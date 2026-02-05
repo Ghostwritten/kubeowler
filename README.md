@@ -50,8 +50,8 @@ Pre-built binaries are published on [GitHub Releases](https://github.com/Ghostwr
 
 | Platform   | Architecture | File |
 |-----------|--------------|------|
-| Linux     | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` (static/musl) |
-| Linux     | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` (static/musl) |
+| Linux     | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` |
+| Linux     | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` |
 | Windows   | amd64        | `kubeowler-<version>-x86_64-windows.zip` |
 | macOS     | amd64 (Intel)| `kubeowler-<version>-x86_64-darwin.tar.gz` |
 | macOS     | arm64 (Apple Silicon) | `kubeowler-<version>-aarch64-darwin.tar.gz` |

@@ -19,14 +19,19 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
+            asset: x86_64-linux
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
+            asset: aarch64-linux
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+            asset: x86_64-windows
           - target: x86_64-apple-darwin
             os: macos-latest
+            asset: x86_64-darwin
           - target: aarch64-apple-darwin
             os: macos-latest
+            asset: aarch64-darwin
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -64,9 +69,9 @@ jobs:
           mkdir -p release
           cp "$BIN" "release/kubeowler"
           cd release
-          tar czvf "../kubeowler-${VERSION}-${{ matrix.target }}.tar.gz" kubeowler
+          tar czvf "../kubeowler-${VERSION}-${{ matrix.asset }}.tar.gz" kubeowler
           cd ..
-          echo "ASSET_PATH=kubeowler-${VERSION}-${{ matrix.target }}.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_PATH=kubeowler-${VERSION}-${{ matrix.asset }}.tar.gz" >> $GITHUB_ENV
 
       - name: Prepare archive (Windows)
         if: runner.os == 'Windows'
@@ -76,13 +81,13 @@ jobs:
           $bin = "target/${{ matrix.target }}/release/kubeowler.exe"
           New-Item -ItemType Directory -Force -Path release | Out-Null
           Copy-Item $bin -Destination release/kubeowler.exe
-          Compress-Archive -Path release/* -DestinationPath "kubeowler-$version-${{ matrix.target }}.zip" -Force
-          echo "ASSET_PATH=kubeowler-$version-${{ matrix.target }}.zip" >> $env:GITHUB_ENV
+          Compress-Archive -Path release/* -DestinationPath "kubeowler-$version-${{ matrix.asset }}.zip" -Force
+          echo "ASSET_PATH=kubeowler-$version-${{ matrix.asset }}.zip" >> $env:GITHUB_ENV
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kubeowler-${{ matrix.target }}
+          name: kubeowler-${{ matrix.asset }}
           path: ${{ env.ASSET_PATH }}
 
   release:

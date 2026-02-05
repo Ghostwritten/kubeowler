@@ -50,15 +50,15 @@ Pre-built binaries are published on [GitHub Releases](https://github.com/Ghostwr
 
 | Platform   | Architecture | File |
 |-----------|--------------|------|
-| Linux     | amd64        | `kubeowler-<version>-x86_64-unknown-linux-gnu.tar.gz` |
-| Linux     | arm64        | `kubeowler-<version>-aarch64-unknown-linux-gnu.tar.gz` |
-| Windows   | amd64        | `kubeowler-<version>-x86_64-pc-windows-msvc.zip` |
-| macOS     | amd64 (Intel)| `kubeowler-<version>-x86_64-apple-darwin.tar.gz` |
-| macOS     | arm64 (Apple Silicon) | `kubeowler-<version>-aarch64-apple-darwin.tar.gz` |
+| Linux     | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` |
+| Linux     | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` |
+| Windows   | amd64        | `kubeowler-<version>-x86_64-windows.zip` |
+| macOS     | amd64 (Intel)| `kubeowler-<version>-x86_64-darwin.tar.gz` |
+| macOS     | arm64 (Apple Silicon) | `kubeowler-<version>-aarch64-darwin.tar.gz` |
 
 **Linux (example: amd64):**
 ```bash
-curl -sSL https://github.com/Ghostwritten/kubeowler/releases/download/v0.1.0/kubeowler-v0.1.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+curl -sSL https://github.com/Ghostwritten/kubeowler/releases/download/v0.1.0/kubeowler-v0.1.0-x86_64-linux.tar.gz | tar xz
 chmod +x kubeowler && ./kubeowler check --help
 ```
 

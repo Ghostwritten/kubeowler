@@ -1,0 +1,3170 @@
+{
+  "cluster_name": "cluster-1",
+  "report_id": "b68522b6-f76d-496b-9e77-3adcdb707126",
+  "timestamp": "2026-02-05T19:40:12.721564874Z",
+  "overall_score": 82.43302531271229,
+  "inspections": [
+    {
+      "inspection_type": "Node Health",
+      "timestamp": "2026-02-05T19:39:33.114166223Z",
+      "overall_score": 100.0,
+      "checks": [
+        {
+          "name": "Node Readiness",
+          "description": "Checks if all nodes are in Ready state",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "4/4 nodes are ready",
+          "recommendations": []
+        },
+        {
+          "name": "Node Pressure",
+          "description": "Checks for memory, disk, or PID pressure on nodes",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "4/4 nodes without pressure",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 2,
+        "passed_checks": 2,
+        "warning_checks": 0,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      }
+    },
+    {
+      "inspection_type": "Control Plane",
+      "timestamp": "2026-02-05T19:39:33.124859738Z",
+      "overall_score": 100.0,
+      "checks": [
+        {
+          "name": "Component Status",
+          "description": "Checks the health of core control-plane components",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "3/3 components healthy",
+          "recommendations": []
+        },
+        {
+          "name": "Control Plane Pods",
+          "description": "Validates that key control-plane pods in kube-system are running",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "3/3 control-plane pods running",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 2,
+        "passed_checks": 2,
+        "warning_checks": 0,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      }
+    },
+    {
+      "inspection_type": "Network Connectivity",
+      "timestamp": "2026-02-05T19:39:33.132009255Z",
+      "overall_score": 65.38461538461539,
+      "checks": [
+        {
+          "name": "Service Configuration",
+          "description": "Checks if services are properly configured with selectors",
+          "status": "Pass",
+          "score": 96.15384615384616,
+          "max_score": 100.0,
+          "details": "50/52 services with proper configuration",
+          "recommendations": []
+        },
+        {
+          "name": "Network Policy Coverage",
+          "description": "Checks if namespaces have network policies for security",
+          "status": "Warning",
+          "score": 0.0,
+          "max_score": 100.0,
+          "details": "0/13 namespaces with network policies",
+          "recommendations": [
+            "Implement network policies for better security isolation"
+          ]
+        },
+        {
+          "name": "DNS Configuration",
+          "description": "Checks DNS service availability",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "DNS service is available",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 3,
+        "passed_checks": 2,
+        "warning_checks": 1,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      }
+    },
+    {
+      "inspection_type": "Storage",
+      "timestamp": "2026-02-05T19:39:33.135856289Z",
+      "overall_score": 90.0,
+      "checks": [
+        {
+          "name": "Persistent Volume Health",
+          "description": "Checks if persistent volumes are in healthy state",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "Available: 0, Bound: 6, Failed: 0, Total: 6",
+          "recommendations": []
+        },
+        {
+          "name": "PVC Binding",
+          "description": "Checks if persistent volume claims are properly bound",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "6/6 PVCs are bound",
+          "recommendations": []
+        },
+        {
+          "name": "Storage Class Configuration",
+          "description": "Checks storage class setup and default configuration",
+          "status": "Warning",
+          "score": 70.0,
+          "max_score": 100.0,
+          "details": "1 storage classes, 0 default",
+          "recommendations": [
+            "Configure appropriate storage classes and set one as default"
+          ]
+        }
+      ],
+      "summary": {
+        "total_checks": 3,
+        "passed_checks": 2,
+        "warning_checks": 1,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": [
+          {
+            "severity": "Warning",
+            "category": "StorageClass",
+            "description": "No default storage class configured",
+            "resource": null,
+            "recommendation": "Configure a default storage class for automatic PV provisioning",
+            "rule_id": "STO-009"
+          }
+        ]
+      }
+    },
+    {
+      "inspection_type": "Resource Usage",
+      "timestamp": "2026-02-05T19:39:33.152615986Z",
+      "overall_score": 47.0,
+      "checks": [
+        {
+          "name": "Resource Requests",
+          "description": "Checks if containers have resource requests configured",
+          "status": "Warning",
+          "score": 65.0,
+          "max_score": 100.0,
+          "details": "65/100 containers with resource requests",
+          "recommendations": [
+            "Configure resource requests for better pod scheduling"
+          ]
+        },
+        {
+          "name": "Resource Limits",
+          "description": "Checks if containers have resource limits configured",
+          "status": "Warning",
+          "score": 38.0,
+          "max_score": 100.0,
+          "details": "38/100 containers with resource limits",
+          "recommendations": [
+            "Configure resource limits to prevent resource exhaustion"
+          ]
+        },
+        {
+          "name": "Complete Resource Configuration",
+          "description": "Checks if containers have both requests and limits configured",
+          "status": "Warning",
+          "score": 38.0,
+          "max_score": 100.0,
+          "details": "38/100 containers with complete resource configuration",
+          "recommendations": [
+            "Configure both requests and limits for optimal resource management"
+          ]
+        }
+      ],
+      "summary": {
+        "total_checks": 3,
+        "passed_checks": 0,
+        "warning_checks": 3,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": [
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container cert-manager-controller in pod cert-manager/cert-manager-7b8b89f89d-dvmjv has no resource requests",
+            "resource": "cert-manager/cert-manager-7b8b89f89d-dvmjv",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container cert-manager-controller in pod cert-manager/cert-manager-7b8b89f89d-dvmjv has no resource limits",
+            "resource": "cert-manager/cert-manager-7b8b89f89d-dvmjv",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container cert-manager-cainjector in pod cert-manager/cert-manager-cainjector-7f9fdd5dd5-zkd9g has no resource requests",
+            "resource": "cert-manager/cert-manager-cainjector-7f9fdd5dd5-zkd9g",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container cert-manager-cainjector in pod cert-manager/cert-manager-cainjector-7f9fdd5dd5-zkd9g has no resource limits",
+            "resource": "cert-manager/cert-manager-cainjector-7f9fdd5dd5-zkd9g",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container cert-manager-webhook in pod cert-manager/cert-manager-webhook-769f6b94cb-d4pc7 has no resource requests",
+            "resource": "cert-manager/cert-manager-webhook-769f6b94cb-d4pc7",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container cert-manager-webhook in pod cert-manager/cert-manager-webhook-769f6b94cb-d4pc7 has no resource limits",
+            "resource": "cert-manager/cert-manager-webhook-769f6b94cb-d4pc7",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container autoscaler in pod kube-system/dns-autoscaler-56cb45595c-8jsd8 has no resource limits",
+            "resource": "kube-system/dns-autoscaler-56cb45595c-8jsd8",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-apiserver in pod kube-system/kube-apiserver-master01 has no resource limits",
+            "resource": "kube-system/kube-apiserver-master01",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-controller-manager in pod kube-system/kube-controller-manager-master01 has no resource limits",
+            "resource": "kube-system/kube-controller-manager-master01",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-4sc5z has no resource requests",
+            "resource": "kube-system/kube-proxy-4sc5z",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-4sc5z has no resource limits",
+            "resource": "kube-system/kube-proxy-4sc5z",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-6vskm has no resource requests",
+            "resource": "kube-system/kube-proxy-6vskm",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-6vskm has no resource limits",
+            "resource": "kube-system/kube-proxy-6vskm",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-jv8kb has no resource requests",
+            "resource": "kube-system/kube-proxy-jv8kb",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-jv8kb has no resource limits",
+            "resource": "kube-system/kube-proxy-jv8kb",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-sk4cn has no resource requests",
+            "resource": "kube-system/kube-proxy-sk4cn",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-sk4cn has no resource limits",
+            "resource": "kube-system/kube-proxy-sk4cn",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-scheduler in pod kube-system/kube-scheduler-master01 has no resource limits",
+            "resource": "kube-system/kube-scheduler-master01",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container metrics-server in pod kube-system/metrics-server-56ff78d5b7-xc7sk has no resource limits",
+            "resource": "kube-system/metrics-server-56ff78d5b7-xc7sk",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container nginx-proxy in pod kube-system/nginx-proxy-worker01 has no resource limits",
+            "resource": "kube-system/nginx-proxy-worker01",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container nginx-proxy in pod kube-system/nginx-proxy-worker02 has no resource limits",
+            "resource": "kube-system/nginx-proxy-worker02",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container nginx-proxy in pod kube-system/nginx-proxy-worker03 has no resource limits",
+            "resource": "kube-system/nginx-proxy-worker03",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container controller in pod metallb-system/controller-9c6cff498-6qhm5 has no resource requests",
+            "resource": "metallb-system/controller-9c6cff498-6qhm5",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container controller in pod metallb-system/controller-9c6cff498-6qhm5 has no resource limits",
+            "resource": "metallb-system/controller-9c6cff498-6qhm5",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-bjsz8 has no resource requests",
+            "resource": "metallb-system/speaker-bjsz8",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-bjsz8 has no resource limits",
+            "resource": "metallb-system/speaker-bjsz8",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-kgprs has no resource requests",
+            "resource": "metallb-system/speaker-kgprs",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-kgprs has no resource limits",
+            "resource": "metallb-system/speaker-kgprs",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-ps8b8 has no resource requests",
+            "resource": "metallb-system/speaker-ps8b8",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-ps8b8 has no resource limits",
+            "resource": "metallb-system/speaker-ps8b8",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-tstgb has no resource requests",
+            "resource": "metallb-system/speaker-tstgb",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-tstgb has no resource limits",
+            "resource": "metallb-system/speaker-tstgb",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container alertmanager in pod prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0 has no resource limits",
+            "resource": "prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container config-reloader in pod prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0 has no resource requests",
+            "resource": "prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container config-reloader in pod prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0 has no resource limits",
+            "resource": "prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-dashboard in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has no resource requests",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-dashboard in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has no resource limits",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-datasources in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has no resource requests",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-datasources in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has no resource limits",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has no resource requests",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has no resource limits",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-dashboard in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has no resource requests",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-dashboard in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has no resource limits",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-datasources in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has no resource requests",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana-sc-datasources in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has no resource limits",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has no resource requests",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container grafana in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has no resource limits",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-prometheus-stack in pod prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6 has no resource requests",
+            "resource": "prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-prometheus-stack in pod prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6 has no resource limits",
+            "resource": "prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-prometheus-stack in pod prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6 has no resource requests",
+            "resource": "prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-prometheus-stack in pod prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6 has no resource limits",
+            "resource": "prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-state-metrics in pod prometheus/prometheus-kube-state-metrics-7547645674-rmh26 has no resource requests",
+            "resource": "prometheus/prometheus-kube-state-metrics-7547645674-rmh26",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kube-state-metrics in pod prometheus/prometheus-kube-state-metrics-7547645674-rmh26 has no resource limits",
+            "resource": "prometheus/prometheus-kube-state-metrics-7547645674-rmh26",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container prometheus in pod prometheus/prometheus-prometheus-kube-prometheus-prometheus-0 has no resource requests",
+            "resource": "prometheus/prometheus-prometheus-kube-prometheus-prometheus-0",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container prometheus in pod prometheus/prometheus-prometheus-kube-prometheus-prometheus-0 has no resource limits",
+            "resource": "prometheus/prometheus-prometheus-kube-prometheus-prometheus-0",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container config-reloader in pod prometheus/prometheus-prometheus-kube-prometheus-prometheus-0 has no resource requests",
+            "resource": "prometheus/prometheus-prometheus-kube-prometheus-prometheus-0",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container config-reloader in pod prometheus/prometheus-prometheus-kube-prometheus-prometheus-0 has no resource limits",
+            "resource": "prometheus/prometheus-prometheus-kube-prometheus-prometheus-0",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-5jllf has no resource requests",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-5jllf",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-5jllf has no resource limits",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-5jllf",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-98djg has no resource requests",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-98djg",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-98djg has no resource limits",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-98djg",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-jtndm has no resource requests",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-jtndm",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-jtndm has no resource limits",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-jtndm",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-x7xfw has no resource requests",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-x7xfw",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-x7xfw has no resource limits",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-x7xfw",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container auth in pod upm-system/upm-platform-auth-7cb945f67d-hvl9m has no resource limits",
+            "resource": "upm-system/upm-platform-auth-7cb945f67d-hvl9m",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container unit-agent in pod upm-system/upm-platform-db-mysql-0 has no resource limits",
+            "resource": "upm-system/upm-platform-db-mysql-0",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container unit-agent in pod upm-system/upm-platform-db-redis-0 has no resource limits",
+            "resource": "upm-system/upm-platform-db-redis-0",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container elasticsearch-ms in pod upm-system/upm-platform-elasticsearch-ms-6bdff4b79b-2jwm9 has no resource limits",
+            "resource": "upm-system/upm-platform-elasticsearch-ms-6bdff4b79b-2jwm9",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container gateway in pod upm-system/upm-platform-gateway-bb4cc77d4-9rl6d has no resource limits",
+            "resource": "upm-system/upm-platform-gateway-bb4cc77d4-9rl6d",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container innodb-cluster-ms in pod upm-system/upm-platform-innodb-cluster-ms-5fb56d898b-sh7xq has no resource limits",
+            "resource": "upm-system/upm-platform-innodb-cluster-ms-5fb56d898b-sh7xq",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kafka-ms in pod upm-system/upm-platform-kafka-ms-77c4ccd4d6-66kjt has no resource limits",
+            "resource": "upm-system/upm-platform-kafka-ms-77c4ccd4d6-66kjt",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container milvus-ms in pod upm-system/upm-platform-milvus-ms-68f994794f-thjjm has no resource limits",
+            "resource": "upm-system/upm-platform-milvus-ms-68f994794f-thjjm",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container mongodb-ms in pod upm-system/upm-platform-mongodb-ms-6c5c6ffc4-hbr2c has no resource limits",
+            "resource": "upm-system/upm-platform-mongodb-ms-6c5c6ffc4-hbr2c",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container mysql-ms in pod upm-system/upm-platform-mysql-ms-598d6cf7db-9w42l has no resource limits",
+            "resource": "upm-system/upm-platform-mysql-ms-598d6cf7db-9w42l",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container nginx in pod upm-system/upm-platform-nginx-6b9b4df87d-lzhbl has no resource limits",
+            "resource": "upm-system/upm-platform-nginx-6b9b4df87d-lzhbl",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container postgresql-ms in pod upm-system/upm-platform-postgresql-ms-65676ffccc-sz27w has no resource limits",
+            "resource": "upm-system/upm-platform-postgresql-ms-65676ffccc-sz27w",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container redis-cluster-ms in pod upm-system/upm-platform-redis-cluster-ms-6c4f9db698-qdfr6 has no resource limits",
+            "resource": "upm-system/upm-platform-redis-cluster-ms-6c4f9db698-qdfr6",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container redis-ms in pod upm-system/upm-platform-redis-ms-5d4bf984f-pr2rs has no resource limits",
+            "resource": "upm-system/upm-platform-redis-ms-5d4bf984f-pr2rs",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container resource in pod upm-system/upm-platform-resource-78d8494fdb-kmlvs has no resource limits",
+            "resource": "upm-system/upm-platform-resource-78d8494fdb-kmlvs",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container user in pod upm-system/upm-platform-user-5494c99b96-dqmp5 has no resource limits",
+            "resource": "upm-system/upm-platform-user-5494c99b96-dqmp5",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container view in pod upm-system/upm-platform-view-7c4476d5cb-qpc2t has no resource limits",
+            "resource": "upm-system/upm-platform-view-7c4476d5cb-qpc2t",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container zookeeper-ms in pod upm-system/upm-platform-zookeeper-ms-668877c9f8-zprtm has no resource limits",
+            "resource": "upm-system/upm-platform-zookeeper-ms-668877c9f8-zprtm",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-agent in pod velero/node-agent-57pwr has no resource requests",
+            "resource": "velero/node-agent-57pwr",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-agent in pod velero/node-agent-57pwr has no resource limits",
+            "resource": "velero/node-agent-57pwr",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-agent in pod velero/node-agent-kjplw has no resource requests",
+            "resource": "velero/node-agent-kjplw",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-agent in pod velero/node-agent-kjplw has no resource limits",
+            "resource": "velero/node-agent-kjplw",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-agent in pod velero/node-agent-twwbk has no resource requests",
+            "resource": "velero/node-agent-twwbk",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container node-agent in pod velero/node-agent-twwbk has no resource limits",
+            "resource": "velero/node-agent-twwbk",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero-repo-maintenance-container in pod velero/upm-system-minio-backups-kopia-maintain-job-1770310177606-n2vkz has no resource requests",
+            "resource": "velero/upm-system-minio-backups-kopia-maintain-job-1770310177606-n2vkz",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero-repo-maintenance-container in pod velero/upm-system-minio-backups-kopia-maintain-job-1770310177606-n2vkz has no resource limits",
+            "resource": "velero/upm-system-minio-backups-kopia-maintain-job-1770310177606-n2vkz",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero-repo-maintenance-container in pod velero/upm-system-minio-backups-kopia-maintain-job-1770314077616-xlf88 has no resource requests",
+            "resource": "velero/upm-system-minio-backups-kopia-maintain-job-1770314077616-xlf88",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero-repo-maintenance-container in pod velero/upm-system-minio-backups-kopia-maintain-job-1770314077616-xlf88 has no resource limits",
+            "resource": "velero/upm-system-minio-backups-kopia-maintain-job-1770314077616-xlf88",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero-repo-maintenance-container in pod velero/upm-system-minio-backups-kopia-maintain-job-1770317977625-rfwnx has no resource requests",
+            "resource": "velero/upm-system-minio-backups-kopia-maintain-job-1770317977625-rfwnx",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero-repo-maintenance-container in pod velero/upm-system-minio-backups-kopia-maintain-job-1770317977625-rfwnx has no resource limits",
+            "resource": "velero/upm-system-minio-backups-kopia-maintain-job-1770317977625-rfwnx",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero in pod velero/velero-7b88f944d5-tdznx has no resource requests",
+            "resource": "velero/velero-7b88f944d5-tdznx",
+            "recommendation": "Set CPU and memory requests for better scheduling",
+            "rule_id": "RES-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container velero in pod velero/velero-7b88f944d5-tdznx has no resource limits",
+            "resource": "velero/velero-7b88f944d5-tdznx",
+            "recommendation": "Set CPU and memory limits to prevent resource exhaustion",
+            "rule_id": "RES-002"
+          },
+          {
+            "severity": "Warning",
+            "category": "Resource Management",
+            "description": "Namespace default has no resource quota",
+            "resource": "default",
+            "recommendation": "Configure resource quotas to prevent resource exhaustion",
+            "rule_id": "RES-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Resource Management",
+            "description": "Namespace demo has no resource quota",
+            "resource": "demo",
+            "recommendation": "Configure resource quotas to prevent resource exhaustion",
+            "rule_id": "RES-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Resource Management",
+            "description": "Namespace kubeowler has no resource quota",
+            "resource": "kubeowler",
+            "recommendation": "Configure resource quotas to prevent resource exhaustion",
+            "rule_id": "RES-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Resource Management",
+            "description": "Namespace metallb-system has no resource quota",
+            "resource": "metallb-system",
+            "recommendation": "Configure resource quotas to prevent resource exhaustion",
+            "rule_id": "RES-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Resource Management",
+            "description": "Namespace prometheus has no resource quota",
+            "resource": "prometheus",
+            "recommendation": "Configure resource quotas to prevent resource exhaustion",
+            "rule_id": "RES-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Resource Management",
+            "description": "Namespace velero has no resource quota",
+            "resource": "velero",
+            "recommendation": "Configure resource quotas to prevent resource exhaustion",
+            "rule_id": "RES-003"
+          }
+        ]
+      }
+    },
+    {
+      "inspection_type": "Pod Status",
+      "timestamp": "2026-02-05T19:39:33.166119643Z",
+      "overall_score": 87.34939759036145,
+      "checks": [
+        {
+          "name": "Pod Health",
+          "description": "Checks if pods are running successfully",
+          "status": "Warning",
+          "score": 91.56626506024097,
+          "max_score": 100.0,
+          "details": "Running: 76, Failed: 0, Pending: 2, Total: 83. Container states: 2 CrashLoopBackOff, 2 ImagePullBackOff",
+          "recommendations": [
+            "Investigate failed and pending pods"
+          ]
+        },
+        {
+          "name": "Pod Stability",
+          "description": "Checks for excessive pod restarts",
+          "status": "Warning",
+          "score": 83.13253012048193,
+          "max_score": 100.0,
+          "details": "14/83 pods with excessive restarts",
+          "recommendations": [
+            "Review application logs and resource limits"
+          ]
+        }
+      ],
+      "summary": {
+        "total_checks": 2,
+        "passed_checks": 0,
+        "warning_checks": 2,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Container",
+            "description": "Pod default/nginx-deployment-fail-5cff74b894-jsls4 has container nginx in state ImagePullBackOff: Back-off pulling image \"nginx:non-existent-tag\": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image \"docker.io/library/nginx:non-existent-tag\": failed to unpack image on snapshotter overlayfs: unexpected media type text/html for sha256:334123de9063ba25831dbf1c74cf63e08f932955730c72fdd24350b31c9cbbb3: not found",
+            "resource": "default/nginx-deployment-fail-5cff74b894-jsls4",
+            "recommendation": "Check image, pull secrets, and pod events (e.g. kubectl describe pod)",
+            "rule_id": "POD-005"
+          },
+          {
+            "severity": "Critical",
+            "category": "Container",
+            "description": "Pod default/nginx-deployment-fail-5cff74b894-nwdvc has container nginx in state ImagePullBackOff: Back-off pulling image \"nginx:non-existent-tag\": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image \"docker.io/library/nginx:non-existent-tag\": failed to unpack image on snapshotter overlayfs: unexpected media type text/html for sha256:334123de9063ba25831dbf1c74cf63e08f932955730c72fdd24350b31c9cbbb3: not found",
+            "resource": "default/nginx-deployment-fail-5cff74b894-nwdvc",
+            "recommendation": "Check image, pull secrets, and pod events (e.g. kubectl describe pod)",
+            "rule_id": "POD-005"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container calico-node in pod kube-system/calico-node-fjv6b has 1 restarts",
+            "resource": "kube-system/calico-node-fjv6b",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container upgrade-ipam in pod kube-system/calico-node-s2zwk has 1 restarts",
+            "resource": "kube-system/calico-node-s2zwk",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container calico-node in pod kube-system/calico-node-s2zwk has 1 restarts",
+            "resource": "kube-system/calico-node-s2zwk",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container upgrade-ipam in pod kube-system/calico-node-xndg7 has 1 restarts",
+            "resource": "kube-system/calico-node-xndg7",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container calico-node in pod kube-system/calico-node-xndg7 has 1 restarts",
+            "resource": "kube-system/calico-node-xndg7",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container coredns in pod kube-system/coredns-5d784884df-h7lx8 has 1 restarts",
+            "resource": "kube-system/coredns-5d784884df-h7lx8",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container autoscaler in pod kube-system/dns-autoscaler-56cb45595c-8jsd8 has 1 restarts",
+            "resource": "kube-system/dns-autoscaler-56cb45595c-8jsd8",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-apiserver in pod kube-system/kube-apiserver-master01 has 2 restarts",
+            "resource": "kube-system/kube-apiserver-master01",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-controller-manager in pod kube-system/kube-controller-manager-master01 has 3 restarts",
+            "resource": "kube-system/kube-controller-manager-master01",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-4sc5z has 1 restarts",
+            "resource": "kube-system/kube-proxy-4sc5z",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-jv8kb has 1 restarts",
+            "resource": "kube-system/kube-proxy-jv8kb",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-sk4cn has 1 restarts",
+            "resource": "kube-system/kube-proxy-sk4cn",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-scheduler in pod kube-system/kube-scheduler-master01 has 2 restarts",
+            "resource": "kube-system/kube-scheduler-master01",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container nginx-proxy in pod kube-system/nginx-proxy-worker01 has 3 restarts",
+            "resource": "kube-system/nginx-proxy-worker01",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container nginx-proxy in pod kube-system/nginx-proxy-worker02 has 1 restarts",
+            "resource": "kube-system/nginx-proxy-worker02",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Critical",
+            "category": "Pod",
+            "description": "Pod kube-system/nginx-proxy-worker03 is Running but not Ready (ContainersNotReady): containers with unready status: [nginx-proxy]",
+            "resource": "kube-system/nginx-proxy-worker03",
+            "recommendation": "Check readiness probes, container logs, and pod events (e.g. kubectl describe pod)",
+            "rule_id": "POD-012"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container nginx-proxy in pod kube-system/nginx-proxy-worker03 has 1 restarts",
+            "resource": "kube-system/nginx-proxy-worker03",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container node-cache in pod kube-system/nodelocaldns-459f6 has 1 restarts",
+            "resource": "kube-system/nodelocaldns-459f6",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container node-cache in pod kube-system/nodelocaldns-jp6pj has 2 restarts",
+            "resource": "kube-system/nodelocaldns-jp6pj",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container node-cache in pod kube-system/nodelocaldns-knsbc has 1 restarts",
+            "resource": "kube-system/nodelocaldns-knsbc",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container controller in pod metallb-system/controller-9c6cff498-6qhm5 has 1 restarts",
+            "resource": "metallb-system/controller-9c6cff498-6qhm5",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-kgprs has 1 restarts",
+            "resource": "metallb-system/speaker-kgprs",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-ps8b8 has 1 restarts",
+            "resource": "metallb-system/speaker-ps8b8",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container speaker in pod metallb-system/speaker-tstgb has 1 restarts",
+            "resource": "metallb-system/speaker-tstgb",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container csi-provisioner in pod openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp has 1 restarts",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container csi-resizer in pod openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp has 1 restarts",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container csi-snapshotter in pod openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp has 1 restarts",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp has 1 restarts",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container snapshot-controller in pod openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp has 1 restarts",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-controller-6d9d6c644b-sppdp",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container csi-node-driver-registrar in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd has 1 restarts",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd has 1 restarts",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container init-config-reloader in pod prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0 has 1 restarts",
+            "resource": "prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container alertmanager in pod prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0 has 1 restarts",
+            "resource": "prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container config-reloader in pod prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0 has 1 restarts",
+            "resource": "prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container grafana in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has 1 restarts",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container grafana-sc-dashboard in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has 1 restarts",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container grafana-sc-datasources in pod prometheus/prometheus-grafana-75f54c4cdd-f8zn7 has 1 restarts",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-f8zn7",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container grafana in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has 1 restarts",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container grafana-sc-dashboard in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has 1 restarts",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container grafana-sc-datasources in pod prometheus/prometheus-grafana-75f54c4cdd-n8rht has 1 restarts",
+            "resource": "prometheus/prometheus-grafana-75f54c4cdd-n8rht",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-prometheus-stack in pod prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6 has 1 restarts",
+            "resource": "prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-prometheus-stack in pod prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6 has 1 restarts",
+            "resource": "prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container kube-state-metrics in pod prometheus/prometheus-kube-state-metrics-7547645674-rmh26 has 1 restarts",
+            "resource": "prometheus/prometheus-kube-state-metrics-7547645674-rmh26",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-98djg has 1 restarts",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-98djg",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-jtndm has 1 restarts",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-jtndm",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container node-exporter in pod prometheus/prometheus-prometheus-node-exporter-x7xfw has 1 restarts",
+            "resource": "prometheus/prometheus-prometheus-node-exporter-x7xfw",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Critical",
+            "category": "Pod",
+            "description": "Pod upm-system/consul-connect-injector-69b8cc47c5-ssqhv is Running but not Ready (ContainersNotReady): containers with unready status: [sidecar-injector]",
+            "resource": "upm-system/consul-connect-injector-69b8cc47c5-ssqhv",
+            "recommendation": "Check readiness probes, container logs, and pod events (e.g. kubectl describe pod)",
+            "rule_id": "POD-012"
+          },
+          {
+            "severity": "Critical",
+            "category": "Container",
+            "description": "Pod upm-system/consul-connect-injector-69b8cc47c5-ssqhv has container sidecar-injector in state CrashLoopBackOff: back-off 5m0s restarting failed container=sidecar-injector pod=consul-connect-injector-69b8cc47c5-ssqhv_upm-system(89cfdc14-ec09-4a28-966d-0db6253a4816)",
+            "resource": "upm-system/consul-connect-injector-69b8cc47c5-ssqhv",
+            "recommendation": "Check image, pull secrets, and pod events (e.g. kubectl describe pod)",
+            "rule_id": "POD-007"
+          },
+          {
+            "severity": "Critical",
+            "category": "Container",
+            "description": "Container sidecar-injector in pod upm-system/consul-connect-injector-69b8cc47c5-ssqhv has 984 restarts",
+            "resource": "upm-system/consul-connect-injector-69b8cc47c5-ssqhv",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Critical",
+            "category": "Pod",
+            "description": "Pod upm-system/consul-connect-injector-6b4b944cd5-jwhpg is Running but not Ready (ContainersNotReady): containers with unready status: [sidecar-injector]",
+            "resource": "upm-system/consul-connect-injector-6b4b944cd5-jwhpg",
+            "recommendation": "Check readiness probes, container logs, and pod events (e.g. kubectl describe pod)",
+            "rule_id": "POD-012"
+          },
+          {
+            "severity": "Critical",
+            "category": "Container",
+            "description": "Pod upm-system/consul-connect-injector-6b4b944cd5-jwhpg has container sidecar-injector in state CrashLoopBackOff: back-off 5m0s restarting failed container=sidecar-injector pod=consul-connect-injector-6b4b944cd5-jwhpg_upm-system(6531c278-e9f8-40e9-8e86-07dd00806c7f)",
+            "resource": "upm-system/consul-connect-injector-6b4b944cd5-jwhpg",
+            "recommendation": "Check image, pull secrets, and pod events (e.g. kubectl describe pod)",
+            "rule_id": "POD-007"
+          },
+          {
+            "severity": "Critical",
+            "category": "Container",
+            "description": "Container sidecar-injector in pod upm-system/consul-connect-injector-6b4b944cd5-jwhpg has 718 restarts",
+            "resource": "upm-system/consul-connect-injector-6b4b944cd5-jwhpg",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container auth in pod upm-system/upm-platform-auth-7cb945f67d-hvl9m has 5 restarts",
+            "resource": "upm-system/upm-platform-auth-7cb945f67d-hvl9m",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container elasticsearch-ms in pod upm-system/upm-platform-elasticsearch-ms-6bdff4b79b-2jwm9 has 6 restarts",
+            "resource": "upm-system/upm-platform-elasticsearch-ms-6bdff4b79b-2jwm9",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Info",
+            "category": "Container",
+            "description": "Container gateway in pod upm-system/upm-platform-gateway-bb4cc77d4-9rl6d has 2 restarts",
+            "resource": "upm-system/upm-platform-gateway-bb4cc77d4-9rl6d",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container innodb-cluster-ms in pod upm-system/upm-platform-innodb-cluster-ms-5fb56d898b-sh7xq has 6 restarts",
+            "resource": "upm-system/upm-platform-innodb-cluster-ms-5fb56d898b-sh7xq",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container kafka-ms in pod upm-system/upm-platform-kafka-ms-77c4ccd4d6-66kjt has 6 restarts",
+            "resource": "upm-system/upm-platform-kafka-ms-77c4ccd4d6-66kjt",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container milvus-ms in pod upm-system/upm-platform-milvus-ms-68f994794f-thjjm has 6 restarts",
+            "resource": "upm-system/upm-platform-milvus-ms-68f994794f-thjjm",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container mongodb-ms in pod upm-system/upm-platform-mongodb-ms-6c5c6ffc4-hbr2c has 6 restarts",
+            "resource": "upm-system/upm-platform-mongodb-ms-6c5c6ffc4-hbr2c",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container mysql-ms in pod upm-system/upm-platform-mysql-ms-598d6cf7db-9w42l has 6 restarts",
+            "resource": "upm-system/upm-platform-mysql-ms-598d6cf7db-9w42l",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container postgresql-ms in pod upm-system/upm-platform-postgresql-ms-65676ffccc-sz27w has 6 restarts",
+            "resource": "upm-system/upm-platform-postgresql-ms-65676ffccc-sz27w",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container redis-cluster-ms in pod upm-system/upm-platform-redis-cluster-ms-6c4f9db698-qdfr6 has 4 restarts",
+            "resource": "upm-system/upm-platform-redis-cluster-ms-6c4f9db698-qdfr6",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container redis-ms in pod upm-system/upm-platform-redis-ms-5d4bf984f-pr2rs has 6 restarts",
+            "resource": "upm-system/upm-platform-redis-ms-5d4bf984f-pr2rs",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container resource in pod upm-system/upm-platform-resource-78d8494fdb-kmlvs has 5 restarts",
+            "resource": "upm-system/upm-platform-resource-78d8494fdb-kmlvs",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Container",
+            "description": "Container zookeeper-ms in pod upm-system/upm-platform-zookeeper-ms-668877c9f8-zprtm has 6 restarts",
+            "resource": "upm-system/upm-platform-zookeeper-ms-668877c9f8-zprtm",
+            "recommendation": "Investigate container crashes and resource limits",
+            "rule_id": "POD-003"
+          }
+        ]
+      },
+      "pod_container_states": [
+        {
+          "pod_ref": "default/nginx-deployment-fail-5cff74b894-jsls4",
+          "container_name": "nginx",
+          "state_kind": "waiting",
+          "reason": "ImagePullBackOff",
+          "detail": "Back-off pulling image \"nginx:non-existent-tag\": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image \"docker.io/library/nginx:non-existent-tag\": failed to unpack image on snapshotter overlayfs: unexpected media type text/html for sha256:334123de9063ba25831dbf1c74cf63e08f932955730c72fdd24350b31c9cbbb3: not found"
+        },
+        {
+          "pod_ref": "default/nginx-deployment-fail-5cff74b894-nwdvc",
+          "container_name": "nginx",
+          "state_kind": "waiting",
+          "reason": "ImagePullBackOff",
+          "detail": "Back-off pulling image \"nginx:non-existent-tag\": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image \"docker.io/library/nginx:non-existent-tag\": failed to unpack image on snapshotter overlayfs: unexpected media type text/html for sha256:334123de9063ba25831dbf1c74cf63e08f932955730c72fdd24350b31c9cbbb3: not found"
+        },
+        {
+          "pod_ref": "upm-system/consul-connect-injector-69b8cc47c5-ssqhv",
+          "container_name": "sidecar-injector",
+          "state_kind": "waiting",
+          "reason": "CrashLoopBackOff",
+          "detail": "back-off 5m0s restarting failed container=sidecar-injector pod=consul-connect-injector-69b8cc47c5-ssqhv_upm-system(89cfdc14-ec09-4a28-966d-0db6253a4816)"
+        },
+        {
+          "pod_ref": "upm-system/consul-connect-injector-6b4b944cd5-jwhpg",
+          "container_name": "sidecar-injector",
+          "state_kind": "waiting",
+          "reason": "CrashLoopBackOff",
+          "detail": "back-off 5m0s restarting failed container=sidecar-injector pod=consul-connect-injector-6b4b944cd5-jwhpg_upm-system(6531c278-e9f8-40e9-8e86-07dd00806c7f)"
+        }
+      ]
+    },
+    {
+      "inspection_type": "Autoscaling",
+      "timestamp": "2026-02-05T19:39:33.168127072Z",
+      "overall_score": 70.0,
+      "checks": [
+        {
+          "name": "Horizontal Pod Autoscalers",
+          "description": "Evaluates health and configuration of HPAs",
+          "status": "Warning",
+          "score": 70.0,
+          "max_score": 100.0,
+          "details": "No HPAs detected in the target scope",
+          "recommendations": [
+            "Consider deploying HPAs to improve workload elasticity."
+          ]
+        }
+      ],
+      "summary": {
+        "total_checks": 1,
+        "passed_checks": 0,
+        "warning_checks": 1,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      }
+    },
+    {
+      "inspection_type": "Batch Workloads",
+      "timestamp": "2026-02-05T19:39:33.170341319Z",
+      "overall_score": 85.0,
+      "checks": [
+        {
+          "name": "CronJobs",
+          "description": "Evaluates CronJob health and schedules",
+          "status": "Warning",
+          "score": 70.0,
+          "max_score": 100.0,
+          "details": "No CronJobs detected",
+          "recommendations": [
+            "Introduce CronJobs for periodic tasks where applicable."
+          ]
+        },
+        {
+          "name": "Jobs",
+          "description": "Checks Jobs for stuck or failed executions",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "3/3 Jobs healthy",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 2,
+        "passed_checks": 1,
+        "warning_checks": 1,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      }
+    },
+    {
+      "inspection_type": "Security Configuration",
+      "timestamp": "2026-02-05T19:39:33.204389809Z",
+      "overall_score": 56.82834140299516,
+      "checks": [
+        {
+          "name": "RBAC Configuration",
+          "description": "Checks for secure RBAC configuration",
+          "status": "Warning",
+          "score": 63.45794392523364,
+          "max_score": 100.0,
+          "details": "Risky roles: 10, Risky bindings: 2",
+          "recommendations": [
+            "Review and minimize RBAC permissions"
+          ]
+        },
+        {
+          "name": "Pod Security Standards",
+          "description": "Checks if pods follow security best practices",
+          "status": "Warning",
+          "score": 78.3132530120482,
+          "max_score": 100.0,
+          "details": "Secure pods: 65/83, Running as root: 7, Privileged: 11",
+          "recommendations": [
+            "Configure security contexts for better pod security"
+          ]
+        },
+        {
+          "name": "Network Policy Coverage",
+          "description": "Checks network policy implementation for traffic segmentation",
+          "status": "Warning",
+          "score": 0.0,
+          "max_score": 100.0,
+          "details": "0/13 namespaces with network policies",
+          "recommendations": [
+            "Implement network policies for better traffic control"
+          ]
+        },
+        {
+          "name": "Service Account Usage",
+          "description": "Checks if pods use dedicated service accounts",
+          "status": "Pass",
+          "score": 85.54216867469879,
+          "max_score": 100.0,
+          "details": "71/83 pods use custom service accounts",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 4,
+        "passed_checks": 1,
+        "warning_checks": 3,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": [
+          {
+            "severity": "Warning",
+            "category": "ClusterRole",
+            "description": "ClusterRole metallb-system:speaker has overly permissive rules",
+            "resource": "metallb-system:speaker",
+            "recommendation": "Review and restrict ClusterRole permissions to minimum required",
+            "rule_id": "SEC-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "ClusterRole",
+            "description": "ClusterRole openebs-lvm-provisioner-role has overly permissive rules",
+            "resource": "openebs-lvm-provisioner-role",
+            "recommendation": "Review and restrict ClusterRole permissions to minimum required",
+            "rule_id": "SEC-001"
+          },
+          {
+            "severity": "Warning",
+            "category": "ClusterRole",
+            "description": "ClusterRole prometheus-kube-prometheus-operator has overly permissive rules",
+            "resource": "prometheus-kube-prometheus-operator",
+            "recommendation": "Review and restrict ClusterRole permissions to minimum required",
+            "rule_id": "SEC-001"
+          },
+          {
+            "severity": "Critical",
+            "category": "ClusterRoleBinding",
+            "description": "ServiceAccount velero/velero has cluster-admin privileges",
+            "resource": "velero",
+            "recommendation": "Review and restrict ServiceAccount permissions",
+            "rule_id": "SEC-003"
+          },
+          {
+            "severity": "Critical",
+            "category": "ClusterRoleBinding",
+            "description": "ServiceAccount velero/velero-server has cluster-admin privileges",
+            "resource": "velero-server",
+            "recommendation": "Review and restrict ServiceAccount permissions",
+            "rule_id": "SEC-003"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container calico-node in pod kube-system/calico-node-dlmbk runs in privileged mode",
+            "resource": "kube-system/calico-node-dlmbk",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container calico-node in pod kube-system/calico-node-fjv6b runs in privileged mode",
+            "resource": "kube-system/calico-node-fjv6b",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container calico-node in pod kube-system/calico-node-s2zwk runs in privileged mode",
+            "resource": "kube-system/calico-node-s2zwk",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container calico-node in pod kube-system/calico-node-xndg7 runs in privileged mode",
+            "resource": "kube-system/calico-node-xndg7",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-4sc5z runs in privileged mode",
+            "resource": "kube-system/kube-proxy-4sc5z",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-6vskm runs in privileged mode",
+            "resource": "kube-system/kube-proxy-6vskm",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-jv8kb runs in privileged mode",
+            "resource": "kube-system/kube-proxy-jv8kb",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container kube-proxy in pod kube-system/kube-proxy-sk4cn runs in privileged mode",
+            "resource": "kube-system/kube-proxy-sk4cn",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container inspector in pod kubeowler/kubeowler-node-inspector-58vk2 runs as root",
+            "resource": "kubeowler/kubeowler-node-inspector-58vk2",
+            "recommendation": "Configure container to run as non-root user",
+            "rule_id": "SEC-006"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container inspector in pod kubeowler/kubeowler-node-inspector-l5cb2 runs as root",
+            "resource": "kubeowler/kubeowler-node-inspector-l5cb2",
+            "recommendation": "Configure container to run as non-root user",
+            "rule_id": "SEC-006"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container inspector in pod kubeowler/kubeowler-node-inspector-lq67c runs as root",
+            "resource": "kubeowler/kubeowler-node-inspector-lq67c",
+            "recommendation": "Configure container to run as non-root user",
+            "rule_id": "SEC-006"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container inspector in pod kubeowler/kubeowler-node-inspector-qpr5h runs as root",
+            "resource": "kubeowler/kubeowler-node-inspector-qpr5h",
+            "recommendation": "Configure container to run as non-root user",
+            "rule_id": "SEC-006"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-9t7xq runs in privileged mode",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-9t7xq",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-9t7xq allows privilege escalation",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-9t7xq",
+            "recommendation": "Disable allowPrivilegeEscalation",
+            "rule_id": "SEC-007"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-gtw6r runs in privileged mode",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-gtw6r",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-gtw6r allows privilege escalation",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-gtw6r",
+            "recommendation": "Disable allowPrivilegeEscalation",
+            "rule_id": "SEC-007"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd runs in privileged mode",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd",
+            "recommendation": "Remove privileged flag unless absolutely necessary",
+            "rule_id": "SEC-005"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Container openebs-lvm-plugin in pod openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd allows privilege escalation",
+            "resource": "openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd",
+            "recommendation": "Disable allowPrivilegeEscalation",
+            "rule_id": "SEC-007"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Pod velero/node-agent-57pwr runs as root user",
+            "resource": "velero/node-agent-57pwr",
+            "recommendation": "Configure runAsUser to use non-root user",
+            "rule_id": "SEC-004"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Pod velero/node-agent-kjplw runs as root user",
+            "resource": "velero/node-agent-kjplw",
+            "recommendation": "Configure runAsUser to use non-root user",
+            "rule_id": "SEC-004"
+          },
+          {
+            "severity": "Warning",
+            "category": "Security",
+            "description": "Pod velero/node-agent-twwbk runs as root user",
+            "resource": "velero/node-agent-twwbk",
+            "recommendation": "Configure runAsUser to use non-root user",
+            "rule_id": "SEC-004"
+          },
+          {
+            "severity": "Warning",
+            "category": "NetworkPolicy",
+            "description": "Low network policy coverage across namespaces",
+            "resource": "cluster",
+            "recommendation": "Implement network policies for traffic segmentation",
+            "rule_id": "SEC-008"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod default/nginx-deployment-fail-5cff74b894-jsls4 uses default service account",
+            "resource": "default/nginx-deployment-fail-5cff74b894-jsls4",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod default/nginx-deployment-fail-5cff74b894-nwdvc uses default service account",
+            "resource": "default/nginx-deployment-fail-5cff74b894-nwdvc",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kube-system/kube-apiserver-master01 uses default service account",
+            "resource": "kube-system/kube-apiserver-master01",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kube-system/kube-controller-manager-master01 uses default service account",
+            "resource": "kube-system/kube-controller-manager-master01",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kube-system/kube-scheduler-master01 uses default service account",
+            "resource": "kube-system/kube-scheduler-master01",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kube-system/nginx-proxy-worker01 uses default service account",
+            "resource": "kube-system/nginx-proxy-worker01",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kube-system/nginx-proxy-worker02 uses default service account",
+            "resource": "kube-system/nginx-proxy-worker02",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kube-system/nginx-proxy-worker03 uses default service account",
+            "resource": "kube-system/nginx-proxy-worker03",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kubeowler/kubeowler-node-inspector-58vk2 uses default service account",
+            "resource": "kubeowler/kubeowler-node-inspector-58vk2",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kubeowler/kubeowler-node-inspector-l5cb2 uses default service account",
+            "resource": "kubeowler/kubeowler-node-inspector-l5cb2",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kubeowler/kubeowler-node-inspector-lq67c uses default service account",
+            "resource": "kubeowler/kubeowler-node-inspector-lq67c",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          },
+          {
+            "severity": "Warning",
+            "category": "ServiceAccount",
+            "description": "Pod kubeowler/kubeowler-node-inspector-qpr5h uses default service account",
+            "resource": "kubeowler/kubeowler-node-inspector-qpr5h",
+            "recommendation": "Create and use dedicated service accounts with minimal permissions",
+            "rule_id": "SEC-009"
+          }
+        ]
+      }
+    },
+    {
+      "inspection_type": "Policy & Governance",
+      "timestamp": "2026-02-05T19:39:33.207643910Z",
+      "overall_score": 75.0,
+      "checks": [
+        {
+          "name": "Resource Quotas",
+          "description": "Checks cluster-wide ResourceQuota coverage",
+          "status": "Warning",
+          "score": 60.0,
+          "max_score": 100.0,
+          "details": "No ResourceQuota objects found",
+          "recommendations": [
+            "Define ResourceQuota in multi-tenant namespaces."
+          ]
+        },
+        {
+          "name": "Limit Ranges",
+          "description": "Ensures namespaces have LimitRange for default resource settings",
+          "status": "Warning",
+          "score": 65.0,
+          "max_score": 100.0,
+          "details": "No LimitRange objects found",
+          "recommendations": [
+            "Create LimitRange to enforce default requests/limits."
+          ]
+        },
+        {
+          "name": "Pod Disruption Budgets",
+          "description": "Evaluates PDB coverage and status",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "All PDBs allow disruption",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 3,
+        "passed_checks": 1,
+        "warning_checks": 2,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": [
+          {
+            "severity": "Warning",
+            "category": "Policy",
+            "description": "No LimitRange defined",
+            "resource": "cluster",
+            "recommendation": "Define LimitRange to ensure pod resource defaults and limits.",
+            "rule_id": "POLICY-002"
+          }
+        ]
+      }
+    },
+    {
+      "inspection_type": "Observability",
+      "timestamp": "2026-02-05T19:39:33.228606468Z",
+      "overall_score": 92.5,
+      "checks": [
+        {
+          "name": "Metrics Pipeline",
+          "description": "Checks metrics-server and kube-state-metrics availability",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "metrics-server: present, kube-state-metrics: present",
+          "recommendations": []
+        },
+        {
+          "name": "Cluster DNS (CoreDNS)",
+          "description": "Checks CoreDNS/kube-dns availability in kube-system",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "CoreDNS: 2/2 ready",
+          "recommendations": []
+        },
+        {
+          "name": "Logging Stack",
+          "description": "Checks whether logging collectors are running",
+          "status": "Warning",
+          "score": 70.0,
+          "max_score": 100.0,
+          "details": "No logging stack found",
+          "recommendations": [
+            "Install a logging stack (e.g., Fluent Bit + Loki)."
+          ]
+        },
+        {
+          "name": "Monitoring & Alerting",
+          "description": "Checks for Prometheus/Thanos/VictoriaMetrics components",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "Prometheus-compatible component detected",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 4,
+        "passed_checks": 3,
+        "warning_checks": 1,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": [
+          {
+            "severity": "Warning",
+            "category": "Observability",
+            "description": "No logging collector pods detected",
+            "resource": "kube-system",
+            "recommendation": "Deploy Fluentd/Vector/Logstash to aggregate cluster logs.",
+            "rule_id": "OBS-003"
+          }
+        ]
+      }
+    },
+    {
+      "inspection_type": "Namespace",
+      "timestamp": "2026-02-05T19:39:33.296494950Z",
+      "overall_score": 100.0,
+      "checks": [
+        {
+          "name": "Namespace summary",
+          "description": "Per-namespace resource and policy coverage",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "13 namespaces",
+          "recommendations": []
+        }
+      ],
+      "summary": {
+        "total_checks": 1,
+        "passed_checks": 1,
+        "warning_checks": 0,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      },
+      "namespace_summary_rows": [
+        {
+          "name": "cert-manager",
+          "pod_count": 3,
+          "deployment_count": 3,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "default",
+          "pod_count": 2,
+          "deployment_count": 1,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "demo",
+          "pod_count": 0,
+          "deployment_count": 0,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "kube-node-lease",
+          "pod_count": 0,
+          "deployment_count": 0,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "kube-public",
+          "pod_count": 0,
+          "deployment_count": 0,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "kube-system",
+          "pod_count": 23,
+          "deployment_count": 4,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "kubeowler",
+          "pod_count": 4,
+          "deployment_count": 0,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "kubeowler-inspector",
+          "pod_count": 0,
+          "deployment_count": 0,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "metallb-system",
+          "pod_count": 5,
+          "deployment_count": 1,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "openebs",
+          "pod_count": 4,
+          "deployment_count": 1,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "prometheus",
+          "pod_count": 11,
+          "deployment_count": 3,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "upm-system",
+          "pod_count": 24,
+          "deployment_count": 20,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        },
+        {
+          "name": "velero",
+          "pod_count": 7,
+          "deployment_count": 1,
+          "has_network_policy": false,
+          "has_resource_quota": false,
+          "has_limit_range": false
+        }
+      ]
+    },
+    {
+      "inspection_type": "Certificates",
+      "timestamp": "2026-02-05T19:39:33.308538642Z",
+      "overall_score": 85.0,
+      "checks": [
+        {
+          "name": "CertificateSigningRequests",
+          "description": "Checks CSR status (Pending/Approved/Denied/Failed). Component cert expiry (apiserver/etcd/kubelet) requires node-level checks.",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "0 total, 0 pending, 0 denied/failed",
+          "recommendations": []
+        },
+        {
+          "name": "TLS certificate expiry",
+          "description": "Lists TLS certificates from Secrets (type kubernetes.io/tls) with expiry and days until expiry. Control-plane certs (apiserver/etcd/kubelet) require node-level checks (e.g. kubeadm cert check-expiry).",
+          "status": "Warning",
+          "score": 70.0,
+          "max_score": 100.0,
+          "details": "5 certificate(s); 2 expiring in 90 days, 1 in 30 days, 0 expired.",
+          "recommendations": [
+            "Renew expiring or expired TLS certificates. Update the Secret and restart workloads."
+          ]
+        }
+      ],
+      "summary": {
+        "total_checks": 2,
+        "passed_checks": 1,
+        "warning_checks": 1,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      },
+      "certificate_expiries": [
+        {
+          "secret_namespace": "demo",
+          "secret_name": "demo-cm-ss-root-ca",
+          "subject_or_cn": "CN=demo",
+          "expiry_utc": "Feb  3 09:06:59 2027 +00:00",
+          "days_until_expiry": 362
+        },
+        {
+          "secret_namespace": "upm-system",
+          "secret_name": "consul-connect-inject-webhook-cert",
+          "subject_or_cn": "CN=Consul Webhook Certificates Service",
+          "expiry_utc": "Feb  6 04:54:35 2026 +00:00",
+          "days_until_expiry": 0
+        },
+        {
+          "secret_namespace": "upm-system",
+          "secret_name": "consul-server-cert",
+          "subject_or_cn": "CN=server.upm.consul",
+          "expiry_utc": "Feb  2 09:34:47 2028 +00:00",
+          "days_until_expiry": 726
+        },
+        {
+          "secret_namespace": "upm-system",
+          "secret_name": "upm-engine-compose-operator-webhook-server-certs",
+          "subject_or_cn": "",
+          "expiry_utc": "May  3 08:51:37 2026 +00:00",
+          "days_until_expiry": 86
+        },
+        {
+          "secret_namespace": "upm-system",
+          "secret_name": "upm-engine-unit-operator-webhook-server-certs",
+          "subject_or_cn": "",
+          "expiry_utc": "May  3 08:51:16 2026 +00:00",
+          "days_until_expiry": 86
+        }
+      ]
+    },
+    {
+      "inspection_type": "Upgrade Readiness",
+      "timestamp": "2026-02-05T19:39:33.310507246Z",
+      "overall_score": 100.0,
+      "checks": [
+        {
+          "name": "Kubelet Versions",
+          "description": "Collects kubelet versions for upgrade planning",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "Detected kubelet versions: [\"v1.33.7\"]",
+          "recommendations": []
+        },
+        {
+          "name": "Deprecated API usage",
+          "description": "Reminds to audit resources for deprecated or removed API versions before upgrade",
+          "status": "Pass",
+          "score": 100.0,
+          "max_score": 100.0,
+          "details": "Cluster version: v1.33.7. Use kubectl or the official deprecation guide to audit resources for deprecated API versions (e.g. extensions/v1beta1, apps/v1beta1).",
+          "recommendations": [
+            "Migrate workloads to current API versions before upgrading. See https://kubernetes.io/docs/reference/using-api/deprecation-guide/"
+          ]
+        }
+      ],
+      "summary": {
+        "total_checks": 2,
+        "passed_checks": 2,
+        "warning_checks": 0,
+        "critical_checks": 0,
+        "error_checks": 0,
+        "issues": []
+      }
+    }
+  ],
+  "executive_summary": {
+    "health_status": "Good",
+    "key_findings": [
+      "Container sidecar-injector in pod upm-system/consul-connect-injector-69b8cc47c5-ssqhv has 984 restarts",
+      "Container sidecar-injector in pod upm-system/consul-connect-injector-6b4b944cd5-jwhpg has 718 restarts",
+      "Pod default/nginx-deployment-fail-5cff74b894-jsls4 has container nginx in state ImagePullBackOff: Back-off pulling image \"nginx:non-existent-tag\": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image \"docker.io/library/nginx:non-existent-tag\": failed to unpack image on snapshotter overlayfs: unexpected media type text/html for sha256:334123de9063ba25831dbf1c74cf63e08f932955730c72fdd24350b31c9cbbb3: not found",
+      "Pod default/nginx-deployment-fail-5cff74b894-nwdvc has container nginx in state ImagePullBackOff: Back-off pulling image \"nginx:non-existent-tag\": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image \"docker.io/library/nginx:non-existent-tag\": failed to unpack image on snapshotter overlayfs: unexpected media type text/html for sha256:334123de9063ba25831dbf1c74cf63e08f932955730c72fdd24350b31c9cbbb3: not found",
+      "Pod kube-system/nginx-proxy-worker03 is Running but not Ready (ContainersNotReady): containers with unready status: [nginx-proxy]"
+    ],
+    "priority_recommendations": [
+      "Check image, pull secrets, and pod events (e.g. kubectl describe pod)",
+      "Check readiness probes, container logs, and pod events (e.g. kubectl describe pod)",
+      "Investigate container crashes and resource limits",
+      "Review and restrict ServiceAccount permissions"
+    ],
+    "score_breakdown": {
+      "Pod Status": 87.34939759036145,
+      "Node Health": 100.0,
+      "Policy & Governance": 75.0,
+      "Certificates": 85.0,
+      "Upgrade Readiness": 100.0,
+      "Control Plane": 100.0,
+      "Autoscaling": 70.0,
+      "Security Configuration": 56.82834140299516,
+      "Namespace": 100.0,
+      "Storage": 90.0,
+      "Batch Workloads": 85.0,
+      "Observability": 92.5,
+      "Network Connectivity": 65.38461538461539,
+      "Resource Usage": 47.0
+    }
+  },
+  "cluster_overview": {
+    "cluster_version": "v1.33.7",
+    "node_count": 4,
+    "ready_node_count": 4,
+    "pod_count": 83,
+    "node_summary": "linux 4 node(s) amd64, kubelet v1.33.7",
+    "node_resources": {
+      "capacity_cpu": "64",
+      "capacity_memory": "89137880Ki",
+      "allocatable_cpu": "61600m",
+      "allocatable_memory": "85582552Ki",
+      "allocatable_disk_gi": 206.14531215280294
+    },
+    "node_list": [
+      {
+        "name": "master01",
+        "operating_system": "linux",
+        "architecture": "amd64",
+        "kubelet_version": "v1.33.7",
+        "ready": true,
+        "pod_count": 9,
+        "node_address": "192.168.22.151",
+        "os_image": "Red Hat Enterprise Linux 9.7 (Plow)",
+        "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+        "container_runtime_version": "containerd://2.1.5"
+      },
+      {
+        "name": "worker01",
+        "operating_system": "linux",
+        "architecture": "amd64",
+        "kubelet_version": "v1.33.7",
+        "ready": true,
+        "pod_count": 31,
+        "node_address": "192.168.22.152",
+        "os_image": "Red Hat Enterprise Linux 9.7 (Plow)",
+        "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+        "container_runtime_version": "containerd://2.1.5"
+      },
+      {
+        "name": "worker02",
+        "operating_system": "linux",
+        "architecture": "amd64",
+        "kubelet_version": "v1.33.7",
+        "ready": true,
+        "pod_count": 21,
+        "node_address": "192.168.22.153",
+        "os_image": "Red Hat Enterprise Linux 9.7 (Plow)",
+        "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+        "container_runtime_version": "containerd://2.1.5"
+      },
+      {
+        "name": "worker03",
+        "operating_system": "linux",
+        "architecture": "amd64",
+        "kubelet_version": "v1.33.7",
+        "ready": true,
+        "pod_count": 22,
+        "node_address": "192.168.22.154",
+        "os_image": "Red Hat Enterprise Linux 9.7 (Plow)",
+        "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+        "container_runtime_version": "containerd://2.1.5"
+      }
+    ],
+    "metrics_available": true,
+    "node_usage": [
+      {
+        "node_name": "master01",
+        "allocatable_cpu_cores": 3.4,
+        "cpu_usage": "0",
+        "cpu_pct": 0.0,
+        "allocatable_memory_gi": 6.652618408203125,
+        "memory_usage": "3.1Gi",
+        "memory_pct": 47.17519599253187,
+        "disk_allocatable_gi": 51.536328038200736
+      },
+      {
+        "node_name": "worker01",
+        "allocatable_cpu_cores": 31.4,
+        "cpu_usage": "0",
+        "cpu_pct": 0.0,
+        "allocatable_memory_gi": 30.235397338867188,
+        "memory_usage": "14.7Gi",
+        "memory_pct": 48.56028770022009,
+        "disk_allocatable_gi": 51.536328038200736
+      },
+      {
+        "node_name": "worker02",
+        "allocatable_cpu_cores": 11.4,
+        "cpu_usage": "0",
+        "cpu_pct": 0.0,
+        "allocatable_memory_gi": 22.365436553955078,
+        "memory_usage": "2.8Gi",
+        "memory_pct": 12.527023442916683,
+        "disk_allocatable_gi": 51.536328038200736
+      },
+      {
+        "node_name": "worker03",
+        "allocatable_cpu_cores": 15.4,
+        "cpu_usage": "0",
+        "cpu_pct": 0.0,
+        "allocatable_memory_gi": 22.364429473876953,
+        "memory_usage": "4.8Gi",
+        "memory_pct": 21.40206365632496,
+        "disk_allocatable_gi": 51.536328038200736
+      }
+    ],
+    "total_usage_cpu_cores": 0.0,
+    "total_usage_memory_gi": 25.408954620361328,
+    "node_conditions": [
+      {
+        "node_name": "master01",
+        "ready": "True",
+        "memory_pressure": "False",
+        "disk_pressure": "False",
+        "pid_pressure": "False"
+      },
+      {
+        "node_name": "worker01",
+        "ready": "True",
+        "memory_pressure": "False",
+        "disk_pressure": "False",
+        "pid_pressure": "False"
+      },
+      {
+        "node_name": "worker02",
+        "ready": "True",
+        "memory_pressure": "False",
+        "disk_pressure": "False",
+        "pid_pressure": "False"
+      },
+      {
+        "node_name": "worker03",
+        "ready": "True",
+        "memory_pressure": "False",
+        "disk_pressure": "False",
+        "pid_pressure": "False"
+      }
+    ],
+    "pod_phase_breakdown": {
+      "running": 76,
+      "pending": 2,
+      "succeeded": 5,
+      "failed": 0,
+      "unknown": 0
+    },
+    "namespace_count": 13,
+    "workload_summary": {
+      "deployments_total": 34,
+      "deployments_ready": 32,
+      "statefulsets_total": 3,
+      "statefulsets_ready": 3,
+      "daemonsets_total": 8,
+      "daemonsets_ready": 8
+    },
+    "storage_summary": {
+      "pv_total": 6,
+      "pvc_total": 6,
+      "pvc_bound": 6,
+      "storage_class_count": 1,
+      "has_default_storage_class": false
+    },
+    "cluster_age_days": 10
+  },
+  "node_inspection_results": [
+    {
+      "node_name": "master01",
+      "hostname": "master01",
+      "timestamp": "2026-02-05T19:39:33Z",
+      "runtime": "",
+      "os_version": "Red Hat Enterprise Linux 9.7 (Plow)",
+      "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+      "uptime": "2 day(s) 12 hour(s)",
+      "resources": {
+        "cpu_cores": 4,
+        "cpu_used": 0.21,
+        "cpu_used_pct": 5.3,
+        "memory_total_mib": 7680,
+        "memory_used_mib": 2815,
+        "memory_used_pct": 36.7,
+        "root_disk_pct": 17.0,
+        "disk_total_g": 58.3,
+        "disk_used_g": 9.4,
+        "disk_used_pct": 16.1,
+        "load_1m": "0.46",
+        "load_5m": "0.39",
+        "load_15m": "0.39",
+        "swap_enabled": false,
+        "swap_total_g": 0.0,
+        "swap_used_g": 0.0,
+        "swap_used_pct": 0.0,
+        "status": "ok",
+        "detail": ""
+      },
+      "container_state_counts": {
+        "running": 9,
+        "exited": 3
+      },
+      "services": {
+        "runtime": "",
+        "journald_active": null,
+        "crontab_present": null,
+        "ntp_synced": false,
+        "status": "ok",
+        "detail": ""
+      },
+      "security": {
+        "selinux": "Permissive",
+        "firewalld_active": false,
+        "ipvs_loaded": true,
+        "status": "ok",
+        "detail": ""
+      },
+      "kernel": {
+        "net_ipv4_ip_forward": "0",
+        "vm_swappiness": "60",
+        "net_core_somaxconn": "4096",
+        "status": "ok",
+        "detail": ""
+      },
+      "zombie_count": 0,
+      "issue_count": 0,
+      "node_certificates": [
+        {
+          "path": "/etc/kubernetes/ssl/apiserver-kubelet-client.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        },
+        {
+          "path": "/etc/kubernetes/ssl/apiserver.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        },
+        {
+          "path": "/etc/kubernetes/ssl/ca.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        },
+        {
+          "path": "/etc/kubernetes/ssl/front-proxy-ca.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        },
+        {
+          "path": "/etc/kubernetes/ssl/front-proxy-client.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        }
+      ],
+      "node_disks": [
+        {
+          "device": "overlay",
+          "mount_point": "/",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 9.38,
+          "used_pct": 16.1
+        },
+        {
+          "device": "/dev/mapper/rhel-root",
+          "mount_point": "/etc",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 9.38,
+          "used_pct": 16.1
+        },
+        {
+          "device": "/dev/sda2",
+          "mount_point": "/host/boot",
+          "fstype": "",
+          "total_g": 0.94,
+          "used_g": 0.44,
+          "used_pct": 46.7
+        },
+        {
+          "device": "/dev/sda1",
+          "mount_point": "/host/boot/efi",
+          "fstype": "",
+          "total_g": 0.58,
+          "used_g": 0.01,
+          "used_pct": 1.2
+        }
+      ]
+    },
+    {
+      "node_name": "worker01",
+      "hostname": "worker01",
+      "timestamp": "2026-02-05T19:40:01Z",
+      "runtime": "",
+      "os_version": "Red Hat Enterprise Linux 9.7 (Plow)",
+      "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+      "uptime": "2 day(s) 12 hour(s)",
+      "resources": {
+        "cpu_cores": 32,
+        "cpu_used": 0.1,
+        "cpu_used_pct": 0.3,
+        "memory_total_mib": 31829,
+        "memory_used_mib": 14600,
+        "memory_used_pct": 45.9,
+        "root_disk_pct": 38.0,
+        "disk_total_g": 58.3,
+        "disk_used_g": 21.8,
+        "disk_used_pct": 37.3,
+        "load_1m": "0.29",
+        "load_5m": "0.17",
+        "load_15m": "0.11",
+        "swap_enabled": false,
+        "swap_total_g": 0.0,
+        "swap_used_g": 0.0,
+        "swap_used_pct": 0.0,
+        "status": "ok",
+        "detail": ""
+      },
+      "container_state_counts": {
+        "exited": 12,
+        "running": 40
+      },
+      "services": {
+        "runtime": "",
+        "journald_active": null,
+        "crontab_present": null,
+        "ntp_synced": false,
+        "status": "ok",
+        "detail": ""
+      },
+      "security": {
+        "selinux": "Permissive",
+        "firewalld_active": false,
+        "ipvs_loaded": true,
+        "status": "ok",
+        "detail": ""
+      },
+      "kernel": {
+        "net_ipv4_ip_forward": "0",
+        "vm_swappiness": "60",
+        "net_core_somaxconn": "4096",
+        "status": "ok",
+        "detail": ""
+      },
+      "zombie_count": 0,
+      "issue_count": 0,
+      "node_certificates": [
+        {
+          "path": "/etc/kubernetes/ssl/ca.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        }
+      ],
+      "node_disks": [
+        {
+          "device": "overlay",
+          "mount_point": "/",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 21.77,
+          "used_pct": 37.3
+        },
+        {
+          "device": "/dev/mapper/rhel-root",
+          "mount_point": "/etc",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 21.77,
+          "used_pct": 37.3
+        },
+        {
+          "device": "/dev/sda2",
+          "mount_point": "/host/boot",
+          "fstype": "",
+          "total_g": 0.94,
+          "used_g": 0.44,
+          "used_pct": 46.7
+        },
+        {
+          "device": "/dev/sda1",
+          "mount_point": "/host/boot/efi",
+          "fstype": "",
+          "total_g": 0.58,
+          "used_g": 0.01,
+          "used_pct": 1.2
+        },
+        {
+          "device": "/dev/mapper/lvmvg-pvc--6580d0ae--8998--449d--acf8--f8bf52306976",
+          "mount_point": "/host/var/lib/kubelet/pods/67240629-a0a2-4496-b275-ab905306b05a/volumes/kubernetes.io~csi/pvc-6580d0ae-8998-449d-acf8-f8bf52306976/mount",
+          "fstype": "",
+          "total_g": 29.36,
+          "used_g": 2.59,
+          "used_pct": 8.8
+        },
+        {
+          "device": "/dev/mapper/lvmvg-pvc--e940c157--819b--4bfa--85ff--6863583bca0c",
+          "mount_point": "/host/var/lib/kubelet/pods/7421a35a-5aea-4dff-b30b-6b19aa4a0bfc/volumes/kubernetes.io~csi/pvc-e940c157-819b-4bfa-85ff-6863583bca0c/mount",
+          "fstype": "",
+          "total_g": 9.75,
+          "used_g": 0.0,
+          "used_pct": 0.0
+        },
+        {
+          "device": "/dev/mapper/lvmvg-pvc--afa5259b--ce0a--4879--a47f--5333f9737f6e",
+          "mount_point": "/host/var/lib/kubelet/pods/7421a35a-5aea-4dff-b30b-6b19aa4a0bfc/volumes/kubernetes.io~csi/pvc-afa5259b-ce0a-4879-a47f-5333f9737f6e/mount",
+          "fstype": "",
+          "total_g": 9.75,
+          "used_g": 0.0,
+          "used_pct": 0.0
+        }
+      ]
+    },
+    {
+      "node_name": "worker02",
+      "hostname": "worker02",
+      "timestamp": "2026-02-05T19:39:45Z",
+      "runtime": "",
+      "os_version": "Red Hat Enterprise Linux 9.7 (Plow)",
+      "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+      "uptime": "2 day(s) 12 hour(s)",
+      "resources": {
+        "cpu_cores": 12,
+        "cpu_used": 0.07,
+        "cpu_used_pct": 0.6,
+        "memory_total_mib": 23770,
+        "memory_used_mib": 2750,
+        "memory_used_pct": 11.6,
+        "root_disk_pct": 22.0,
+        "disk_total_g": 58.3,
+        "disk_used_g": 12.4,
+        "disk_used_pct": 21.3,
+        "load_1m": "0.08",
+        "load_5m": "0.06",
+        "load_15m": "0.01",
+        "swap_enabled": false,
+        "swap_total_g": 0.0,
+        "swap_used_g": 0.0,
+        "swap_used_pct": 0.0,
+        "status": "ok",
+        "detail": ""
+      },
+      "container_state_counts": {
+        "exited": 7,
+        "waiting": 2,
+        "running": 17
+      },
+      "services": {
+        "runtime": "",
+        "journald_active": null,
+        "crontab_present": null,
+        "ntp_synced": false,
+        "status": "ok",
+        "detail": ""
+      },
+      "security": {
+        "selinux": "Permissive",
+        "firewalld_active": false,
+        "ipvs_loaded": true,
+        "status": "ok",
+        "detail": ""
+      },
+      "kernel": {
+        "net_ipv4_ip_forward": "0",
+        "vm_swappiness": "60",
+        "net_core_somaxconn": "4096",
+        "status": "ok",
+        "detail": ""
+      },
+      "zombie_count": 0,
+      "issue_count": 0,
+      "node_certificates": [
+        {
+          "path": "/etc/kubernetes/ssl/ca.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        }
+      ],
+      "node_disks": [
+        {
+          "device": "overlay",
+          "mount_point": "/",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 12.43,
+          "used_pct": 21.3
+        },
+        {
+          "device": "/dev/mapper/rhel-root",
+          "mount_point": "/etc",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 12.43,
+          "used_pct": 21.3
+        },
+        {
+          "device": "/dev/sda2",
+          "mount_point": "/host/boot",
+          "fstype": "",
+          "total_g": 0.94,
+          "used_g": 0.44,
+          "used_pct": 46.7
+        },
+        {
+          "device": "/dev/sda1",
+          "mount_point": "/host/boot/efi",
+          "fstype": "",
+          "total_g": 0.58,
+          "used_g": 0.01,
+          "used_pct": 1.2
+        }
+      ]
+    },
+    {
+      "node_name": "worker03",
+      "hostname": "worker03",
+      "timestamp": "2026-02-05T19:39:53Z",
+      "runtime": "",
+      "os_version": "Red Hat Enterprise Linux 9.7 (Plow)",
+      "kernel_version": "5.14.0-611.24.1.el9_7.x86_64",
+      "uptime": "2 day(s) 12 hour(s)",
+      "resources": {
+        "cpu_cores": 16,
+        "cpu_used": 0.1,
+        "cpu_used_pct": 0.6,
+        "memory_total_mib": 23769,
+        "memory_used_mib": 4611,
+        "memory_used_pct": 19.4,
+        "root_disk_pct": 24.0,
+        "disk_total_g": 58.3,
+        "disk_used_g": 13.6,
+        "disk_used_pct": 23.3,
+        "load_1m": "0.03",
+        "load_5m": "0.08",
+        "load_15m": "0.17",
+        "swap_enabled": false,
+        "swap_total_g": 0.0,
+        "swap_used_g": 0.0,
+        "swap_used_pct": 0.0,
+        "status": "ok",
+        "detail": ""
+      },
+      "container_state_counts": {
+        "running": 23,
+        "waiting": 2,
+        "exited": 8
+      },
+      "services": {
+        "runtime": "",
+        "journald_active": null,
+        "crontab_present": null,
+        "ntp_synced": false,
+        "status": "ok",
+        "detail": ""
+      },
+      "security": {
+        "selinux": "Permissive",
+        "firewalld_active": false,
+        "ipvs_loaded": true,
+        "status": "ok",
+        "detail": ""
+      },
+      "kernel": {
+        "net_ipv4_ip_forward": "0",
+        "vm_swappiness": "60",
+        "net_core_somaxconn": "4096",
+        "status": "ok",
+        "detail": ""
+      },
+      "zombie_count": 0,
+      "issue_count": 0,
+      "node_certificates": [
+        {
+          "path": "/etc/kubernetes/ssl/ca.crt",
+          "expiration_date": "Jan  2 04:05:42 2126 GMT",
+          "days_remaining": 36489,
+          "status": "Valid"
+        }
+      ],
+      "node_disks": [
+        {
+          "device": "overlay",
+          "mount_point": "/",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 13.58,
+          "used_pct": 23.3
+        },
+        {
+          "device": "/dev/mapper/rhel-root",
+          "mount_point": "/etc",
+          "fstype": "",
+          "total_g": 58.35,
+          "used_g": 13.58,
+          "used_pct": 23.3
+        },
+        {
+          "device": "/dev/sda2",
+          "mount_point": "/host/boot",
+          "fstype": "",
+          "total_g": 0.94,
+          "used_g": 0.44,
+          "used_pct": 46.7
+        },
+        {
+          "device": "/dev/sda1",
+          "mount_point": "/host/boot/efi",
+          "fstype": "",
+          "total_g": 0.58,
+          "used_g": 0.01,
+          "used_pct": 1.2
+        },
+        {
+          "device": "/dev/mapper/lvmvg-pvc--f7f8b152--be0b--422e--8ffe--7c4716eaa1cc",
+          "mount_point": "/host/var/lib/kubelet/pods/53503385-1e84-4b23-936a-14ec69ce1e39/volumes/kubernetes.io~csi/pvc-f7f8b152-be0b-422e-8ffe-7c4716eaa1cc/mount",
+          "fstype": "",
+          "total_g": 9.75,
+          "used_g": 0.06,
+          "used_pct": 0.7
+        },
+        {
+          "device": "/dev/mapper/lvmvg-pvc--fe94c644--8e37--4308--88fa--2c337e5c21ea",
+          "mount_point": "/host/var/lib/kubelet/pods/72342c11-435d-4c08-b8d7-654c9c2cd5cc/volumes/kubernetes.io~csi/pvc-fe94c644-8e37-4308-88fa-2c337e5c21ea/mount",
+          "fstype": "",
+          "total_g": 9.75,
+          "used_g": 0.02,
+          "used_pct": 0.2
+        },
+        {
+          "device": "/dev/mapper/lvmvg-pvc--2de784a0--20df--49ec--832c--4b5b013b2a17",
+          "mount_point": "/host/var/lib/kubelet/pods/72342c11-435d-4c08-b8d7-654c9c2cd5cc/volumes/kubernetes.io~csi/pvc-2de784a0-20df-49ec-832c-4b5b013b2a17/mount",
+          "fstype": "",
+          "total_g": 9.75,
+          "used_g": 1.22,
+          "used_pct": 12.5
+        }
+      ]
+    }
+  ],
+  "recent_events": [
+    {
+      "namespace": "upm-system",
+      "object_ref": "Pod/consul-connect-injector-6b4b944cd5-jwhpg",
+      "event_type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container sidecar-injector in pod consul-connect-i...",
+      "last_seen": "2026-02-05 19:38:21"
+    },
+    {
+      "namespace": "default",
+      "object_ref": "Pod/nginx-deployment-fail-5cff74b894-jsls4",
+      "event_type": "Warning",
+      "reason": "Failed",
+      "message": "Error: ImagePullBackOff",
+      "last_seen": "2026-02-05 19:38:12"
+    },
+    {
+      "namespace": "default",
+      "object_ref": "Pod/nginx-deployment-fail-5cff74b894-nwdvc",
+      "event_type": "Warning",
+      "reason": "Failed",
+      "message": "Error: ImagePullBackOff",
+      "last_seen": "2026-02-05 19:38:10"
+    },
+    {
+      "namespace": "upm-system",
+      "object_ref": "Pod/consul-connect-injector-69b8cc47c5-ssqhv",
+      "event_type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Startup probe failed: Get \"http://10.233.94.112:9445/readyz/ready\": dial tcp ...",
+      "last_seen": "2026-02-05 19:37:38"
+    },
+    {
+      "namespace": "upm-system",
+      "object_ref": "Pod/consul-connect-injector-69b8cc47c5-ssqhv",
+      "event_type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container sidecar-injector in pod consul-connect-i...",
+      "last_seen": "2026-02-05 19:32:49"
+    },
+    {
+      "namespace": "upm-system",
+      "object_ref": "Pod/consul-connect-injector-6b4b944cd5-jwhpg",
+      "event_type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Startup probe failed: Get \"http://10.233.69.134:9445/readyz/ready\": dial tcp ...",
+      "last_seen": "2026-02-05 19:23:17"
+    },
+    {
+      "namespace": "default",
+      "object_ref": "Pod/nginx-deployment-fail-5cff74b894-jsls4",
+      "event_type": "Warning",
+      "reason": "Failed",
+      "message": "Failed to pull image \"nginx:non-existent-tag\": rpc error: code = NotFound des...",
+      "last_seen": "2026-02-05 19:23:03"
+    },
+    {
+      "namespace": "kube-system",
+      "object_ref": "Pod/kube-apiserver-master01",
+      "event_type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: HTTP probe failed with statuscode: 500",
+      "last_seen": "2026-02-05 18:50:40"
+    }
+  ]
+}

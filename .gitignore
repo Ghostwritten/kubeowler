@@ -1,0 +1,23 @@
+# Build
+/target/
+
+# IDE and editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local reports (optional: uncomment to ignore generated reports in repo root)
+# /cluster-*-kubernetes-inspection-report-*.md
+# /cluster-*-kubernetes-inspection-report-*.json
+# /cluster-*-kubernetes-inspection-report-*.csv
+# /cluster-*-kubernetes-inspection-report-*.html
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

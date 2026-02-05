@@ -1,0 +1,104 @@
+# Build multi-arch binaries and publish to GitHub Releases on tag push (e.g. v0.1.0).
+# Artifacts: Linux (amd64, arm64), Windows (amd64), macOS (amd64, arm64).
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          targets: ${{ matrix.target }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Strip binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: strip target/${{ matrix.target }}/release/kubeowler 2>/dev/null || true
+
+      - name: Prepare archive (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          BIN=target/${{ matrix.target }}/release/kubeowler
+          mkdir -p release
+          cp "$BIN" "release/kubeowler"
+          cd release
+          tar czvf "../kubeowler-${VERSION}-${{ matrix.target }}.tar.gz" kubeowler
+          cd ..
+          echo "ASSET_PATH=kubeowler-${VERSION}-${{ matrix.target }}.tar.gz" >> $GITHUB_ENV
+
+      - name: Prepare archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          $bin = "target/${{ matrix.target }}/release/kubeowler.exe"
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Copy-Item $bin -Destination release/kubeowler.exe
+          Compress-Archive -Path release/* -DestinationPath "kubeowler-$version-${{ matrix.target }}.zip" -Force
+          echo "ASSET_PATH=kubeowler-$version-${{ matrix.target }}.zip" >> $env:GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubeowler-${{ matrix.target }}
+          path: ${{ env.ASSET_PATH }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten assets for release
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

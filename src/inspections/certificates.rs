@@ -1,0 +1,261 @@
+//! Certificate-related inspection: CSR (CertificateSigningRequest) status and TLS certificate expiry from Secrets.
+//! Note: apiserver/etcd/kubelet certificate expiry is not exposed via the Kubernetes API;
+//! use `kubeadm cert check-expiry` or similar on control-plane nodes.
+
+use anyhow::Result;
+use chrono::Utc;
+use kube::api::ListParams;
+use x509_parser::pem::Pem;
+
+use crate::k8s::K8sClient;
+use crate::inspections::types::*;
+
+pub struct CertificateInspector<'a> {
+    client: &'a K8sClient,
+}
+
+impl<'a> CertificateInspector<'a> {
+    pub fn new(client: &'a K8sClient) -> Self {
+        Self { client }
+    }
+
+    pub async fn inspect(&self) -> Result<InspectionResult> {
+        let mut checks = Vec::new();
+        let mut issues = Vec::new();
+
+        let csr_check = self.inspect_csrs(&mut issues).await?;
+        checks.push(csr_check);
+
+        let (tls_check, certificate_expiries) = self.inspect_tls_certificates().await?;
+        checks.push(tls_check);
+
+        let overall_score = if checks.is_empty() {
+            100.0
+        } else {
+            checks.iter().map(|c| c.score).sum::<f64>() / checks.len() as f64
+        };
+
+        let summary = self.build_summary(&checks, issues.clone());
+
+        Ok(InspectionResult {
+            inspection_type: "Certificates".to_string(),
+            timestamp: Utc::now(),
+            overall_score,
+            checks,
+            summary,
+            certificate_expiries: if certificate_expiries.is_empty() {
+                None
+            } else {
+                Some(certificate_expiries)
+            },
+            pod_container_states: None,
+            namespace_summary_rows: None,
+        })
+    }
+
+    /// List TLS secrets, parse tls.crt, and return (CheckResult, CertificateExpiryRow list).
+    async fn inspect_tls_certificates(&self) -> Result<(CheckResult, Vec<CertificateExpiryRow>)> {
+        let secrets_api = self.client.secrets(None);
+        let list = secrets_api.list(&ListParams::default()).await?;
+        let mut rows = Vec::new();
+        let mut total_certs = 0usize;
+        let mut expiring_90 = 0usize;
+        let mut expiring_30 = 0usize;
+        let mut expired = 0usize;
+
+        for secret in &list.items {
+            let st = secret.type_.as_deref().unwrap_or("");
+            if st != "kubernetes.io/tls" {
+                continue;
+            }
+            let namespace = secret.metadata.namespace.as_deref().unwrap_or("default").to_string();
+            let name = secret.metadata.name.as_deref().unwrap_or("unknown").to_string();
+            let data = match &secret.data {
+                Some(d) => d,
+                None => continue,
+            };
+            let tls_crt = match data.get("tls.crt") {
+                Some(b) => b,
+                None => continue,
+            };
+            let pem_bytes = tls_crt.0.as_slice();
+            if pem_bytes.is_empty() {
+                continue;
+            }
+            for pem in Pem::iter_from_buffer(pem_bytes).flatten() {
+                let x509 = match pem.parse_x509() {
+                    Ok(c) => c,
+                    Err(_) => continue,
+                };
+                total_certs += 1;
+                let subject = x509.subject().to_string().trim().to_string();
+                let subject_short = if subject.len() > 60 {
+                    format!("{}...", subject.chars().take(57).collect::<String>())
+                } else {
+                    subject.clone()
+                };
+                let validity = x509.validity();
+                let expiry_utc = format!("{}", validity.not_after);
+                let days = match validity.time_to_expiration() {
+                    Some(d) => d.whole_days() as i64,
+                    None => {
+                        let now = time::OffsetDateTime::now_utc();
+                        let not_after = validity.not_after.to_datetime();
+                        (not_after - now).whole_days() as i64
+                    }
+                };
+                if days < 0 {
+                    expired += 1;
+                } else if days <= 30 {
+                    expiring_30 += 1;
+                } else if days <= 90 {
+                    expiring_90 += 1;
+                }
+                rows.push(CertificateExpiryRow {
+                    secret_namespace: namespace.clone(),
+                    secret_name: name.clone(),
+                    subject_or_cn: subject_short,
+                    expiry_utc,
+                    days_until_expiry: days,
+                });
+            }
+        }
+
+        let details = if total_certs == 0 {
+            "No TLS secrets found.".to_string()
+        } else {
+            format!(
+                "{} certificate(s); {} expiring in 90 days, {} in 30 days, {} expired.",
+                total_certs, expiring_90, expiring_30, expired
+            )
+        };
+        let score = if expired > 0 {
+            40.0
+        } else if expiring_30 > 0 {
+            70.0
+        } else if expiring_90 > 0 {
+            85.0
+        } else if total_certs > 0 {
+            100.0
+        } else {
+            100.0
+        };
+        let status = if score >= 90.0 {
+            CheckStatus::Pass
+        } else if score >= 70.0 {
+            CheckStatus::Warning
+        } else {
+            CheckStatus::Critical
+        };
+        let check = CheckResult {
+            name: "TLS certificate expiry".to_string(),
+            description: "Lists TLS certificates from Secrets (type kubernetes.io/tls) with expiry and days until expiry. Control-plane certs (apiserver/etcd/kubelet) require node-level checks (e.g. kubeadm cert check-expiry).".to_string(),
+            status,
+            score,
+            max_score: 100.0,
+            details: Some(details),
+            recommendations: if expiring_30 > 0 || expired > 0 {
+                vec!["Renew expiring or expired TLS certificates. Update the Secret and restart workloads.".to_string()]
+            } else {
+                vec![]
+            },
+        };
+        Ok((check, rows))
+    }
+
+    async fn inspect_csrs(&self, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+        let api = self.client.certificate_signing_requests();
+        let list = api.list(&ListParams::default()).await?;
+        let total = list.items.len();
+        let mut pending = 0usize;
+        let mut denied_or_failed = 0usize;
+
+        for csr in &list.items {
+            let name = csr.metadata.name.as_deref().unwrap_or("unknown").to_string();
+            let status = csr.status.as_ref();
+            let conditions = status.and_then(|s| s.conditions.as_ref());
+            let has_approved = conditions.map(|c| c.iter().any(|x| x.type_ == "Approved" && x.status == "True")).unwrap_or(false);
+            let has_denied = conditions.map(|c| c.iter().any(|x| x.type_ == "Denied")).unwrap_or(false);
+            let has_failed = conditions.map(|c| c.iter().any(|x| x.type_ == "Failed")).unwrap_or(false);
+
+            if has_denied || has_failed {
+                denied_or_failed += 1;
+                issues.push(Issue {
+                    severity: IssueSeverity::Warning,
+                    category: "Certificates".to_string(),
+                    description: format!(
+                        "CSR {} is {}",
+                        name,
+                        if has_denied { "Denied" } else { "Failed" }
+                    ),
+                    resource: Some(name.clone()),
+                    recommendation: "Review and clean up denied/failed CSRs; re-issue if needed.".to_string(),
+                    rule_id: Some("CERT-001".to_string()),
+                });
+            } else if !has_approved {
+                pending += 1;
+                issues.push(Issue {
+                    severity: IssueSeverity::Info,
+                    category: "Certificates".to_string(),
+                    description: format!("CSR {} is Pending approval", name),
+                    resource: Some(name),
+                    recommendation: "Approve or deny pending CSRs (e.g. kubectl certificate approve/deny). Cluster component cert expiry (apiserver/etcd/kubelet) must be checked on nodes (e.g. kubeadm cert check-expiry).".to_string(),
+                    rule_id: Some("CERT-001".to_string()),
+                });
+            }
+        }
+
+        let score = if total == 0 {
+            100.0
+        } else {
+            let bad = pending + denied_or_failed;
+            (1.0 - (bad as f64 / total as f64).min(1.0)) * 100.0
+        };
+
+        let status = if score >= 90.0 {
+            CheckStatus::Pass
+        } else if score >= 70.0 {
+            CheckStatus::Warning
+        } else {
+            CheckStatus::Critical
+        };
+
+        Ok(CheckResult {
+            name: "CertificateSigningRequests".to_string(),
+            description: "Checks CSR status (Pending/Approved/Denied/Failed). Component cert expiry (apiserver/etcd/kubelet) requires node-level checks.".to_string(),
+            status,
+            score,
+            max_score: 100.0,
+            details: Some(format!("{} total, {} pending, {} denied/failed", total, pending, denied_or_failed)),
+            recommendations: if pending > 0 || denied_or_failed > 0 {
+                vec!["Review CSRs; approve or clean up as needed. For apiserver/etcd/kubelet certificate expiry, run kubeadm cert check-expiry on control-plane nodes.".to_string()]
+            } else {
+                vec![]
+            },
+        })
+    }
+
+    fn build_summary(&self, checks: &[CheckResult], issues: Vec<Issue>) -> InspectionSummary {
+        let total_checks = checks.len() as u32;
+        let mut passed_checks = 0;
+        let mut warning_checks = 0;
+        let mut critical_checks = 0;
+        let mut error_checks = 0;
+        for check in checks {
+            match check.status {
+                CheckStatus::Pass => passed_checks += 1,
+                CheckStatus::Warning => warning_checks += 1,
+                CheckStatus::Critical => critical_checks += 1,
+                CheckStatus::Error => error_checks += 1,
+            }
+        }
+        InspectionSummary {
+            total_checks,
+            passed_checks,
+            warning_checks,
+            critical_checks,
+            error_checks,
+            issues,
+        }
+    }
+}

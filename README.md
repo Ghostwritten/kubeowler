@@ -42,7 +42,7 @@ kubeowler/
 
 - **Kubernetes**: 1.23 or later (see [docs/01-installation-guide.md](docs/01-installation-guide.md) for details).
 - **Architectures**: `amd64` (x86_64), `arm64` (aarch64) for both the kubeowler binary and the node-inspector image.
-- **Operating systems** (glibc-based Linux): RHEL 7+, CentOS 7.x, Rocky Linux 8+, AlmaLinux 8+, Ubuntu 20.04 LTS+, SUSE Linux Enterprise 12+ / openSUSE Leap, OpenAnolis (龙蜥), Kylin (麒麟), and compatible distributions. The node-inspector DaemonSet image runs on the same OS when used on cluster nodes.
+- **Operating systems** (Linux): Pre-built Linux binaries are **statically linked (musl)** and do not depend on glibc version, so they run on RHEL 7/8/9, CentOS 7.x, Rocky Linux 8+, AlmaLinux 8+, Ubuntu 18.04+, SUSE / openSUSE, OpenAnolis (龙蜥), Kylin (麒麟), and other distros. The node-inspector DaemonSet image runs on the same OS when used on cluster nodes.
 
 ### Download (pre-built binaries)
 
@@ -50,8 +50,8 @@ Pre-built binaries are published on [GitHub Releases](https://github.com/Ghostwr
 
 | Platform   | Architecture | File |
 |-----------|--------------|------|
-| Linux     | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` |
-| Linux     | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` |
+| Linux     | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` (static/musl) |
+| Linux     | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` (static/musl) |
 | Windows   | amd64        | `kubeowler-<version>-x86_64-windows.zip` |
 | macOS     | amd64 (Intel)| `kubeowler-<version>-x86_64-darwin.tar.gz` |
 | macOS     | arm64 (Apple Silicon) | `kubeowler-<version>-aarch64-darwin.tar.gz` |

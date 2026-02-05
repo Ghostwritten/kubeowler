@@ -42,6 +42,10 @@ time = "0.3"
 # Vendored OpenSSL when building for aarch64 (CI cross-compile); avoids apt arm64/404 on ubuntu-latest
 openssl = { version = "0.10", features = ["vendored"] }
 
+[target.'cfg(target_env = "musl")'.dependencies]
+# Vendored OpenSSL for musl (static Linux build); runs on RHEL 7/8/9, older glibc, etc.
+openssl = { version = "0.10", features = ["vendored"] }
+
 [dev-dependencies]
 mockall = "0.11"
 tempfile = "3.0"

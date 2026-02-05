@@ -17,10 +17,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
+          # Linux: musl static binaries (no glibc dependency; run on RHEL 7/8/9, older distros)
+          - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
             asset: x86_64-linux
-          - target: aarch64-unknown-linux-gnu
+          - target: aarch64-unknown-linux-musl
             os: ubuntu-latest
             asset: aarch64-linux
           - target: x86_64-pc-windows-msvc
@@ -42,11 +43,9 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.target }}
 
-      - name: Install cross-compilation toolchain (Linux aarch64)
-        if: matrix.os == 'ubuntu-latest' && matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Install cross (Linux musl static build)
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo install cross
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
@@ -54,8 +53,13 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           targets: ${{ matrix.target }}
 
-      - name: Build release binary
-        run: cargo build --release --target ${{ matrix.target }}
+      - name: Build release binary (Linux musl via cross, others via cargo)
+        run: |
+          if [[ "${{ matrix.target }}" == *-linux-musl ]]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
 
       - name: Strip binary (Linux/macOS)
         if: runner.os != 'Windows'

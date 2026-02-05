@@ -1,10 +1,10 @@
 use anyhow::Result;
 use chrono::Utc;
-use kube::api::ListParams;
 use k8s_openapi::api::batch::v1::Job;
+use kube::api::ListParams;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct BatchInspector<'a> {
     client: &'a K8sClient,
@@ -45,7 +45,11 @@ impl<'a> BatchInspector<'a> {
         })
     }
 
-    async fn inspect_cron_jobs(&self, namespace: Option<&str>, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+    async fn inspect_cron_jobs(
+        &self,
+        namespace: Option<&str>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<CheckResult> {
         let cron_api = self.client.cron_jobs(namespace);
         let cron_jobs = cron_api.list(&ListParams::default()).await?;
 
@@ -57,13 +61,19 @@ impl<'a> BatchInspector<'a> {
                 score: 70.0,
                 max_score: 100.0,
                 details: Some("No CronJobs detected".to_string()),
-                recommendations: vec!["Introduce CronJobs for periodic tasks where applicable.".to_string()],
+                recommendations: vec![
+                    "Introduce CronJobs for periodic tasks where applicable.".to_string()
+                ],
             });
         }
 
         let mut healthy = 0usize;
         for cron in &cron_jobs.items {
-            let name = cron.metadata.name.clone().unwrap_or_else(|| "unknown".to_string());
+            let name = cron
+                .metadata
+                .name
+                .clone()
+                .unwrap_or_else(|| "unknown".to_string());
             if let Some(spec) = &cron.spec {
                 if spec.suspend == Some(true) {
                     issues.push(Issue {
@@ -89,8 +99,10 @@ impl<'a> BatchInspector<'a> {
                             category: "Batch".to_string(),
                             description: format!("CronJob {} last run failed", name),
                             resource: Some(name.clone()),
-                            recommendation: "Check CronJob job logs and fix failures before next schedule.".to_string(),
-                                rule_id: Some("BATCH-002".to_string()),
+                            recommendation:
+                                "Check CronJob job logs and fix failures before next schedule."
+                                    .to_string(),
+                            rule_id: Some("BATCH-002".to_string()),
                         });
                         continue;
                     }
@@ -102,7 +114,9 @@ impl<'a> BatchInspector<'a> {
                         category: "Batch".to_string(),
                         description: format!("CronJob {} never executed", name),
                         resource: Some(name.clone()),
-                        recommendation: "Ensure CronJob schedule is correct and controller is running.".to_string(),
+                        recommendation:
+                            "Ensure CronJob schedule is correct and controller is running."
+                                .to_string(),
                         rule_id: Some("BATCH-003".to_string()),
                     });
                     continue;
@@ -126,7 +140,11 @@ impl<'a> BatchInspector<'a> {
             status,
             score,
             max_score: 100.0,
-            details: Some(format!("{}/{} CronJobs healthy", healthy, cron_jobs.items.len())),
+            details: Some(format!(
+                "{}/{} CronJobs healthy",
+                healthy,
+                cron_jobs.items.len()
+            )),
             recommendations: if score < 90.0 {
                 vec!["Review CronJob failure events and tune schedule or retry policy.".to_string()]
             } else {
@@ -135,7 +153,11 @@ impl<'a> BatchInspector<'a> {
         })
     }
 
-    async fn inspect_jobs(&self, namespace: Option<&str>, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+    async fn inspect_jobs(
+        &self,
+        namespace: Option<&str>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<CheckResult> {
         let job_api: kube::Api<Job> = if let Some(ns) = namespace {
             kube::Api::namespaced(self.client.client().clone(), ns)
         } else {
@@ -151,13 +173,19 @@ impl<'a> BatchInspector<'a> {
                 score: 70.0,
                 max_score: 100.0,
                 details: Some("No Jobs detected".to_string()),
-                recommendations: vec!["Use Jobs for one-off batch workloads when needed.".to_string()],
+                recommendations: vec![
+                    "Use Jobs for one-off batch workloads when needed.".to_string()
+                ],
             });
         }
 
         let mut healthy = 0usize;
         for job in &jobs.items {
-            let name = job.metadata.name.clone().unwrap_or_else(|| "unknown".to_string());
+            let name = job
+                .metadata
+                .name
+                .clone()
+                .unwrap_or_else(|| "unknown".to_string());
             if let Some(status) = &job.status {
                 if status.failed.unwrap_or(0) > 0 {
                     issues.push(Issue {
@@ -165,7 +193,9 @@ impl<'a> BatchInspector<'a> {
                         category: "Batch".to_string(),
                         description: format!("Job {} has failed pods", name),
                         resource: Some(name.clone()),
-                        recommendation: "Inspect job pod logs and adjust backoffLimit or resource requests.".to_string(),
+                        recommendation:
+                            "Inspect job pod logs and adjust backoffLimit or resource requests."
+                                .to_string(),
                         rule_id: Some("BATCH-004".to_string()),
                     });
                     continue;
@@ -180,7 +210,9 @@ impl<'a> BatchInspector<'a> {
                                 category: "Batch".to_string(),
                                 description: format!("Job {} running for over 60 minutes", name),
                                 resource: Some(name.clone()),
-                                recommendation: "Check for stuck pods or adjust activeDeadlineSeconds.".to_string(),
+                                recommendation:
+                                    "Check for stuck pods or adjust activeDeadlineSeconds."
+                                        .to_string(),
                                 rule_id: Some("BATCH-005".to_string()),
                             });
                             continue;

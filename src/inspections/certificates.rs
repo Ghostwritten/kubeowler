@@ -7,8 +7,8 @@ use chrono::Utc;
 use kube::api::ListParams;
 use x509_parser::pem::Pem;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct CertificateInspector<'a> {
     client: &'a K8sClient,
@@ -68,8 +68,18 @@ impl<'a> CertificateInspector<'a> {
             if st != "kubernetes.io/tls" {
                 continue;
             }
-            let namespace = secret.metadata.namespace.as_deref().unwrap_or("default").to_string();
-            let name = secret.metadata.name.as_deref().unwrap_or("unknown").to_string();
+            let namespace = secret
+                .metadata
+                .namespace
+                .as_deref()
+                .unwrap_or("default")
+                .to_string();
+            let name = secret
+                .metadata
+                .name
+                .as_deref()
+                .unwrap_or("unknown")
+                .to_string();
             let data = match &secret.data {
                 Some(d) => d,
                 None => continue,
@@ -171,12 +181,26 @@ impl<'a> CertificateInspector<'a> {
         let mut denied_or_failed = 0usize;
 
         for csr in &list.items {
-            let name = csr.metadata.name.as_deref().unwrap_or("unknown").to_string();
+            let name = csr
+                .metadata
+                .name
+                .as_deref()
+                .unwrap_or("unknown")
+                .to_string();
             let status = csr.status.as_ref();
             let conditions = status.and_then(|s| s.conditions.as_ref());
-            let has_approved = conditions.map(|c| c.iter().any(|x| x.type_ == "Approved" && x.status == "True")).unwrap_or(false);
-            let has_denied = conditions.map(|c| c.iter().any(|x| x.type_ == "Denied")).unwrap_or(false);
-            let has_failed = conditions.map(|c| c.iter().any(|x| x.type_ == "Failed")).unwrap_or(false);
+            let has_approved = conditions
+                .map(|c| {
+                    c.iter()
+                        .any(|x| x.type_ == "Approved" && x.status == "True")
+                })
+                .unwrap_or(false);
+            let has_denied = conditions
+                .map(|c| c.iter().any(|x| x.type_ == "Denied"))
+                .unwrap_or(false);
+            let has_failed = conditions
+                .map(|c| c.iter().any(|x| x.type_ == "Failed"))
+                .unwrap_or(false);
 
             if has_denied || has_failed {
                 denied_or_failed += 1;
@@ -189,7 +213,8 @@ impl<'a> CertificateInspector<'a> {
                         if has_denied { "Denied" } else { "Failed" }
                     ),
                     resource: Some(name.clone()),
-                    recommendation: "Review and clean up denied/failed CSRs; re-issue if needed.".to_string(),
+                    recommendation: "Review and clean up denied/failed CSRs; re-issue if needed."
+                        .to_string(),
                     rule_id: Some("CERT-001".to_string()),
                 });
             } else if !has_approved {

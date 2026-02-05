@@ -1,10 +1,10 @@
 use anyhow::Result;
 use chrono::Utc;
-use kube::Api;
 use k8s_openapi::api::core::v1::Node;
+use kube::Api;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct UpgradeInspector<'a> {
     client: &'a K8sClient,
@@ -77,13 +77,18 @@ impl<'a> UpgradeInspector<'a> {
 
         if kubelet_versions.len() > 1 {
             score -= 10.0;
-            recommendations.push("Kubelet versions differ; align node upgrades for consistency.".to_string());
+            recommendations
+                .push("Kubelet versions differ; align node upgrades for consistency.".to_string());
         }
 
         Ok(CheckResult {
             name: "Kubelet Versions".to_string(),
             description: "Collects kubelet versions for upgrade planning".to_string(),
-            status: if score >= 90.0 { CheckStatus::Pass } else { CheckStatus::Warning },
+            status: if score >= 90.0 {
+                CheckStatus::Pass
+            } else {
+                CheckStatus::Warning
+            },
             score,
             max_score: 100.0,
             details: Some(format!("Detected kubelet versions: {:?}", kubelet_versions)),

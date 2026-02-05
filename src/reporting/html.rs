@@ -16,7 +16,9 @@ fn escape_html(s: &str) -> String {
 pub fn write_report(report: &ClusterReport, path: &str) -> Result<()> {
     let mut f = std::fs::File::create(path)?;
 
-    writeln!(f, r#"<!DOCTYPE html>
+    writeln!(
+        f,
+        r#"<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -41,12 +43,27 @@ th {{ background: #f5f5f5; }}
     )?;
 
     if let Some(ref overview) = report.cluster_overview {
-        writeln!(f, "<h2>Cluster Overview</h2><table><tr><th>Metric</th><th>Value</th></tr>")?;
+        writeln!(
+            f,
+            "<h2>Cluster Overview</h2><table><tr><th>Metric</th><th>Value</th></tr>"
+        )?;
         if let Some(v) = &overview.cluster_version {
-            writeln!(f, "<tr><td>Cluster Version</td><td>{}</td></tr>", escape_html(v))?;
+            writeln!(
+                f,
+                "<tr><td>Cluster Version</td><td>{}</td></tr>",
+                escape_html(v)
+            )?;
         }
-        writeln!(f, "<tr><td>Node Count</td><td>{}</td></tr>", overview.node_count)?;
-        writeln!(f, "<tr><td>Ready Nodes</td><td>{}</td></tr>", overview.ready_node_count)?;
+        writeln!(
+            f,
+            "<tr><td>Node Count</td><td>{}</td></tr>",
+            overview.node_count
+        )?;
+        writeln!(
+            f,
+            "<tr><td>Ready Nodes</td><td>{}</td></tr>",
+            overview.ready_node_count
+        )?;
         if let Some(pc) = overview.pod_count {
             writeln!(f, "<tr><td>Pod Count</td><td>{}</td></tr>", pc)?;
         }
@@ -74,7 +91,12 @@ th {{ background: #f5f5f5; }}
                 sev,
                 escape_html(&issue.category),
                 escape_html(&issue.description),
-                issue.resource.as_deref().map(escape_html).as_deref().unwrap_or(""),
+                issue
+                    .resource
+                    .as_deref()
+                    .map(escape_html)
+                    .as_deref()
+                    .unwrap_or(""),
                 escape_html(&issue.recommendation)
             )?;
         }

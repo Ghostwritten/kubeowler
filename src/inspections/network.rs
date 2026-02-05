@@ -3,8 +3,8 @@ use chrono::Utc;
 use kube::api::ListParams;
 use log::info;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct NetworkInspector<'a> {
     client: &'a K8sClient,
@@ -46,7 +46,9 @@ impl<'a> NetworkInspector<'a> {
                     Some("LoadBalancer") => {
                         if let Some(status) = &service.status {
                             if let Some(load_balancer) = &status.load_balancer {
-                                if load_balancer.ingress.is_none() || load_balancer.ingress.as_ref().unwrap().is_empty() {
+                                if load_balancer.ingress.is_none()
+                                    || load_balancer.ingress.as_ref().unwrap().is_empty()
+                                {
                                     issues.push(Issue {
                                         severity: IssueSeverity::Warning,
                                         category: "Service".to_string(),
@@ -100,7 +102,9 @@ impl<'a> NetworkInspector<'a> {
                                 service_namespace, service_name
                             ),
                             resource: Some(format!("{}/{}", service_namespace, service_name)),
-                            recommendation: "Ensure service has proper selectors or manual endpoints".to_string(),
+                            recommendation:
+                                "Ensure service has proper selectors or manual endpoints"
+                                    .to_string(),
                             rule_id: Some("NET-003".to_string()),
                         });
                     }
@@ -145,7 +149,10 @@ impl<'a> NetworkInspector<'a> {
             },
             score: service_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} services with proper configuration", services_with_endpoints, total_services)),
+            details: Some(format!(
+                "{}/{} services with proper configuration",
+                services_with_endpoints, total_services
+            )),
             recommendations: if service_score < 90.0 {
                 vec!["Review service configurations and selectors".to_string()]
             } else {
@@ -170,7 +177,11 @@ impl<'a> NetworkInspector<'a> {
             },
             score: policy_coverage,
             max_score: 100.0,
-            details: Some(format!("{}/{} namespaces with network policies", namespaces_with_policies.len(), total_namespaces)),
+            details: Some(format!(
+                "{}/{} namespaces with network policies",
+                namespaces_with_policies.len(),
+                total_namespaces
+            )),
             recommendations: if policy_coverage < 70.0 {
                 vec!["Implement network policies for better security isolation".to_string()]
             } else {
@@ -237,9 +248,14 @@ impl<'a> NetworkInspector<'a> {
                             issues.push(Issue {
                                 severity: IssueSeverity::Critical,
                                 category: "Deployment".to_string(),
-                                description: format!("DNS deployment {} has {}/{} replicas ready", name, ready_replicas, desired_replicas),
+                                description: format!(
+                                    "DNS deployment {} has {}/{} replicas ready",
+                                    name, ready_replicas, desired_replicas
+                                ),
                                 resource: Some(format!("kube-system/{}", name)),
-                                recommendation: "Check DNS deployment logs and resource availability".to_string(),
+                                recommendation:
+                                    "Check DNS deployment logs and resource availability"
+                                        .to_string(),
                                 rule_id: Some("NET-004".to_string()),
                             });
                             return Ok(false);

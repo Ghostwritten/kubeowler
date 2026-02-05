@@ -3,8 +3,8 @@ use chrono::Utc;
 use kube::api::ListParams;
 use log::info;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 use crate::utils::resource_quantity::{parse_cpu_str, parse_memory_str};
 
 pub struct ResourceInspector<'a> {
@@ -39,12 +39,16 @@ impl<'a> ResourceInspector<'a> {
                 for container in &spec.containers {
                     total_containers += 1;
 
-                    let has_requests = container.resources.as_ref()
+                    let has_requests = container
+                        .resources
+                        .as_ref()
                         .and_then(|r| r.requests.as_ref())
                         .map(|requests| !requests.is_empty())
                         .unwrap_or(false);
 
-                    let has_limits = container.resources.as_ref()
+                    let has_limits = container
+                        .resources
+                        .as_ref()
                         .and_then(|r| r.limits.as_ref())
                         .map(|limits| !limits.is_empty())
                         .unwrap_or(false);
@@ -80,7 +84,8 @@ impl<'a> ResourceInspector<'a> {
                                 container.name, pod_namespace, pod_name
                             ),
                             resource: Some(format!("{}/{}", pod_namespace, pod_name)),
-                            recommendation: "Set CPU and memory requests for better scheduling".to_string(),
+                            recommendation: "Set CPU and memory requests for better scheduling"
+                                .to_string(),
                             rule_id: Some("RES-001".to_string()),
                         });
                     }
@@ -94,7 +99,9 @@ impl<'a> ResourceInspector<'a> {
                                 container.name, pod_namespace, pod_name
                             ),
                             resource: Some(format!("{}/{}", pod_namespace, pod_name)),
-                            recommendation: "Set CPU and memory limits to prevent resource exhaustion".to_string(),
+                            recommendation:
+                                "Set CPU and memory limits to prevent resource exhaustion"
+                                    .to_string(),
                             rule_id: Some("RES-002".to_string()),
                         });
                     }
@@ -108,7 +115,9 @@ impl<'a> ResourceInspector<'a> {
         } else {
             let ns_api = self.client.namespaces();
             let ns_list = ns_api.list(&ListParams::default()).await?;
-            ns_list.items.iter()
+            ns_list
+                .items
+                .iter()
                 .filter_map(|ns| ns.metadata.name.clone())
                 .collect()
         };
@@ -127,7 +136,8 @@ impl<'a> ResourceInspector<'a> {
                         category: "Resource Management".to_string(),
                         description: format!("Namespace {} has no resource quota", ns),
                         resource: Some(ns.clone()),
-                        recommendation: "Configure resource quotas to prevent resource exhaustion".to_string(),
+                        recommendation: "Configure resource quotas to prevent resource exhaustion"
+                            .to_string(),
                         rule_id: Some("RES-003".to_string()),
                     });
                 }
@@ -151,7 +161,10 @@ impl<'a> ResourceInspector<'a> {
             },
             score: requests_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} containers with resource requests", containers_with_requests, total_containers)),
+            details: Some(format!(
+                "{}/{} containers with resource requests",
+                containers_with_requests, total_containers
+            )),
             recommendations: if requests_score < 80.0 {
                 vec!["Configure resource requests for better pod scheduling".to_string()]
             } else {
@@ -176,7 +189,10 @@ impl<'a> ResourceInspector<'a> {
             },
             score: limits_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} containers with resource limits", containers_with_limits, total_containers)),
+            details: Some(format!(
+                "{}/{} containers with resource limits",
+                containers_with_limits, total_containers
+            )),
             recommendations: if limits_score < 80.0 {
                 vec!["Configure resource limits to prevent resource exhaustion".to_string()]
             } else {
@@ -193,7 +209,8 @@ impl<'a> ResourceInspector<'a> {
 
         checks.push(CheckResult {
             name: "Complete Resource Configuration".to_string(),
-            description: "Checks if containers have both requests and limits configured".to_string(),
+            description: "Checks if containers have both requests and limits configured"
+                .to_string(),
             status: if complete_config_score >= 70.0 {
                 CheckStatus::Pass
             } else {
@@ -201,9 +218,15 @@ impl<'a> ResourceInspector<'a> {
             },
             score: complete_config_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} containers with complete resource configuration", containers_with_both, total_containers)),
+            details: Some(format!(
+                "{}/{} containers with complete resource configuration",
+                containers_with_both, total_containers
+            )),
             recommendations: if complete_config_score < 70.0 {
-                vec!["Configure both requests and limits for optimal resource management".to_string()]
+                vec![
+                    "Configure both requests and limits for optimal resource management"
+                        .to_string(),
+                ]
             } else {
                 vec![]
             },
@@ -256,7 +279,9 @@ impl<'a> ResourceInspector<'a> {
             }
 
             // Memory check: parse to bytes and compare
-            if let (Some(memory_request), Some(memory_limit)) = (requests.get("memory"), limits.get("memory")) {
+            if let (Some(memory_request), Some(memory_limit)) =
+                (requests.get("memory"), limits.get("memory"))
+            {
                 let req_b = parse_memory_str(memory_request.0.as_str());
                 let lim_b = parse_memory_str(memory_limit.0.as_str());
                 if let (Some(req), Some(lim)) = (req_b, lim_b) {
@@ -269,7 +294,9 @@ impl<'a> ResourceInspector<'a> {
                                 container_name, pod_name
                             ),
                             resource: Some(pod_name.to_string()),
-                            recommendation: "Ensure memory limits are higher than or equal to requests".to_string(),
+                            recommendation:
+                                "Ensure memory limits are higher than or equal to requests"
+                                    .to_string(),
                             rule_id: Some("RES-005".to_string()),
                         });
                     }

@@ -21,7 +21,11 @@ pub enum Commands {
         namespace: Option<String>,
 
         /// Namespace where kubeowler-node-inspector DaemonSet runs; used only for node-level data collection. Default: kubeowler.
-        #[arg(long = "node-inspector-namespace", value_name = "NAMESPACE", default_value = "kubeowler")]
+        #[arg(
+            long = "node-inspector-namespace",
+            value_name = "NAMESPACE",
+            default_value = "kubeowler"
+        )]
         node_inspector_namespace: String,
 
         /// Output file path for the report; if not set, defaults to {cluster-name}-kubernetes-inspection-report-{YYYY-MM-DD-HHMMSS}.{ext}
@@ -37,7 +41,12 @@ pub enum Commands {
         config_file: Option<String>,
 
         /// Check levels to show in report: "all" or comma-separated (Info, warning, critical). Default: warning,critical.
-        #[arg(short = 'l', long = "level", value_name = "LEVELS", default_value = "warning,critical")]
+        #[arg(
+            short = 'l',
+            long = "level",
+            value_name = "LEVELS",
+            default_value = "warning,critical"
+        )]
         level: String,
     },
 }

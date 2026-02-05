@@ -4,9 +4,9 @@
 //! Container state counts are filled via Kubernetes API (runtime-agnostic: works with Docker, containerd, CRI-O).
 
 use anyhow::{Context, Result};
+use k8s_openapi::api::core::v1::Pod;
 use kube::api::{AttachParams, ListParams};
 use kube::Api;
-use k8s_openapi::api::core::v1::Pod;
 use log::debug;
 use std::collections::HashMap;
 use tokio::io::AsyncReadExt;
@@ -60,10 +60,7 @@ pub async fn collect_node_inspections(
             .unwrap_or("")
             .to_string();
 
-        let mut attached = match pods_api
-            .exec(name, [SCRIPT_PATH], &attach_params)
-            .await
-        {
+        let mut attached = match pods_api.exec(name, [SCRIPT_PATH], &attach_params).await {
             Ok(a) => a,
             Err(e) => {
                 debug!("Exec failed for pod {}: {}", name, e);
@@ -90,8 +87,9 @@ pub async fn collect_node_inspections(
         }
 
         // Script outputs a single JSON object to stdout
-        let parsed: NodeInspectionResult = serde_json::from_str(trimmed)
-            .with_context(|| format!("Parse node inspection JSON from pod {}: {}", name, trimmed))?;
+        let parsed: NodeInspectionResult = serde_json::from_str(trimmed).with_context(|| {
+            format!("Parse node inspection JSON from pod {}: {}", name, trimmed)
+        })?;
 
         // Prefer node name from pod spec if script didn't set it
         let mut result = parsed;

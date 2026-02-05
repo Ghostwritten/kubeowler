@@ -120,8 +120,21 @@ impl ReportGenerator {
     }
 
     #[allow(dead_code)]
-    pub async fn generate_report(&self, cluster_report: &ClusterReport, output_path: &str) -> Result<()> {
-        self.generate_report_with_filters(cluster_report, output_path, None, false, None, None, None).await
+    pub async fn generate_report(
+        &self,
+        cluster_report: &ClusterReport,
+        output_path: &str,
+    ) -> Result<()> {
+        self.generate_report_with_filters(
+            cluster_report,
+            output_path,
+            None,
+            false,
+            None,
+            None,
+            None,
+        )
+        .await
     }
 
     pub async fn generate_report_with_filters(
@@ -145,7 +158,8 @@ impl ReportGenerator {
             filtered
         };
 
-        let main_report = self.generate_main_report(&filtered, max_recommendations, check_level_filter)?;
+        let main_report =
+            self.generate_main_report(&filtered, max_recommendations, check_level_filter)?;
 
         // Write main report
         fs::write(output_path, main_report)?;
@@ -182,7 +196,8 @@ impl ReportGenerator {
         let overall = engine.calculate_weighted_score(&new_report.inspections);
         let health = engine.get_health_status(overall);
         let score_breakdown_details = engine.generate_score_breakdown(&new_report.inspections);
-        let mut score_breakdown: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+        let mut score_breakdown: std::collections::HashMap<String, f64> =
+            std::collections::HashMap::new();
         for (k, v) in score_breakdown_details.into_iter() {
             score_breakdown.insert(k, v.score);
         }
@@ -207,33 +222,46 @@ impl ReportGenerator {
         let lower: Vec<String> = filters.iter().map(|s| s.to_lowercase()).collect();
         let mut new_report = report.clone();
         // Keep only inspection modules that have issues matching the category filter; recalc scores and summary.
-        new_report.inspections = report.inspections.iter().filter_map(|ins| {
-            let mut ins_clone = ins.clone();
-            ins_clone.summary.issues = ins.summary.issues.iter()
-                .filter(|iss| lower.iter().any(|f| iss.category.to_lowercase().contains(f)))
-                .cloned().collect();
+        new_report.inspections = report
+            .inspections
+            .iter()
+            .filter_map(|ins| {
+                let mut ins_clone = ins.clone();
+                ins_clone.summary.issues = ins
+                    .summary
+                    .issues
+                    .iter()
+                    .filter(|iss| {
+                        lower
+                            .iter()
+                            .any(|f| iss.category.to_lowercase().contains(f))
+                    })
+                    .cloned()
+                    .collect();
 
-            if ins_clone.summary.issues.is_empty() {
-                return None;
-            }
+                if ins_clone.summary.issues.is_empty() {
+                    return None;
+                }
 
-            // Keep checks list unchanged; overall_score remains per-module to avoid misleading stats.
+                // Keep checks list unchanged; overall_score remains per-module to avoid misleading stats.
 
-            // Re-aggregate summary counts; checks counts stay as original.
-            ins_clone.summary.total_checks = ins.summary.total_checks;
-            ins_clone.summary.passed_checks = ins.summary.passed_checks;
-            ins_clone.summary.warning_checks = ins.summary.warning_checks;
-            ins_clone.summary.critical_checks = ins.summary.critical_checks;
-            ins_clone.summary.error_checks = ins.summary.error_checks;
-            Some(ins_clone)
-        }).collect();
+                // Re-aggregate summary counts; checks counts stay as original.
+                ins_clone.summary.total_checks = ins.summary.total_checks;
+                ins_clone.summary.passed_checks = ins.summary.passed_checks;
+                ins_clone.summary.warning_checks = ins.summary.warning_checks;
+                ins_clone.summary.critical_checks = ins.summary.critical_checks;
+                ins_clone.summary.error_checks = ins.summary.error_checks;
+                Some(ins_clone)
+            })
+            .collect();
 
         // Rebuild executive summary from remaining modules.
         let engine = ScoringEngine::new();
         let overall = engine.calculate_weighted_score(&new_report.inspections);
         let health = engine.get_health_status(overall);
         let score_breakdown_details = engine.generate_score_breakdown(&new_report.inspections);
-        let mut score_breakdown: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+        let mut score_breakdown: std::collections::HashMap<String, f64> =
+            std::collections::HashMap::new();
         for (k, v) in score_breakdown_details.into_iter() {
             score_breakdown.insert(k, v.score);
         }
@@ -265,7 +293,8 @@ impl ReportGenerator {
             }
         }
         type GroupKey = (Option<String>, String, String);
-        let mut groups: HashMap<GroupKey, (IssueSeverity, String, String, Vec<String>)> = HashMap::new();
+        let mut groups: HashMap<GroupKey, (IssueSeverity, String, String, Vec<String>)> =
+            HashMap::new();
         for inspection in &report.inspections {
             for issue in &inspection.summary.issues {
                 if issue.severity != IssueSeverity::Critical {
@@ -276,15 +305,24 @@ impl ReportGenerator {
                 } else {
                     (None, issue.category.clone(), issue.recommendation.clone())
                 };
-                let title = issue.rule_id.as_ref()
+                let title = issue
+                    .rule_id
+                    .as_ref()
                     .and_then(|c| issue_codes::short_title(c).map(String::from))
                     .unwrap_or_else(|| issue.description.clone());
-                let entry = groups
-                    .entry(key)
-                    .or_insert_with(|| (issue.severity.clone(), title, issue.recommendation.clone(), Vec::new()));
+                let entry = groups.entry(key).or_insert_with(|| {
+                    (
+                        issue.severity.clone(),
+                        title,
+                        issue.recommendation.clone(),
+                        Vec::new(),
+                    )
+                });
                 if severity_ord(&issue.severity) < severity_ord(&entry.0) {
                     entry.0 = issue.severity.clone();
-                    entry.1 = issue.rule_id.as_ref()
+                    entry.1 = issue
+                        .rule_id
+                        .as_ref()
                         .and_then(|c| issue_codes::short_title(c).map(String::from))
                         .unwrap_or_else(|| issue.description.clone());
                     entry.2 = issue.recommendation.clone();
@@ -296,7 +334,9 @@ impl ReportGenerator {
         }
         let mut rows: Vec<(IssueSeverity, Option<String>, String, String, Vec<String>)> = groups
             .into_iter()
-            .map(|((rid, _cat, _rec), (sev, title, rec, resources))| (sev, rid, title, rec, resources))
+            .map(|((rid, _cat, _rec), (sev, title, rec, resources))| {
+                (sev, rid, title, rec, resources)
+            })
             .collect();
         rows.sort_by(|a, b| {
             let sev_order = |s: &IssueSeverity| match s {
@@ -304,7 +344,9 @@ impl ReportGenerator {
                 IssueSeverity::Warning => 1,
                 IssueSeverity::Info => 2,
             };
-            sev_order(&a.0).cmp(&sev_order(&b.0)).then_with(|| b.4.len().cmp(&a.4.len()))
+            sev_order(&a.0)
+                .cmp(&sev_order(&b.0))
+                .then_with(|| b.4.len().cmp(&a.4.len()))
         });
         rows.truncate(max_items);
         rows.into_iter()
@@ -319,7 +361,10 @@ impl ReportGenerator {
                 if let Some(ref code) = rule_id {
                     let doc = issue_codes::doc_path(code);
                     if resource_list.is_empty() {
-                        format!("[{}] **{}** {} ({}). [Doc]({})", severity_label, code, title, n, doc)
+                        format!(
+                            "[{}] **{}** {} ({}). [Doc]({})",
+                            severity_label, code, title, n, doc
+                        )
                     } else {
                         format!(
                             "[{}] **{}** {} ({}). [Doc]({}). Affected: {}",
@@ -355,7 +400,9 @@ impl ReportGenerator {
                 } else {
                     (None, issue.category.clone(), issue.recommendation.clone())
                 };
-                let title = issue.rule_id.as_ref()
+                let title = issue
+                    .rule_id
+                    .as_ref()
                     .and_then(|c| issue_codes::short_title(c).map(String::from))
                     .unwrap_or_else(|| issue.description.clone());
                 let entry = groups
@@ -377,7 +424,10 @@ impl ReportGenerator {
             if let Some(ref code) = rule_id {
                 let doc = issue_codes::doc_path(code);
                 if resource_list.is_empty() {
-                    rows.push(format!("[error] **{}** {} ({}). [Doc]({})", code, title, n, doc));
+                    rows.push(format!(
+                        "[error] **{}** {} ({}). [Doc]({})",
+                        code, title, n, doc
+                    ));
                 } else {
                     rows.push(format!(
                         "[error] **{}** {} ({}). [Doc]({}). Affected: {}",
@@ -414,7 +464,9 @@ impl ReportGenerator {
                 } else {
                     (None, issue.category.clone(), issue.recommendation.clone())
                 };
-                let title = issue.rule_id.as_ref()
+                let title = issue
+                    .rule_id
+                    .as_ref()
                     .and_then(|c| issue_codes::short_title(c).map(String::from))
                     .unwrap_or_else(|| issue.description.clone());
                 let entry = groups
@@ -450,7 +502,8 @@ impl ReportGenerator {
     ) -> HashMap<IssueSeverity, Vec<(Option<String>, String, String, Vec<String>)>> {
         // Key: when rule_id present use (Some(rule_id), "", ""); else (None, category, recommendation)
         type Key = (Option<String>, String, String);
-        let mut by_sev: HashMap<IssueSeverity, HashMap<Key, (String, String, Vec<String>)>> = HashMap::new();
+        let mut by_sev: HashMap<IssueSeverity, HashMap<Key, (String, String, Vec<String>)>> =
+            HashMap::new();
         for issue in issues {
             let key: Key = if let Some(ref rid) = issue.rule_id {
                 (Some(rid.clone()), String::new(), String::new())
@@ -462,7 +515,9 @@ impl ReportGenerator {
                 .or_default()
                 .entry(key)
                 .or_insert_with(|| {
-                    let title = issue.rule_id.as_ref()
+                    let title = issue
+                        .rule_id
+                        .as_ref()
                         .and_then(|c| issue_codes::short_title(c).map(String::from))
                         .unwrap_or_else(|| issue.description.clone());
                     (title, issue.recommendation.clone(), Vec::new())
@@ -514,12 +569,16 @@ impl ReportGenerator {
 
             let score = inspection.overall_score;
             match best_module {
-                Some((_, best_score)) if score > best_score => best_module = Some((&inspection.inspection_type, score)),
+                Some((_, best_score)) if score > best_score => {
+                    best_module = Some((&inspection.inspection_type, score))
+                }
                 None => best_module = Some((&inspection.inspection_type, score)),
                 _ => {}
             }
             match worst_module {
-                Some((_, worst_score)) if score < worst_score => worst_module = Some((&inspection.inspection_type, score)),
+                Some((_, worst_score)) if score < worst_score => {
+                    worst_module = Some((&inspection.inspection_type, score))
+                }
                 None => worst_module = Some((&inspection.inspection_type, score)),
                 _ => {}
             }
@@ -535,10 +594,16 @@ impl ReportGenerator {
         content.push_str("### 📈 Cluster Statistics\n\n");
         content.push_str("| Metric | Value |\n");
         content.push_str("|--------|-------|\n");
-        content.push_str(&format!("| Modules Checked | {} |\n", report.inspections.len()));
+        content.push_str(&format!(
+            "| Modules Checked | {} |\n",
+            report.inspections.len()
+        ));
         content.push_str(&format!("| Total Checks | {} |\n", total_checks));
         content.push_str(&format!("| Total Issues | {} |\n", total_issues));
-        content.push_str(&format!("| Distinct Resource Categories | {} |\n\n", category_counts.len()));
+        content.push_str(&format!(
+            "| Distinct Resource Categories | {} |\n\n",
+            category_counts.len()
+        ));
 
         if total_issues > 0 {
             content.push_str("| Severity | Count | Ratio |\n");
@@ -555,7 +620,12 @@ impl ReportGenerator {
                         IssueSeverity::Warning => "Warning",
                         IssueSeverity::Info => "Info",
                     };
-                    content.push_str(&format!("| {} | {} | {:.1}% |\n", label, count, (*count as f64 / total_issues as f64) * 100.0));
+                    content.push_str(&format!(
+                        "| {} | {} | {:.1}% |\n",
+                        label,
+                        count,
+                        (*count as f64 / total_issues as f64) * 100.0
+                    ));
                 }
             }
             content.push('\n');
@@ -573,10 +643,16 @@ impl ReportGenerator {
         }
 
         if let Some((module, score)) = best_module {
-            content.push_str(&format!("**Best Module**: {} ({:.1} points)\n\n", module, score));
+            content.push_str(&format!(
+                "**Best Module**: {} ({:.1} points)\n\n",
+                module, score
+            ));
         }
         if let Some((module, score)) = worst_module {
-            content.push_str(&format!("**Worst Module**: {} ({:.1} points)\n\n", module, score));
+            content.push_str(&format!(
+                "**Worst Module**: {} ({:.1} points)\n\n",
+                module, score
+            ));
         }
 
         content
@@ -584,10 +660,14 @@ impl ReportGenerator {
 
     #[allow(dead_code)]
     fn node_inspection_status(n: &NodeInspectionResult) -> &'static str {
-        let has_error = n.resources.status == "error" || n.services.status == "error"
-            || n.security.status == "error" || n.kernel.status == "error";
-        let has_warning = n.resources.status == "warning" || n.services.status == "warning"
-            || n.security.status == "warning" || n.kernel.status == "warning";
+        let has_error = n.resources.status == "error"
+            || n.services.status == "error"
+            || n.security.status == "error"
+            || n.kernel.status == "error";
+        let has_warning = n.resources.status == "warning"
+            || n.services.status == "warning"
+            || n.security.status == "warning"
+            || n.kernel.status == "warning";
         if has_error {
             "error"
         } else if has_warning || n.issue_count > 0 {
@@ -617,7 +697,12 @@ impl ReportGenerator {
             .and_then(|o| o.node_list.as_ref())
             .map(|list| {
                 list.iter()
-                    .map(|r| (r.name.clone(), (r.os_image.clone(), r.kernel_version.clone())))
+                    .map(|r| {
+                        (
+                            r.name.clone(),
+                            (r.os_image.clone(), r.kernel_version.clone()),
+                        )
+                    })
                     .collect()
             })
             .unwrap_or_default();
@@ -656,11 +741,15 @@ impl ReportGenerator {
                     .collect()
             })
             .or_else(|| {
-                report.cluster_overview.as_ref().and_then(|o| o.node_list.as_ref()).map(|list| {
-                    list.iter()
-                        .map(|r| (r.name.clone(), if r.ready { "Ready" } else { "NotReady" }))
-                        .collect()
-                })
+                report
+                    .cluster_overview
+                    .as_ref()
+                    .and_then(|o| o.node_list.as_ref())
+                    .map(|list| {
+                        list.iter()
+                            .map(|r| (r.name.clone(), if r.ready { "Ready" } else { "NotReady" }))
+                            .collect()
+                    })
             })
             .unwrap_or_default();
 
@@ -673,18 +762,24 @@ impl ReportGenerator {
         out.push_str("| Node | OS Version | IP Address | Kernel Version | Uptime |\n");
         out.push_str("|------|-------------|------------|----------------|--------|\n");
         for n in nodes {
-            let (api_os, api_kernel) = node_api_os_kernel.get(&n.node_name).cloned().unwrap_or((None, None));
-            let os_ver = api_os
-                .as_deref()
-                .or(n.os_version.as_deref())
+            let (api_os, api_kernel) = node_api_os_kernel
+                .get(&n.node_name)
+                .cloned()
+                .unwrap_or((None, None));
+            let os_ver = api_os.as_deref().or(n.os_version.as_deref()).unwrap_or("-");
+            let ip = node_address_map
+                .get(&n.node_name)
+                .map(|s| s.as_str())
                 .unwrap_or("-");
-            let ip = node_address_map.get(&n.node_name).map(|s| s.as_str()).unwrap_or("-");
             let kernel = api_kernel
                 .as_deref()
                 .or(n.kernel_version.as_deref())
                 .unwrap_or("-");
             let uptime = n.uptime.as_deref().unwrap_or("-");
-            out.push_str(&format!("| {} | {} | {} | {} | {} |\n", n.node_name, os_ver, ip, kernel, uptime));
+            out.push_str(&format!(
+                "| {} | {} | {} | {} | {} |\n",
+                n.node_name, os_ver, ip, kernel, uptime
+            ));
         }
         out.push_str("\n");
 
@@ -693,7 +788,11 @@ impl ReportGenerator {
         out.push_str("| Node | CPU (cores) | CPU Used | CPU % | Mem Total (Gi) | Mem Used (Gi) | Mem % | Swap Total (Gi) | Swap Used (Gi) | Swap % | Load (1m, 5m, 15m) |\n");
         out.push_str("|------|-------------|----------|-------|----------------|---------------|-------|----------------|---------------|-------|---------------------|\n");
         for n in nodes {
-            let cpu = n.resources.cpu_cores.map(|c| c.to_string()).unwrap_or_else(|| "-".to_string());
+            let cpu = n
+                .resources
+                .cpu_cores
+                .map(|c| c.to_string())
+                .unwrap_or_else(|| "-".to_string());
             let cpu_used = n
                 .resources
                 .cpu_used
@@ -704,33 +803,72 @@ impl ReportGenerator {
                 .cpu_used_pct
                 .map(|p| format!("{:.1}%", p))
                 .unwrap_or_else(|| "-".to_string());
-            let mem_total_g = n.resources.memory_total_mib.map(|m| format!("{:.1}", m as f64 / 1024.0)).unwrap_or_else(|| "-".to_string());
-            let mem_used_g = n.resources.memory_used_mib.map(|m| format!("{:.1}", m as f64 / 1024.0)).unwrap_or_else(|| "-".to_string());
-            let mem_pct = n.resources.memory_used_pct.map(|p| format!("{:.1}%", p)).unwrap_or_else(|| "-".to_string());
-            let swap_total_g = n.resources.swap_total_g.map(|g| format!("{:.2}", g)).unwrap_or_else(|| "-".to_string());
-            let swap_used_g = n.resources.swap_used_g.map(|g| format!("{:.2}", g)).unwrap_or_else(|| "-".to_string());
-            let swap_pct = n.resources.swap_used_pct.map(|p| format!("{:.1}%", p)).unwrap_or_else(|| "-".to_string());
+            let mem_total_g = n
+                .resources
+                .memory_total_mib
+                .map(|m| format!("{:.1}", m as f64 / 1024.0))
+                .unwrap_or_else(|| "-".to_string());
+            let mem_used_g = n
+                .resources
+                .memory_used_mib
+                .map(|m| format!("{:.1}", m as f64 / 1024.0))
+                .unwrap_or_else(|| "-".to_string());
+            let mem_pct = n
+                .resources
+                .memory_used_pct
+                .map(|p| format!("{:.1}%", p))
+                .unwrap_or_else(|| "-".to_string());
+            let swap_total_g = n
+                .resources
+                .swap_total_g
+                .map(|g| format!("{:.2}", g))
+                .unwrap_or_else(|| "-".to_string());
+            let swap_used_g = n
+                .resources
+                .swap_used_g
+                .map(|g| format!("{:.2}", g))
+                .unwrap_or_else(|| "-".to_string());
+            let swap_pct = n
+                .resources
+                .swap_used_pct
+                .map(|p| format!("{:.1}%", p))
+                .unwrap_or_else(|| "-".to_string());
             let load_1m = n.resources.load_1m.as_deref().unwrap_or("-");
             let load_5m = n.resources.load_5m.as_deref().unwrap_or("-");
             let load_15m = n.resources.load_15m.as_deref().unwrap_or("-");
             let load_merged = format!("{}, {}, {}", load_1m, load_5m, load_15m);
             out.push_str(&format!(
                 "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
-                n.node_name, cpu, cpu_used, cpu_pct, mem_total_g, mem_used_g, mem_pct, swap_total_g, swap_used_g, swap_pct, load_merged
+                n.node_name,
+                cpu,
+                cpu_used,
+                cpu_pct,
+                mem_total_g,
+                mem_used_g,
+                mem_pct,
+                swap_total_g,
+                swap_used_g,
+                swap_pct,
+                load_merged
             ));
         }
         out.push_str("\n");
 
         // (1a) Node disk usage: per node show top 3 by used% + all with used% > 60%; Status: Info (<60%), Warning (60–90%), Critical (>=90%)
         out.push_str("### Node disk usage\n\n");
-        out.push_str("| Node | Mount Point | Device | FSType | Total (Gi) | Used (Gi) | Used % | Status |\n");
+        out.push_str(
+            "| Node | Mount Point | Device | FSType | Total (Gi) | Used (Gi) | Used % | Status |\n",
+        );
         out.push_str("|------|-------------|--------|--------|------------|------------|--------|--------|\n");
         let node_004_link = format!("[NODE-004]({})", issue_codes::doc_path("NODE-004"));
         let node_005_link = format!("[NODE-005]({})", issue_codes::doc_path("NODE-005"));
         for n in nodes {
             let disks = n.node_disks.as_deref().unwrap_or(&[]);
             if disks.is_empty() {
-                out.push_str(&format!("| {} | - | - | - | - | - | - | - |\n", n.node_name));
+                out.push_str(&format!(
+                    "| {} | - | - | - | - | - | - | - |\n",
+                    n.node_name
+                ));
             } else {
                 let mut order: Vec<usize> = (0..disks.len()).collect();
                 order.sort_by(|&i, &j| {
@@ -738,7 +876,8 @@ impl ReportGenerator {
                     let b = disks[j].used_pct.unwrap_or(0.0);
                     b.partial_cmp(&a).unwrap_or(std::cmp::Ordering::Equal)
                 });
-                let mut to_show_idx: std::collections::HashSet<usize> = order.iter().take(3).copied().collect();
+                let mut to_show_idx: std::collections::HashSet<usize> =
+                    order.iter().take(3).copied().collect();
                 for (idx, d) in disks.iter().enumerate() {
                     if d.used_pct.map(|p| p > 60.0).unwrap_or(false) {
                         to_show_idx.insert(idx);
@@ -752,9 +891,18 @@ impl ReportGenerator {
                 });
                 for i in to_show {
                     let d = &disks[i];
-                    let total_g = d.total_g.map(|g| format!("{:.1}", g)).unwrap_or_else(|| "-".to_string());
-                    let used_g = d.used_g.map(|g| format!("{:.1}", g)).unwrap_or_else(|| "-".to_string());
-                    let used_pct_str = d.used_pct.map(|p| format!("{:.1}%", p)).unwrap_or_else(|| "-".to_string());
+                    let total_g = d
+                        .total_g
+                        .map(|g| format!("{:.1}", g))
+                        .unwrap_or_else(|| "-".to_string());
+                    let used_g = d
+                        .used_g
+                        .map(|g| format!("{:.1}", g))
+                        .unwrap_or_else(|| "-".to_string());
+                    let used_pct_str = d
+                        .used_pct
+                        .map(|p| format!("{:.1}%", p))
+                        .unwrap_or_else(|| "-".to_string());
                     let status = match d.used_pct {
                         Some(p) if p >= 90.0 => format!("Critical {}", node_005_link),
                         Some(p) if p >= 60.0 => format!("Warning {}", node_004_link),
@@ -764,9 +912,18 @@ impl ReportGenerator {
                     out.push_str(&format!(
                         "| {} | {} | {} | {} | {} | {} | {} | {} |\n",
                         n.node_name,
-                        d.mount_point.is_empty().then(|| "-".to_string()).unwrap_or(d.mount_point.clone()),
-                        d.device.is_empty().then(|| "-".to_string()).unwrap_or(d.device.clone()),
-                        d.fstype.is_empty().then(|| "-".to_string()).unwrap_or(d.fstype.clone()),
+                        d.mount_point
+                            .is_empty()
+                            .then(|| "-".to_string())
+                            .unwrap_or(d.mount_point.clone()),
+                        d.device
+                            .is_empty()
+                            .then(|| "-".to_string())
+                            .unwrap_or(d.device.clone()),
+                        d.fstype
+                            .is_empty()
+                            .then(|| "-".to_string())
+                            .unwrap_or(d.fstype.clone()),
                         total_g,
                         used_g,
                         used_pct_str,
@@ -786,7 +943,10 @@ impl ReportGenerator {
             let running = counts.and_then(|c| c.get("running")).copied().unwrap_or(0);
             let waiting = counts.and_then(|c| c.get("waiting")).copied().unwrap_or(0);
             let exited = counts.and_then(|c| c.get("exited")).copied().unwrap_or(0);
-            out.push_str(&format!("| {} | {} | {} | {} |\n", n.node_name, running, waiting, exited));
+            out.push_str(&format!(
+                "| {} | {} | {} | {} |\n",
+                n.node_name, running, waiting, exited
+            ));
         }
         out.push_str("\n");
 
@@ -805,7 +965,10 @@ impl ReportGenerator {
             let ntp = service_cell(n.services.ntp_synced);
             let journald = service_cell(n.services.journald_active);
             let crontab = service_cell(n.services.crontab_present);
-            out.push_str(&format!("| {} | {} | {} | {} |\n", n.node_name, ntp, journald, crontab));
+            out.push_str(&format!(
+                "| {} | {} | {} | {} |\n",
+                n.node_name, ntp, journald, crontab
+            ));
         }
         out.push_str("\n");
 
@@ -814,10 +977,21 @@ impl ReportGenerator {
         out.push_str("| Node | SELinux | Firewalld | IPVS loaded |\n");
         out.push_str("|------|---------|------------|-------------|\n");
         for n in nodes {
-            let fw = n.security.firewalld_active.map(|b| if b { "Active" } else { "Inactive" }).unwrap_or("-");
-            let ipvs = n.security.ipvs_loaded.map(|b| if b { "Yes" } else { "No" }).unwrap_or("-");
+            let fw = n
+                .security
+                .firewalld_active
+                .map(|b| if b { "Active" } else { "Inactive" })
+                .unwrap_or("-");
+            let ipvs = n
+                .security
+                .ipvs_loaded
+                .map(|b| if b { "Yes" } else { "No" })
+                .unwrap_or("-");
             let se = n.security.selinux.as_deref().unwrap_or("-");
-            out.push_str(&format!("| {} | {} | {} | {} |\n", n.node_name, se, fw, ipvs));
+            out.push_str(&format!(
+                "| {} | {} | {} | {} |\n",
+                n.node_name, se, fw, ipvs
+            ));
         }
         out.push_str("\n");
 
@@ -829,7 +1003,10 @@ impl ReportGenerator {
             let fwd = n.kernel.net_ipv4_ip_forward.as_deref().unwrap_or("-");
             let sw = n.kernel.vm_swappiness.as_deref().unwrap_or("-");
             let somax = n.kernel.net_core_somaxconn.as_deref().unwrap_or("-");
-            out.push_str(&format!("| {} | {} | {} | {} |\n", n.node_name, fwd, sw, somax));
+            out.push_str(&format!(
+                "| {} | {} | {} | {} |\n",
+                n.node_name, fwd, sw, somax
+            ));
         }
         out.push_str("\n");
 
@@ -858,11 +1035,7 @@ impl ReportGenerator {
                     let expired = if c.status == "Expired" { "Yes" } else { "No" };
                     out.push_str(&format!(
                         "| {} | {} | {} | {} | {} |\n",
-                        n.node_name,
-                        c.path,
-                        expired,
-                        c.expiration_date,
-                        c.days_remaining
+                        n.node_name, c.path, expired, c.expiration_date, c.days_remaining
                     ));
                 }
             }
@@ -892,15 +1065,9 @@ impl ReportGenerator {
             report.cluster_name
         ));
 
-        content.push_str(&format!(
-            "**Report ID**: `{}`\n\n",
-            report.report_id
-        ));
+        content.push_str(&format!("**Report ID**: `{}`\n\n", report.report_id));
 
-        content.push_str(&format!(
-            "**Cluster**: {}\n\n",
-            report.cluster_name
-        ));
+        content.push_str(&format!("**Cluster**: {}\n\n", report.cluster_name));
 
         content.push_str(&format!(
             "**Generated At**: {}\n\n",
@@ -916,7 +1083,10 @@ impl ReportGenerator {
                 content.push_str(&format!("| Cluster Version | {} |\n", v));
             }
             content.push_str(&format!("| Node Count | {} |\n", overview.node_count));
-            content.push_str(&format!("| Ready Nodes | {} |\n", overview.ready_node_count));
+            content.push_str(&format!(
+                "| Ready Nodes | {} |\n",
+                overview.ready_node_count
+            ));
             if let Some(pc) = overview.pod_count {
                 content.push_str(&format!("| Pod Count | {} |\n", pc));
             }
@@ -941,12 +1111,20 @@ impl ReportGenerator {
             if let Some(ref conds) = overview.node_conditions {
                 if !conds.is_empty() {
                     content.push_str("### Node conditions\n\n");
-                    content.push_str("| Node | Ready | MemoryPressure | DiskPressure | PIDPressure |\n");
-                    content.push_str("|------|-------|----------------|--------------|-------------|\n");
+                    content.push_str(
+                        "| Node | Ready | MemoryPressure | DiskPressure | PIDPressure |\n",
+                    );
+                    content.push_str(
+                        "|------|-------|----------------|--------------|-------------|\n",
+                    );
                     for r in conds {
                         content.push_str(&format!(
                             "| {} | {} | {} | {} | {} |\n",
-                            r.node_name, r.ready, r.memory_pressure, r.disk_pressure, r.pid_pressure
+                            r.node_name,
+                            r.ready,
+                            r.memory_pressure,
+                            r.disk_pressure,
+                            r.pid_pressure
                         ));
                     }
                     content.push_str("\n");
@@ -978,10 +1156,17 @@ impl ReportGenerator {
                 content.push_str(&format!("| PV total | {} |\n", st.pv_total));
                 content.push_str(&format!("| PVC total | {} |\n", st.pvc_total));
                 content.push_str(&format!("| PVC Bound | {} |\n", st.pvc_bound));
-                content.push_str(&format!("| StorageClass count | {} |\n", st.storage_class_count));
+                content.push_str(&format!(
+                    "| StorageClass count | {} |\n",
+                    st.storage_class_count
+                ));
                 content.push_str(&format!(
                     "| Default StorageClass | {} |\n\n",
-                    if st.has_default_storage_class { "Yes" } else { "No" }
+                    if st.has_default_storage_class {
+                        "Yes"
+                    } else {
+                        "No"
+                    }
                 ));
             }
             // Container resource usage: top 20 high usage (usage/limit >= 80%); shown only when metrics available
@@ -1111,24 +1296,25 @@ impl ReportGenerator {
                 let details_short = truncate_string(details_str, DETAILS_MAX_LEN);
                 content.push_str(&format!(
                     "| {} | {} | {} | {:.1}/{:.1} | {} |\n",
-                    resource,
-                    check.name,
-                    status_text,
-                    check.score,
-                    check.max_score,
-                    details_short
+                    resource, check.name, status_text, check.score, check.max_score, details_short
                 ));
             }
         }
         content.push_str("\n");
 
         // Namespace summary table (from Namespace inspection)
-        if let Some(rows) = report.inspections.iter().find_map(|i| {
-            i.namespace_summary_rows.as_ref().filter(|v| !v.is_empty())
-        }) {
+        if let Some(rows) = report
+            .inspections
+            .iter()
+            .find_map(|i| i.namespace_summary_rows.as_ref().filter(|v| !v.is_empty()))
+        {
             content.push_str("### Namespace summary\n\n");
-            content.push_str("| Namespace | Pods | Deployments | NetworkPolicy | ResourceQuota | LimitRange |\n");
-            content.push_str("|-----------|------|-------------|---------------|---------------|------------|\n");
+            content.push_str(
+                "| Namespace | Pods | Deployments | NetworkPolicy | ResourceQuota | LimitRange |\n",
+            );
+            content.push_str(
+                "|-----------|------|-------------|---------------|---------------|------------|\n",
+            );
             for r in rows {
                 content.push_str(&format!(
                     "| {} | {} | {} | {} | {} | {} |\n",
@@ -1153,7 +1339,10 @@ impl ReportGenerator {
         });
 
         for &resource in REPORT_RESOURCE_ORDER {
-            let issues = by_resource.get(resource).map(|v| v.as_slice()).unwrap_or(&[]);
+            let issues = by_resource
+                .get(resource)
+                .map(|v| v.as_slice())
+                .unwrap_or(&[]);
             let has_cert_expiries = resource == "Certificate" && cert_expiries.is_some();
             if issues.is_empty() && !has_cert_expiries {
                 continue;
@@ -1168,11 +1357,20 @@ impl ReportGenerator {
                     content.push_str("|--------------------------|-----------------------|--------------|-------------------|-------|------------|\n");
                     for row in expiries {
                         let (level, code_link) = if row.days_until_expiry < 0 {
-                            ("Critical", format!("[CERT-003]({})", issue_codes::doc_path("CERT-003")))
+                            (
+                                "Critical",
+                                format!("[CERT-003]({})", issue_codes::doc_path("CERT-003")),
+                            )
                         } else if row.days_until_expiry <= 30 {
-                            ("Warning", format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")))
+                            (
+                                "Warning",
+                                format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")),
+                            )
                         } else {
-                            ("Info", format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")))
+                            (
+                                "Info",
+                                format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")),
+                            )
                         };
                         let secret_cell = format!("{}/{}", row.secret_namespace, row.secret_name);
                         content.push_str(&format!(
@@ -1205,7 +1403,9 @@ impl ReportGenerator {
                     IssueSeverity::Info,
                 ] {
                     // Default: only Warning and Critical (exclude Info). With --check-level all, show Info too.
-                    if matches!(sev, IssueSeverity::Info) && !matches!(&check_filter, CheckLevelFilter::All) {
+                    if matches!(sev, IssueSeverity::Info)
+                        && !matches!(&check_filter, CheckLevelFilter::All)
+                    {
                         continue;
                     }
                     let level = severity_to_level(sev);
@@ -1216,10 +1416,16 @@ impl ReportGenerator {
                                 .map(|c| format!("[{}]({})", c, issue_codes::doc_path(c)))
                                 .unwrap_or_else(|| "-".to_string());
                             if resources.is_empty() {
-                                content.push_str(&format!("| - | {} | {} | {} |\n", level, code_link, title));
+                                content.push_str(&format!(
+                                    "| - | {} | {} | {} |\n",
+                                    level, code_link, title
+                                ));
                             } else {
                                 for r in resources {
-                                    content.push_str(&format!("| `{}` | {} | {} | {} |\n", r, level, code_link, title));
+                                    content.push_str(&format!(
+                                        "| `{}` | {} | {} | {} |\n",
+                                        r, level, code_link, title
+                                    ));
                                 }
                             }
                         }
@@ -1232,7 +1438,9 @@ impl ReportGenerator {
 
         // Footer
         content.push_str("---\n\n");
-        content.push_str("*Report generated by [kubeowler](https://github.com/username/kubeowler).*\n");
+        content.push_str(
+            "*Report generated by [kubeowler](https://github.com/username/kubeowler).*\n",
+        );
 
         Ok(content)
     }
@@ -1242,10 +1450,7 @@ impl ReportGenerator {
 
         content.push_str("# Cluster Inspection – Exception Summary\n\n");
 
-        content.push_str(&format!(
-            "**Cluster**: {}\n\n",
-            report.cluster_name
-        ));
+        content.push_str(&format!("**Cluster**: {}\n\n", report.cluster_name));
 
         content.push_str(&format!(
             "**Generated At**: {}\n\n",
@@ -1321,15 +1526,23 @@ impl ReportGenerator {
         // Warning and Info: single "Other Issues" table
         if !warning_issues.is_empty() || !info_issues.is_empty() {
             content.push_str("## Other Issues\n\n");
-            content.push_str("| Code | Severity | Category | Count | Sample Resource | Recommendation |\n");
-            content.push_str("|------|----------|----------|-------|-----------------|----------------|\n");
+            content.push_str(
+                "| Code | Severity | Category | Count | Sample Resource | Recommendation |\n",
+            );
+            content.push_str(
+                "|------|----------|----------|-------|-----------------|----------------|\n",
+            );
 
             let warning_groups = Self::group_issues_for_summary_table_with_code(&warning_issues);
             for (code, cat, rec, count, sample) in warning_groups {
                 let sample_short = truncate_string(&sample, 40);
                 content.push_str(&format!(
                     "| {} | Warning | {} | {} | {} | {} |\n",
-                    code, cat, count, sample_short, truncate_string(&rec, 50)
+                    code,
+                    cat,
+                    count,
+                    sample_short,
+                    truncate_string(&rec, 50)
                 ));
             }
             let info_groups = Self::group_issues_for_summary_table_with_code(&info_issues);
@@ -1337,7 +1550,11 @@ impl ReportGenerator {
                 let sample_short = truncate_string(&sample, 40);
                 content.push_str(&format!(
                     "| {} | Info | {} | {} | {} | {} |\n",
-                    code, cat, count, sample_short, truncate_string(&rec, 50)
+                    code,
+                    cat,
+                    count,
+                    sample_short,
+                    truncate_string(&rec, 50)
                 ));
             }
             content.push_str("\n");
@@ -1363,7 +1580,8 @@ impl ReportGenerator {
 
         for (category, _total) in category_totals {
             let rec_map = category_rec_counts.get(&category).unwrap();
-            let mut rec_list: Vec<(String, usize)> = rec_map.iter().map(|(r, c)| (r.clone(), *c)).collect();
+            let mut rec_list: Vec<(String, usize)> =
+                rec_map.iter().map(|(r, c)| (r.clone(), *c)).collect();
             rec_list.sort_by(|a, b| b.1.cmp(&a.1));
             content.push_str(&format!("### {}\n\n", category));
             for (recommendation, count) in rec_list {
@@ -1429,8 +1647,7 @@ impl ReportGenerator {
         content.push_str(&format!("<a id=\"{}\"></a>\n\n", slug));
         content.push_str(&format!(
             "### {} (Score: {:.1}/100)\n\n",
-            inspection.inspection_type,
-            inspection.overall_score
+            inspection.inspection_type, inspection.overall_score
         ));
 
         // Summary
@@ -1461,11 +1678,7 @@ impl ReportGenerator {
 
             content.push_str(&format!(
                 "| {} | {} | {:.1}/{:.1} | {} |\n",
-                check.name,
-                status_text,
-                check.score,
-                check.max_score,
-                details_short
+                check.name, status_text, check.score, check.max_score, details_short
             ));
         }
         content.push('\n');
@@ -1478,11 +1691,20 @@ impl ReportGenerator {
                 content.push_str("|--------------------------|-----------------------|--------------|-------------------|-------|------------|\n");
                 for row in expiries {
                     let (level, code_link) = if row.days_until_expiry < 0 {
-                        ("Critical", format!("[CERT-003]({})", issue_codes::doc_path("CERT-003")))
+                        (
+                            "Critical",
+                            format!("[CERT-003]({})", issue_codes::doc_path("CERT-003")),
+                        )
                     } else if row.days_until_expiry <= 30 {
-                        ("Warning", format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")))
+                        (
+                            "Warning",
+                            format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")),
+                        )
                     } else {
-                        ("Info", format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")))
+                        (
+                            "Info",
+                            format!("[CERT-002]({})", issue_codes::doc_path("CERT-002")),
+                        )
                     };
                     let secret_cell = format!("{}/{}", row.secret_namespace, row.secret_name);
                     content.push_str(&format!(
@@ -1524,10 +1746,16 @@ impl ReportGenerator {
                             .map(|c| format!("[{}]({})", c, issue_codes::doc_path(c)))
                             .unwrap_or_else(|| "-".to_string());
                         if resources.is_empty() {
-                            content.push_str(&format!("| - | {} | {} | {} |\n", level, code_link, title));
+                            content.push_str(&format!(
+                                "| - | {} | {} | {} |\n",
+                                level, code_link, title
+                            ));
                         } else {
                             for r in resources {
-                                content.push_str(&format!("| `{}` | {} | {} | {} |\n", r, level, code_link, title));
+                                content.push_str(&format!(
+                                    "| `{}` | {} | {} | {} |\n",
+                                    r, level, code_link, title
+                                ));
                             }
                         }
                     }

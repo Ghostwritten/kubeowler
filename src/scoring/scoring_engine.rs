@@ -123,7 +123,10 @@ impl ScoringEngine {
         }
     }
 
-    pub fn generate_score_breakdown(&self, inspections: &[InspectionResult]) -> std::collections::HashMap<String, ScoreDetails> {
+    pub fn generate_score_breakdown(
+        &self,
+        inspections: &[InspectionResult],
+    ) -> std::collections::HashMap<String, ScoreDetails> {
         let mut breakdown = std::collections::HashMap::new();
 
         for inspection in inspections {
@@ -160,12 +163,18 @@ impl ScoringEngine {
     }
 
     #[allow(dead_code)]
-    pub fn get_priority_recommendations(&self, inspections: &[InspectionResult]) -> Vec<PriorityRecommendation> {
+    pub fn get_priority_recommendations(
+        &self,
+        inspections: &[InspectionResult],
+    ) -> Vec<PriorityRecommendation> {
         let mut recommendations = Vec::new();
 
         for inspection in inspections {
             for issue in &inspection.summary.issues {
-                if matches!(issue.severity, IssueSeverity::Critical | IssueSeverity::Warning) {
+                if matches!(
+                    issue.severity,
+                    IssueSeverity::Critical | IssueSeverity::Warning
+                ) {
                     recommendations.push(PriorityRecommendation {
                         category: issue.category.clone(),
                         description: issue.description.clone(),

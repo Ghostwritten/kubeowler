@@ -1,16 +1,18 @@
 use anyhow::Result;
 use http::Request;
-use kube::config::Kubeconfig;
-use kube::{Api, Client, Config};
-use k8s_openapi::api::core::v1::{Node, Pod, PersistentVolume, PersistentVolumeClaim, Secret, Service, Namespace, Event};
-use serde::Deserialize;
-use k8s_openapi::api::apps::v1::{Deployment, ReplicaSet, DaemonSet, StatefulSet};
-use k8s_openapi::api::rbac::v1::{Role, RoleBinding, ClusterRole, ClusterRoleBinding};
-use k8s_openapi::api::networking::v1::NetworkPolicy;
-use k8s_openapi::api::storage::v1::StorageClass;
+use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
 use k8s_openapi::api::autoscaling::v2::HorizontalPodAutoscaler;
 use k8s_openapi::api::batch::v1::CronJob;
 use k8s_openapi::api::certificates::v1::CertificateSigningRequest;
+use k8s_openapi::api::core::v1::{
+    Event, Namespace, Node, PersistentVolume, PersistentVolumeClaim, Pod, Secret, Service,
+};
+use k8s_openapi::api::networking::v1::NetworkPolicy;
+use k8s_openapi::api::rbac::v1::{ClusterRole, ClusterRoleBinding, Role, RoleBinding};
+use k8s_openapi::api::storage::v1::StorageClass;
+use kube::config::Kubeconfig;
+use kube::{Api, Client, Config};
+use serde::Deserialize;
 
 fn infer_cluster_name() -> Option<String> {
     let kubeconfig = Kubeconfig::read().ok()?;
@@ -34,7 +36,10 @@ impl K8sClient {
         let cluster_name = infer_cluster_name();
         let config = Config::infer().await?;
         let client = Client::try_from(config)?;
-        Ok(Self { client, cluster_name })
+        Ok(Self {
+            client,
+            cluster_name,
+        })
     }
 
     pub fn client(&self) -> &Client {
@@ -100,7 +105,10 @@ impl K8sClient {
     }
 
     // Autoscaling APIs
-    pub fn horizontal_pod_autoscalers(&self, namespace: Option<&str>) -> Api<HorizontalPodAutoscaler> {
+    pub fn horizontal_pod_autoscalers(
+        &self,
+        namespace: Option<&str>,
+    ) -> Api<HorizontalPodAutoscaler> {
         match namespace {
             Some(ns) => Api::namespaced(self.client.clone(), ns),
             None => Api::all(self.client.clone()),
@@ -213,8 +221,16 @@ impl K8sClient {
             .into_iter()
             .map(|m| {
                 let name = m.metadata.name;
-                let cpu = m.usage.get("cpu").cloned().unwrap_or_else(|| "0".to_string());
-                let memory = m.usage.get("memory").cloned().unwrap_or_else(|| "0".to_string());
+                let cpu = m
+                    .usage
+                    .get("cpu")
+                    .cloned()
+                    .unwrap_or_else(|| "0".to_string());
+                let memory = m
+                    .usage
+                    .get("memory")
+                    .cloned()
+                    .unwrap_or_else(|| "0".to_string());
                 (name, cpu, memory)
             })
             .collect();
@@ -223,7 +239,9 @@ impl K8sClient {
 
     /// Fetches pod metrics from metrics.k8s.io/v1beta1 (requires metrics-server).
     /// Returns list of (namespace, pod_name, container_name, cpu_usage_str, memory_usage_str) or None if API unavailable.
-    pub async fn pod_metrics(&self) -> Result<Option<Vec<(String, String, String, String, String)>>> {
+    pub async fn pod_metrics(
+        &self,
+    ) -> Result<Option<Vec<(String, String, String, String, String)>>> {
         let req = Request::builder()
             .method("GET")
             .uri("/apis/metrics.k8s.io/v1beta1/pods")
@@ -238,8 +256,16 @@ impl K8sClient {
             let namespace = pm.metadata.namespace.unwrap_or_default();
             let pod_name = pm.metadata.name;
             for c in pm.containers {
-                let cpu = c.usage.get("cpu").cloned().unwrap_or_else(|| "0".to_string());
-                let memory = c.usage.get("memory").cloned().unwrap_or_else(|| "0".to_string());
+                let cpu = c
+                    .usage
+                    .get("cpu")
+                    .cloned()
+                    .unwrap_or_else(|| "0".to_string());
+                let memory = c
+                    .usage
+                    .get("memory")
+                    .cloned()
+                    .unwrap_or_else(|| "0".to_string());
                 out.push((namespace.clone(), pod_name.clone(), c.name, cpu, memory));
             }
         }

@@ -34,7 +34,10 @@ pub fn parse_memory_str(s: &str) -> Option<i64> {
     } else if s.ends_with('T') {
         (s.trim_end_matches('T'), 1024_i64 * 1024 * 1024 * 1024)
     } else if s.ends_with('P') {
-        (s.trim_end_matches('P'), 1024_i64 * 1024 * 1024 * 1024 * 1024)
+        (
+            s.trim_end_matches('P'),
+            1024_i64 * 1024 * 1024 * 1024 * 1024,
+        )
     } else if let Ok(n) = s.parse::<i64>() {
         return Some(n);
     } else {

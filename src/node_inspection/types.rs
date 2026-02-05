@@ -1,8 +1,8 @@
 //! Types for node inspection (DaemonSet-collected) results.
 //! Schema aligns with the universal node script JSON output: resources, services, security, kernel.
 
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Single node inspection result (one JSON object per node from the DaemonSet script).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

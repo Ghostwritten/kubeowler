@@ -1,25 +1,25 @@
 use anyhow::Result;
 use chrono::Utc;
-use kube::api::ListParams;
 use k8s_openapi::api::core::v1::Pod;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
+use kube::api::ListParams;
 use std::collections::HashMap;
 use uuid::Uuid;
 
+use super::types::{
+    CheckResult, CheckStatus, ClusterOverview, ClusterReport, ContainerUsageRow, EventRow,
+    ExecutiveSummary, HealthStatus, InspectionResult, InspectionSummary, Issue, IssueSeverity,
+    NodeConditionsRow, NodeResourceSummary, NodeRow, NodeUsageRow, PodPhaseBreakdown,
+    StorageSummary, WorkloadSummary,
+};
+use super::{
+    autoscaling, batch, certificates, control_plane, namespace_summary, network, nodes,
+    observability, pods, policies, resources, security, storage, upgrade,
+};
 use crate::cli::InspectionType;
 use crate::k8s::K8sClient;
 use crate::node_inspection::{collect_node_inspections, NodeInspectionResult};
 use crate::utils::resource_quantity::{parse_cpu_str, parse_memory_str};
-use super::types::{
-    CheckResult, CheckStatus, ClusterOverview, ClusterReport, ContainerUsageRow, EventRow,
-    ExecutiveSummary, HealthStatus, InspectionResult, InspectionSummary, Issue, IssueSeverity,
-    NodeConditionsRow, NodeResourceSummary, NodeRow, NodeUsageRow, PodPhaseBreakdown, StorageSummary,
-    WorkloadSummary,
-};
-use super::{
-    certificates, nodes, pods, resources, network, storage, security,
-    control_plane, autoscaling, batch, policies, observability, upgrade, namespace_summary
-};
 
 fn parse_cpu_quantity(q: Option<&Quantity>) -> Option<i64> {
     q.and_then(|q| parse_cpu_str(q.0.as_str()))
@@ -155,13 +155,19 @@ impl InspectionRunner {
             .unwrap_or_else(|| self.client.cluster_name().unwrap_or("default").to_string());
 
         let cluster_overview = self.fetch_cluster_overview().await.ok();
-        let recent_events = self.fetch_recent_events(50).await.ok().filter(|v| !v.is_empty());
+        let recent_events = self
+            .fetch_recent_events(50)
+            .await
+            .ok()
+            .filter(|v| !v.is_empty());
 
         // Collect per-node inspection JSON from DaemonSet pods when doing full or node-only inspection.
         // DaemonSet is always looked up in node_inspector_namespace (e.g. kubeowler); inspection scope is namespace.
         let node_inspection_results: Option<Vec<NodeInspectionResult>> = match inspection_type {
             InspectionType::All | InspectionType::Nodes => {
-                collect_node_inspections(&self.client, Some(node_inspector_namespace)).await.ok()
+                collect_node_inspections(&self.client, Some(node_inspector_namespace))
+                    .await
+                    .ok()
             }
             _ => None,
         };
@@ -178,7 +184,8 @@ impl InspectionRunner {
                         category: "Node".to_string(),
                         description: format!("Node {} has {} zombie process(es)", n.node_name, z),
                         resource: Some(n.node_name.clone()),
-                        recommendation: "Identify parent processes and fix reaping; see NODE-003.".to_string(),
+                        recommendation: "Identify parent processes and fix reaping; see NODE-003."
+                            .to_string(),
                         rule_id: Some("NODE-003".to_string()),
                     }
                 })
@@ -190,8 +197,13 @@ impl InspectionRunner {
                     status: CheckStatus::Warning,
                     score: 0.0,
                     max_score: 100.0,
-                    details: Some(format!("{} node(s) with zombie processes", zombie_issues.len())),
-                    recommendations: vec!["See NODE-003 and fix parent process reaping.".to_string()],
+                    details: Some(format!(
+                        "{} node(s) with zombie processes",
+                        zombie_issues.len()
+                    )),
+                    recommendations: vec![
+                        "See NODE-003 and fix parent process reaping.".to_string()
+                    ],
                 };
                 let summary = InspectionSummary {
                     total_checks: 1,
@@ -273,7 +285,11 @@ impl InspectionRunner {
                     .map(|t| t.0.format("%Y-%m-%d %H:%M:%S").to_string())
                     .unwrap_or_else(|| "-".to_string());
                 let message = ev.message.as_deref().unwrap_or("").to_string();
-                let message_trunc = if message.len() > 80 { format!("{}...", &message[..77]) } else { message };
+                let message_trunc = if message.len() > 80 {
+                    format!("{}...", &message[..77])
+                } else {
+                    message
+                };
                 rows.push(EventRow {
                     namespace,
                     object_ref,
@@ -306,7 +322,11 @@ impl InspectionRunner {
         // Pod phase breakdown from existing pods list.
         let mut pod_phase = PodPhaseBreakdown::default();
         for pod in &pods.items {
-            let phase = pod.status.as_ref().and_then(|s| s.phase.as_deref()).unwrap_or("Unknown");
+            let phase = pod
+                .status
+                .as_ref()
+                .and_then(|s| s.phase.as_deref())
+                .unwrap_or("Unknown");
             match phase {
                 "Running" => pod_phase.running += 1,
                 "Pending" => pod_phase.pending += 1,
@@ -328,7 +348,11 @@ impl InspectionRunner {
             workload.deployments_total = list.items.len() as u32;
             for d in &list.items {
                 let desired = d.spec.as_ref().and_then(|s| s.replicas).unwrap_or(1) as u32;
-                let ready = d.status.as_ref().and_then(|s| s.ready_replicas).unwrap_or(0) as u32;
+                let ready = d
+                    .status
+                    .as_ref()
+                    .and_then(|s| s.ready_replicas)
+                    .unwrap_or(0) as u32;
                 if desired > 0 && ready >= desired {
                     workload.deployments_ready += 1;
                 }
@@ -339,7 +363,11 @@ impl InspectionRunner {
             workload.statefulsets_total = list.items.len() as u32;
             for s in &list.items {
                 let desired = s.spec.as_ref().and_then(|sp| sp.replicas).unwrap_or(1) as u32;
-                let ready = s.status.as_ref().and_then(|st| st.ready_replicas).unwrap_or(0) as u32;
+                let ready = s
+                    .status
+                    .as_ref()
+                    .and_then(|st| st.ready_replicas)
+                    .unwrap_or(0) as u32;
                 if desired > 0 && ready >= desired {
                     workload.statefulsets_ready += 1;
                 }
@@ -349,7 +377,11 @@ impl InspectionRunner {
         if let Ok(list) = ds_api.list(&ListParams::default()).await {
             workload.daemonsets_total = list.items.len() as u32;
             for d in &list.items {
-                let desired = d.status.as_ref().map(|s| s.desired_number_scheduled).unwrap_or(0) as u32;
+                let desired = d
+                    .status
+                    .as_ref()
+                    .map(|s| s.desired_number_scheduled)
+                    .unwrap_or(0) as u32;
                 let ready = d.status.as_ref().map(|s| s.number_ready).unwrap_or(0) as u32;
                 if desired > 0 && ready >= desired {
                     workload.daemonsets_ready += 1;
@@ -367,7 +399,11 @@ impl InspectionRunner {
         if let Ok(list) = pvc_api.list(&ListParams::default()).await {
             storage.pvc_total = list.items.len() as u32;
             for pvc in &list.items {
-                let phase = pvc.status.as_ref().and_then(|s| s.phase.as_deref()).unwrap_or("");
+                let phase = pvc
+                    .status
+                    .as_ref()
+                    .and_then(|s| s.phase.as_deref())
+                    .unwrap_or("");
                 if phase == "Bound" {
                     storage.pvc_bound += 1;
                 }
@@ -398,7 +434,8 @@ impl InspectionRunner {
         let mut node_conditions: Vec<NodeConditionsRow> = Vec::new();
         let mut allocatable_per_node: HashMap<String, (i64, i64, i64)> = HashMap::new();
 
-        const CONDITION_TYPES: &[&str] = &["Ready", "MemoryPressure", "DiskPressure", "PIDPressure"];
+        const CONDITION_TYPES: &[&str] =
+            &["Ready", "MemoryPressure", "DiskPressure", "PIDPressure"];
 
         for node in &nodes.items {
             let name = node.metadata.name.as_deref().unwrap_or("").to_string();
@@ -409,7 +446,10 @@ impl InspectionRunner {
             let mut kernel_version: Option<String> = None;
             let mut container_runtime_version: Option<String> = None;
             let mut is_ready = false;
-            let mut cond_map: HashMap<String, String> = CONDITION_TYPES.iter().map(|&t| (t.to_string(), "Unknown".to_string())).collect();
+            let mut cond_map: HashMap<String, String> = CONDITION_TYPES
+                .iter()
+                .map(|&t| (t.to_string(), "Unknown".to_string()))
+                .collect();
 
             if let Some(status) = &node.status {
                 if let Some(conditions) = &status.conditions {
@@ -444,7 +484,8 @@ impl InspectionRunner {
                 if let (Some(cap), Some(alloc)) = (&status.capacity, &status.allocatable) {
                     let ac = parse_cpu_quantity(alloc.get("cpu")).unwrap_or(0);
                     let am = parse_memory_quantity(alloc.get("memory")).unwrap_or(0);
-                    let disk_bytes = parse_memory_quantity(alloc.get("ephemeral-storage")).unwrap_or(0);
+                    let disk_bytes =
+                        parse_memory_quantity(alloc.get("ephemeral-storage")).unwrap_or(0);
                     allocatable_per_node.insert(name.clone(), (ac, am, disk_bytes));
                     cap_cpu_millis += parse_cpu_quantity(cap.get("cpu")).unwrap_or(0);
                     cap_mem_bytes += parse_memory_quantity(cap.get("memory")).unwrap_or(0);
@@ -454,9 +495,16 @@ impl InspectionRunner {
             }
 
             let node_pod_count = pods_per_node.get(&name).copied().unwrap_or(0);
-            let node_address = node.status.as_ref().and_then(|s| s.addresses.as_ref()).and_then(|addrs| {
-                addrs.iter().find(|a| a.type_.as_str() == "InternalIP").map(|a| a.address.clone())
-            });
+            let node_address = node
+                .status
+                .as_ref()
+                .and_then(|s| s.addresses.as_ref())
+                .and_then(|addrs| {
+                    addrs
+                        .iter()
+                        .find(|a| a.type_.as_str() == "InternalIP")
+                        .map(|a| a.address.clone())
+                });
             node_list.push(NodeRow {
                 name: name.clone(),
                 operating_system: os,
@@ -471,10 +519,22 @@ impl InspectionRunner {
             });
             node_conditions.push(NodeConditionsRow {
                 node_name: name,
-                ready: cond_map.get("Ready").cloned().unwrap_or_else(|| "Unknown".to_string()),
-                memory_pressure: cond_map.get("MemoryPressure").cloned().unwrap_or_else(|| "Unknown".to_string()),
-                disk_pressure: cond_map.get("DiskPressure").cloned().unwrap_or_else(|| "Unknown".to_string()),
-                pid_pressure: cond_map.get("PIDPressure").cloned().unwrap_or_else(|| "Unknown".to_string()),
+                ready: cond_map
+                    .get("Ready")
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                memory_pressure: cond_map
+                    .get("MemoryPressure")
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                disk_pressure: cond_map
+                    .get("DiskPressure")
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                pid_pressure: cond_map
+                    .get("PIDPressure")
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
             });
         }
 
@@ -493,7 +553,11 @@ impl InspectionRunner {
                 if kubelet_versions.len() == 1 {
                     summary.push_str(&format!(", kubelet {}", kv));
                 } else {
-                    summary.push_str(&format!(", kubelet {}..{}", kv, kubelet_versions.last().unwrap_or(&String::new())));
+                    summary.push_str(&format!(
+                        ", kubelet {}..{}",
+                        kv,
+                        kubelet_versions.last().unwrap_or(&String::new())
+                    ));
                 }
             }
             Some(summary)
@@ -546,7 +610,13 @@ impl InspectionRunner {
                         let mem_bytes = parse_memory_str(&mem_str).unwrap_or(0);
                         sum_cpu_millis += cpu_millis;
                         sum_mem_bytes += mem_bytes;
-                        let (alloc_cpu_cores, alloc_mem_gi, disk_allocatable_gi, cpu_pct, memory_pct) = allocatable_per_node
+                        let (
+                            alloc_cpu_cores,
+                            alloc_mem_gi,
+                            disk_allocatable_gi,
+                            cpu_pct,
+                            memory_pct,
+                        ) = allocatable_per_node
                             .get(&node_name)
                             .map(|&(alloc_cpu, alloc_mem, disk_bytes)| {
                                 let cpu_pct = if alloc_cpu > 0 {
@@ -606,125 +676,123 @@ impl InspectionRunner {
         const CONTAINER_HIGH_USAGE_TOP_N: usize = 20;
         const HIGH_USAGE_PCT: f64 = 0.80;
 
-        let container_usage_notable: Option<Vec<ContainerUsageRow>> =
-            if metrics_available != Some(true) {
-                None
-            } else {
-                match self.client.pod_metrics().await.ok().flatten() {
-                    None => None,
-                    Some(metrics_list) => {
-                        let pod_lookup: HashMap<(String, String), &Pod> = pods
-                            .items
-                            .iter()
-                            .filter_map(|p| {
-                                let ns = p.metadata.namespace.as_deref().unwrap_or("").to_string();
-                                let name = p.metadata.name.as_deref().unwrap_or("").to_string();
-                                if name.is_empty() {
-                                    None
-                                } else {
-                                    Some(((ns, name), p))
-                                }
-                            })
-                            .collect();
-                        let mut high_usage_rows: Vec<(f64, ContainerUsageRow)> = Vec::new();
-                        for (ns, pod_name, container_name, cpu_str, mem_str) in metrics_list {
-                            let cpu_used_m =
-                                parse_cpu_str(&cpu_str).unwrap_or(0).max(0) as u64;
-                            let mem_used_bytes = parse_memory_str(&mem_str).unwrap_or(0).max(0);
-                            let mem_used_mib = (mem_used_bytes / (1024 * 1024)) as u64;
-
-                            let pod = match pod_lookup.get(&(ns.clone(), pod_name.clone())) {
-                                Some(p) => p,
-                                None => continue,
-                            };
-                            let spec = match &pod.spec {
-                                Some(s) => s,
-                                None => continue,
-                            };
-                            let container = spec
-                                .containers
-                                .iter()
-                                .find(|c| c.name == container_name);
-                            let container = match container {
-                                Some(c) => c,
-                                None => continue,
-                            };
-
-                            let lim = container.resources.as_ref().and_then(|r| r.limits.as_ref());
-                            let cpu_request_m = container
-                                .resources
-                                .as_ref()
-                                .and_then(|r| r.requests.as_ref())
-                                .and_then(|r| r.get("cpu"))
-                                .and_then(|q| parse_cpu_str(q.0.as_str()))
-                                .unwrap_or(0)
-                                .max(0) as u64;
-                            let mem_request_bytes = container
-                                .resources
-                                .as_ref()
-                                .and_then(|r| r.requests.as_ref())
-                                .and_then(|r| r.get("memory"))
-                                .and_then(|q| parse_memory_str(q.0.as_str()))
-                                .unwrap_or(0)
-                                .max(0);
-                            let mem_request_mib = (mem_request_bytes / (1024 * 1024)) as u64;
-                            let cpu_limit_m = lim
-                                .and_then(|r| r.get("cpu"))
-                                .and_then(|q| parse_cpu_str(q.0.as_str()))
-                                .unwrap_or(0)
-                                .max(0) as u64;
-                            let mem_limit_bytes = lim
-                                .and_then(|r| r.get("memory"))
-                                .and_then(|q| parse_memory_str(q.0.as_str()))
-                                .unwrap_or(0)
-                                .max(0);
-                            let mem_limit_mib = (mem_limit_bytes / (1024 * 1024)) as u64;
-
-                            let cpu_pct = if cpu_limit_m > 0 {
-                                cpu_used_m as f64 / cpu_limit_m as f64
+        let container_usage_notable: Option<Vec<ContainerUsageRow>> = if metrics_available
+            != Some(true)
+        {
+            None
+        } else {
+            match self.client.pod_metrics().await.ok().flatten() {
+                None => None,
+                Some(metrics_list) => {
+                    let pod_lookup: HashMap<(String, String), &Pod> = pods
+                        .items
+                        .iter()
+                        .filter_map(|p| {
+                            let ns = p.metadata.namespace.as_deref().unwrap_or("").to_string();
+                            let name = p.metadata.name.as_deref().unwrap_or("").to_string();
+                            if name.is_empty() {
+                                None
                             } else {
-                                0.0
-                            };
-                            let mem_pct = if mem_limit_mib > 0 {
-                                mem_used_mib as f64 / mem_limit_mib as f64
-                            } else {
-                                0.0
-                            };
-                            let high_usage = cpu_pct >= HIGH_USAGE_PCT || mem_pct >= HIGH_USAGE_PCT;
-                            if !high_usage {
-                                continue;
+                                Some(((ns, name), p))
                             }
-                            let sort_score = cpu_pct.max(mem_pct);
-                            high_usage_rows.push((
-                                sort_score,
-                                ContainerUsageRow {
-                                    namespace: ns,
-                                    pod_name,
-                                    container_name,
-                                    cpu_used_m,
-                                    cpu_request_m,
-                                    cpu_limit_m,
-                                    mem_used_mib,
-                                    mem_request_mib,
-                                    mem_limit_mib,
-                                    notable_reason: "high_usage".to_string(),
-                                },
-                            ));
-                        }
-                        high_usage_rows.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-                        let rows: Vec<ContainerUsageRow> = high_usage_rows
-                            .into_iter()
-                            .map(|(_, r)| r)
-                            .take(CONTAINER_HIGH_USAGE_TOP_N)
-                            .collect();
-                        if rows.is_empty() {
-                            None
+                        })
+                        .collect();
+                    let mut high_usage_rows: Vec<(f64, ContainerUsageRow)> = Vec::new();
+                    for (ns, pod_name, container_name, cpu_str, mem_str) in metrics_list {
+                        let cpu_used_m = parse_cpu_str(&cpu_str).unwrap_or(0).max(0) as u64;
+                        let mem_used_bytes = parse_memory_str(&mem_str).unwrap_or(0).max(0);
+                        let mem_used_mib = (mem_used_bytes / (1024 * 1024)) as u64;
+
+                        let pod = match pod_lookup.get(&(ns.clone(), pod_name.clone())) {
+                            Some(p) => p,
+                            None => continue,
+                        };
+                        let spec = match &pod.spec {
+                            Some(s) => s,
+                            None => continue,
+                        };
+                        let container = spec.containers.iter().find(|c| c.name == container_name);
+                        let container = match container {
+                            Some(c) => c,
+                            None => continue,
+                        };
+
+                        let lim = container.resources.as_ref().and_then(|r| r.limits.as_ref());
+                        let cpu_request_m = container
+                            .resources
+                            .as_ref()
+                            .and_then(|r| r.requests.as_ref())
+                            .and_then(|r| r.get("cpu"))
+                            .and_then(|q| parse_cpu_str(q.0.as_str()))
+                            .unwrap_or(0)
+                            .max(0) as u64;
+                        let mem_request_bytes = container
+                            .resources
+                            .as_ref()
+                            .and_then(|r| r.requests.as_ref())
+                            .and_then(|r| r.get("memory"))
+                            .and_then(|q| parse_memory_str(q.0.as_str()))
+                            .unwrap_or(0)
+                            .max(0);
+                        let mem_request_mib = (mem_request_bytes / (1024 * 1024)) as u64;
+                        let cpu_limit_m = lim
+                            .and_then(|r| r.get("cpu"))
+                            .and_then(|q| parse_cpu_str(q.0.as_str()))
+                            .unwrap_or(0)
+                            .max(0) as u64;
+                        let mem_limit_bytes = lim
+                            .and_then(|r| r.get("memory"))
+                            .and_then(|q| parse_memory_str(q.0.as_str()))
+                            .unwrap_or(0)
+                            .max(0);
+                        let mem_limit_mib = (mem_limit_bytes / (1024 * 1024)) as u64;
+
+                        let cpu_pct = if cpu_limit_m > 0 {
+                            cpu_used_m as f64 / cpu_limit_m as f64
                         } else {
-                            Some(rows)
+                            0.0
+                        };
+                        let mem_pct = if mem_limit_mib > 0 {
+                            mem_used_mib as f64 / mem_limit_mib as f64
+                        } else {
+                            0.0
+                        };
+                        let high_usage = cpu_pct >= HIGH_USAGE_PCT || mem_pct >= HIGH_USAGE_PCT;
+                        if !high_usage {
+                            continue;
                         }
+                        let sort_score = cpu_pct.max(mem_pct);
+                        high_usage_rows.push((
+                            sort_score,
+                            ContainerUsageRow {
+                                namespace: ns,
+                                pod_name,
+                                container_name,
+                                cpu_used_m,
+                                cpu_request_m,
+                                cpu_limit_m,
+                                mem_used_mib,
+                                mem_request_mib,
+                                mem_limit_mib,
+                                notable_reason: "high_usage".to_string(),
+                            },
+                        ));
+                    }
+                    high_usage_rows
+                        .sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+                    let rows: Vec<ContainerUsageRow> = high_usage_rows
+                        .into_iter()
+                        .map(|(_, r)| r)
+                        .take(CONTAINER_HIGH_USAGE_TOP_N)
+                        .collect();
+                    if rows.is_empty() {
+                        None
+                    } else {
+                        Some(rows)
                     }
                 }
-            };
+            }
+        };
 
         Ok(ClusterOverview {
             cluster_version,
@@ -733,12 +801,20 @@ impl InspectionRunner {
             pod_count: Some(pod_count),
             node_summary,
             node_resources,
-            node_list: if node_list.is_empty() { None } else { Some(node_list) },
+            node_list: if node_list.is_empty() {
+                None
+            } else {
+                Some(node_list)
+            },
             metrics_available,
             node_usage,
             total_usage_cpu_cores: total_usage_cpu_cores,
             total_usage_memory_gi: total_usage_memory_gi,
-            node_conditions: if node_conditions.is_empty() { None } else { Some(node_conditions) },
+            node_conditions: if node_conditions.is_empty() {
+                None
+            } else {
+                Some(node_conditions)
+            },
             pod_phase_breakdown: Some(pod_phase),
             namespace_count: Some(namespace_count),
             workload_summary: Some(workload),
@@ -753,47 +829,75 @@ impl InspectionRunner {
     }
 
     async fn run_pod_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        pods::PodInspector::new(&self.client).inspect(namespace).await
+        pods::PodInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_resource_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        resources::ResourceInspector::new(&self.client).inspect(namespace).await
+        resources::ResourceInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_network_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        network::NetworkInspector::new(&self.client).inspect(namespace).await
+        network::NetworkInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_storage_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        storage::StorageInspector::new(&self.client).inspect(namespace).await
+        storage::StorageInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_security_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        security::SecurityInspector::new(&self.client).inspect(namespace).await
+        security::SecurityInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_control_plane_inspection(&self) -> Result<InspectionResult> {
-        control_plane::ControlPlaneInspector::new(&self.client).inspect().await
+        control_plane::ControlPlaneInspector::new(&self.client)
+            .inspect()
+            .await
     }
 
-    async fn run_autoscaling_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        autoscaling::AutoscalingInspector::new(&self.client).inspect(namespace).await
+    async fn run_autoscaling_inspection(
+        &self,
+        namespace: Option<&str>,
+    ) -> Result<InspectionResult> {
+        autoscaling::AutoscalingInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_batch_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        batch::BatchInspector::new(&self.client).inspect(namespace).await
+        batch::BatchInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_policy_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        policies::PoliciesInspector::new(&self.client).inspect(namespace).await
+        policies::PoliciesInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
-    async fn run_observability_inspection(&self, namespace: Option<&str>) -> Result<InspectionResult> {
-        observability::ObservabilityInspector::new(&self.client).inspect(namespace).await
+    async fn run_observability_inspection(
+        &self,
+        namespace: Option<&str>,
+    ) -> Result<InspectionResult> {
+        observability::ObservabilityInspector::new(&self.client)
+            .inspect(namespace)
+            .await
     }
 
     async fn run_namespace_summary_inspection(&self) -> Result<InspectionResult> {
-        namespace_summary::NamespaceSummaryInspector::new(&self.client).inspect().await
+        namespace_summary::NamespaceSummaryInspector::new(&self.client)
+            .inspect()
+            .await
     }
 
     async fn run_upgrade_readiness_inspection(&self) -> Result<InspectionResult> {
@@ -801,7 +905,9 @@ impl InspectionRunner {
     }
 
     async fn run_certificate_inspection(&self) -> Result<InspectionResult> {
-        certificates::CertificateInspector::new(&self.client).inspect().await
+        certificates::CertificateInspector::new(&self.client)
+            .inspect()
+            .await
     }
 
     fn calculate_overall_score(&self, inspections: &[InspectionResult]) -> f64 {
@@ -813,7 +919,11 @@ impl InspectionRunner {
         total_score / inspections.len() as f64
     }
 
-    fn generate_executive_summary(&self, inspections: &[InspectionResult], overall_score: f64) -> ExecutiveSummary {
+    fn generate_executive_summary(
+        &self,
+        inspections: &[InspectionResult],
+        overall_score: f64,
+    ) -> ExecutiveSummary {
         let health_status = match overall_score {
             s if s >= 90.0 => HealthStatus::Excellent,
             s if s >= 80.0 => HealthStatus::Good,

@@ -48,7 +48,9 @@ pub fn issue_to_resource_key(issue: &Issue) -> String {
         "Observability" => "Observability".to_string(),
         "Node" | "Service" | "Deployment" | "Namespace" => cat.to_string(),
         "PersistentVolume" | "PersistentVolumeClaim" | "StorageClass" => cat.to_string(),
-        "ClusterRole" | "ClusterRoleBinding" | "ServiceAccount" | "NetworkPolicy" => cat.to_string(),
+        "ClusterRole" | "ClusterRoleBinding" | "ServiceAccount" | "NetworkPolicy" => {
+            cat.to_string()
+        }
         _ => cat.to_string(),
     }
 }

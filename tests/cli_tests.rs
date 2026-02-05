@@ -1,5 +1,5 @@
-use kubeowler::cli::{Args, Commands, InspectionType};
 use clap::Parser;
+use kubeowler::cli::{Args, Commands, InspectionType};
 
 #[test]
 fn test_cli_parsing() {
@@ -30,8 +30,20 @@ fn test_inspection_type_variants() {
     assert!(types.len() >= 6); // We have at least 6 inspection types
 
     // Test that all types can be parsed
-    assert!(matches!("all".parse::<InspectionType>(), Ok(InspectionType::All)));
-    assert!(matches!("nodes".parse::<InspectionType>(), Ok(InspectionType::Nodes)));
-    assert!(matches!("pods".parse::<InspectionType>(), Ok(InspectionType::Pods)));
-    assert!(matches!("security".parse::<InspectionType>(), Ok(InspectionType::Security)));
+    assert!(matches!(
+        "all".parse::<InspectionType>(),
+        Ok(InspectionType::All)
+    ));
+    assert!(matches!(
+        "nodes".parse::<InspectionType>(),
+        Ok(InspectionType::Nodes)
+    ));
+    assert!(matches!(
+        "pods".parse::<InspectionType>(),
+        Ok(InspectionType::Pods)
+    ));
+    assert!(matches!(
+        "security".parse::<InspectionType>(),
+        Ok(InspectionType::Security)
+    ));
 }

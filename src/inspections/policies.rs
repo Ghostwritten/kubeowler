@@ -1,12 +1,12 @@
 use anyhow::Result;
 use chrono::Utc;
-use kube::api::ListParams;
-use kube::Api;
 use k8s_openapi::api::core::v1::{LimitRange, ResourceQuota};
 use k8s_openapi::api::policy::v1::PodDisruptionBudget;
+use kube::api::ListParams;
+use kube::Api;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct PoliciesInspector<'a> {
     client: &'a K8sClient,
@@ -49,7 +49,11 @@ impl<'a> PoliciesInspector<'a> {
         })
     }
 
-    async fn inspect_resource_quotas(&self, namespace: Option<&str>, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+    async fn inspect_resource_quotas(
+        &self,
+        namespace: Option<&str>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<CheckResult> {
         let quota_api: Api<ResourceQuota> = match namespace {
             Some(ns) => Api::namespaced(self.client.client().clone(), ns),
             None => Api::all(self.client.client().clone()),
@@ -63,7 +67,8 @@ impl<'a> PoliciesInspector<'a> {
                     category: "Policy".to_string(),
                     description: "Namespace lacks ResourceQuota".to_string(),
                     resource: namespace.map(|ns| ns.to_string()),
-                    recommendation: "Define ResourceQuota to prevent resource exhaustion.".to_string(),
+                    recommendation: "Define ResourceQuota to prevent resource exhaustion."
+                        .to_string(),
                     rule_id: Some("POLICY-001".to_string()),
                 });
                 return Ok(CheckResult {
@@ -73,7 +78,9 @@ impl<'a> PoliciesInspector<'a> {
                     score: 60.0,
                     max_score: 100.0,
                     details: Some("Namespace has no ResourceQuota".to_string()),
-                    recommendations: vec!["Create ResourceQuota to enforce resource boundaries.".to_string()],
+                    recommendations: vec![
+                        "Create ResourceQuota to enforce resource boundaries.".to_string()
+                    ],
                 });
             }
         } else if quotas.items.is_empty() {
@@ -84,7 +91,9 @@ impl<'a> PoliciesInspector<'a> {
                 score: 60.0,
                 max_score: 100.0,
                 details: Some("No ResourceQuota objects found".to_string()),
-                recommendations: vec!["Define ResourceQuota in multi-tenant namespaces.".to_string()],
+                recommendations: vec![
+                    "Define ResourceQuota in multi-tenant namespaces.".to_string()
+                ],
             });
         }
 
@@ -99,7 +108,11 @@ impl<'a> PoliciesInspector<'a> {
         })
     }
 
-    async fn inspect_limit_ranges(&self, namespace: Option<&str>, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+    async fn inspect_limit_ranges(
+        &self,
+        namespace: Option<&str>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<CheckResult> {
         let limit_api: Api<LimitRange> = match namespace {
             Some(ns) => Api::namespaced(self.client.client().clone(), ns),
             None => Api::all(self.client.client().clone()),
@@ -111,18 +124,26 @@ impl<'a> PoliciesInspector<'a> {
                 severity: IssueSeverity::Warning,
                 category: "Policy".to_string(),
                 description: "No LimitRange defined".to_string(),
-                resource: Some(namespace.map(|ns| ns.to_string()).unwrap_or_else(|| "cluster".to_string())),
-                recommendation: "Define LimitRange to ensure pod resource defaults and limits.".to_string(),
+                resource: Some(
+                    namespace
+                        .map(|ns| ns.to_string())
+                        .unwrap_or_else(|| "cluster".to_string()),
+                ),
+                recommendation: "Define LimitRange to ensure pod resource defaults and limits."
+                    .to_string(),
                 rule_id: Some("POLICY-002".to_string()),
             });
             return Ok(CheckResult {
                 name: "Limit Ranges".to_string(),
-                description: "Ensures namespaces have LimitRange for default resource settings".to_string(),
+                description: "Ensures namespaces have LimitRange for default resource settings"
+                    .to_string(),
                 status: CheckStatus::Warning,
                 score: 65.0,
                 max_score: 100.0,
                 details: Some("No LimitRange objects found".to_string()),
-                recommendations: vec!["Create LimitRange to enforce default requests/limits.".to_string()],
+                recommendations: vec![
+                    "Create LimitRange to enforce default requests/limits.".to_string()
+                ],
             });
         }
 
@@ -137,7 +158,11 @@ impl<'a> PoliciesInspector<'a> {
         })
     }
 
-    async fn inspect_pdbs(&self, namespace: Option<&str>, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+    async fn inspect_pdbs(
+        &self,
+        namespace: Option<&str>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<CheckResult> {
         let pdb_api: Api<PodDisruptionBudget> = match namespace {
             Some(ns) => Api::namespaced(self.client.client().clone(), ns),
             None => Api::all(self.client.client().clone()),
@@ -177,7 +202,8 @@ impl<'a> PoliciesInspector<'a> {
                         category: "Policy".to_string(),
                         description: format!("PDB {} currently blocks disruptions", name),
                         resource: Some(name.clone()),
-                        recommendation: "Ensure enough replicas to satisfy PDB requirements.".to_string(),
+                        recommendation: "Ensure enough replicas to satisfy PDB requirements."
+                            .to_string(),
                         rule_id: Some("POLICY-004".to_string()),
                     });
                 }
@@ -203,7 +229,10 @@ impl<'a> PoliciesInspector<'a> {
                 format!("{} PDBs currently block disruption", unhealthy)
             }),
             recommendations: if unhealthy > 0 {
-                vec!["Scale workloads or adjust PDB thresholds to allow controlled disruptions.".to_string()]
+                vec![
+                    "Scale workloads or adjust PDB thresholds to allow controlled disruptions."
+                        .to_string(),
+                ]
             } else {
                 vec![]
             },

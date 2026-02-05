@@ -3,8 +3,8 @@ use chrono::Utc;
 use kube::api::ListParams;
 use log::info;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct SecurityInspector<'a> {
     client: &'a K8sClient,
@@ -22,16 +22,20 @@ impl<'a> SecurityInspector<'a> {
         let mut issues = Vec::new();
 
         // Check RBAC configuration
-        self.check_rbac_configuration(&mut checks, &mut issues).await?;
+        self.check_rbac_configuration(&mut checks, &mut issues)
+            .await?;
 
         // Check Pod Security Standards
-        self.check_pod_security_standards(namespace, &mut checks, &mut issues).await?;
+        self.check_pod_security_standards(namespace, &mut checks, &mut issues)
+            .await?;
 
         // Check Network Policies
-        self.check_network_policies(namespace, &mut checks, &mut issues).await?;
+        self.check_network_policies(namespace, &mut checks, &mut issues)
+            .await?;
 
         // Check Service Account configuration
-        self.check_service_accounts(namespace, &mut checks, &mut issues).await?;
+        self.check_service_accounts(namespace, &mut checks, &mut issues)
+            .await?;
 
         let overall_score = checks.iter().map(|c| c.score).sum::<f64>() / checks.len() as f64;
 
@@ -49,7 +53,11 @@ impl<'a> SecurityInspector<'a> {
         })
     }
 
-    async fn check_rbac_configuration(&self, checks: &mut Vec<CheckResult>, issues: &mut Vec<Issue>) -> Result<()> {
+    async fn check_rbac_configuration(
+        &self,
+        checks: &mut Vec<CheckResult>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<()> {
         // Check ClusterRoles
         let cluster_roles_api = self.client.cluster_roles();
         let cluster_roles = cluster_roles_api.list(&ListParams::default()).await?;
@@ -63,11 +71,17 @@ impl<'a> SecurityInspector<'a> {
             if let Some(rules) = &role.rules {
                 for rule in rules {
                     // Check for overly permissive rules
-                    if rule.verbs.contains(&"*".to_string()) ||
-                       rule.resources.as_ref().map_or(false, |r| r.contains(&"*".to_string())) {
+                    if rule.verbs.contains(&"*".to_string())
+                        || rule
+                            .resources
+                            .as_ref()
+                            .map_or(false, |r| r.contains(&"*".to_string()))
+                    {
                         dangerous_cluster_roles += 1;
 
-                        if !role_name.starts_with("system:") && !role_name.starts_with("cluster-admin") {
+                        if !role_name.starts_with("system:")
+                            && !role_name.starts_with("cluster-admin")
+                        {
                             issues.push(Issue {
                                 severity: IssueSeverity::Warning,
                                 category: "ClusterRole".to_string(),
@@ -85,7 +99,9 @@ impl<'a> SecurityInspector<'a> {
 
         // Check ClusterRoleBindings
         let cluster_role_bindings_api = self.client.cluster_role_bindings();
-        let cluster_role_bindings = cluster_role_bindings_api.list(&ListParams::default()).await?;
+        let cluster_role_bindings = cluster_role_bindings_api
+            .list(&ListParams::default())
+            .await?;
 
         let mut risky_bindings = 0;
         for binding in &cluster_role_bindings.items {
@@ -93,41 +109,50 @@ impl<'a> SecurityInspector<'a> {
 
             let role_ref = &binding.role_ref;
             if role_ref.name == "cluster-admin" {
-                    if let Some(subjects) = &binding.subjects {
-                        for subject in subjects {
-                            if subject.kind == "User" && !subject.name.starts_with("system:") {
-                                risky_bindings += 1;
-                                issues.push(Issue {
-                                    severity: IssueSeverity::Warning,
-                                    category: "ClusterRoleBinding".to_string(),
-                                    description: format!("User {} has cluster-admin privileges", subject.name),
-                                    resource: Some(binding_name.to_string()),
-                                    recommendation: "Minimize cluster-admin privileges and use more specific roles".to_string(),
-                                    rule_id: Some("SEC-002".to_string()),
-                                });
-                            }
-                            if subject.kind == "ServiceAccount" && subject.namespace.as_deref() != Some("kube-system") {
-                                risky_bindings += 1;
-                                issues.push(Issue {
-                                    severity: IssueSeverity::Critical,
-                                    category: "ClusterRoleBinding".to_string(),
-                                    description: format!(
-                                        "ServiceAccount {}/{} has cluster-admin privileges",
-                                        subject.namespace.as_deref().unwrap_or("default"),
-                                        subject.name
-                                    ),
-                                    resource: Some(binding_name.to_string()),
-                                    recommendation: "Review and restrict ServiceAccount permissions".to_string(),
-                                    rule_id: Some("SEC-003".to_string()),
-                                });
-                            }
+                if let Some(subjects) = &binding.subjects {
+                    for subject in subjects {
+                        if subject.kind == "User" && !subject.name.starts_with("system:") {
+                            risky_bindings += 1;
+                            issues.push(Issue {
+                                severity: IssueSeverity::Warning,
+                                category: "ClusterRoleBinding".to_string(),
+                                description: format!(
+                                    "User {} has cluster-admin privileges",
+                                    subject.name
+                                ),
+                                resource: Some(binding_name.to_string()),
+                                recommendation:
+                                    "Minimize cluster-admin privileges and use more specific roles"
+                                        .to_string(),
+                                rule_id: Some("SEC-002".to_string()),
+                            });
+                        }
+                        if subject.kind == "ServiceAccount"
+                            && subject.namespace.as_deref() != Some("kube-system")
+                        {
+                            risky_bindings += 1;
+                            issues.push(Issue {
+                                severity: IssueSeverity::Critical,
+                                category: "ClusterRoleBinding".to_string(),
+                                description: format!(
+                                    "ServiceAccount {}/{} has cluster-admin privileges",
+                                    subject.namespace.as_deref().unwrap_or("default"),
+                                    subject.name
+                                ),
+                                resource: Some(binding_name.to_string()),
+                                recommendation: "Review and restrict ServiceAccount permissions"
+                                    .to_string(),
+                                rule_id: Some("SEC-003".to_string()),
+                            });
                         }
                     }
+                }
             }
         }
 
         let rbac_score = if total_cluster_roles > 0 {
-            ((total_cluster_roles - dangerous_cluster_roles) as f64 / total_cluster_roles as f64) * 100.0
+            ((total_cluster_roles - dangerous_cluster_roles) as f64 / total_cluster_roles as f64)
+                * 100.0
         } else {
             100.0
         };
@@ -142,9 +167,16 @@ impl<'a> SecurityInspector<'a> {
             } else {
                 CheckStatus::Critical
             },
-            score: if risky_bindings > 0 { rbac_score * 0.7 } else { rbac_score },
+            score: if risky_bindings > 0 {
+                rbac_score * 0.7
+            } else {
+                rbac_score
+            },
             max_score: 100.0,
-            details: Some(format!("Risky roles: {}, Risky bindings: {}", dangerous_cluster_roles, risky_bindings)),
+            details: Some(format!(
+                "Risky roles: {}, Risky bindings: {}",
+                dangerous_cluster_roles, risky_bindings
+            )),
             recommendations: if rbac_score < 90.0 || risky_bindings > 0 {
                 vec!["Review and minimize RBAC permissions".to_string()]
             } else {
@@ -155,7 +187,12 @@ impl<'a> SecurityInspector<'a> {
         Ok(())
     }
 
-    async fn check_pod_security_standards(&self, namespace: Option<&str>, checks: &mut Vec<CheckResult>, issues: &mut Vec<Issue>) -> Result<()> {
+    async fn check_pod_security_standards(
+        &self,
+        namespace: Option<&str>,
+        checks: &mut Vec<CheckResult>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<()> {
         let pods_api = self.client.pods(namespace);
         let pods = pods_api.list(&ListParams::default()).await?;
 
@@ -174,7 +211,9 @@ impl<'a> SecurityInspector<'a> {
             if let Some(spec) = &pod.spec {
                 // Check security context
                 if let Some(security_context) = &spec.security_context {
-                    if security_context.run_as_user.is_some() && security_context.run_as_user != Some(0) {
+                    if security_context.run_as_user.is_some()
+                        && security_context.run_as_user != Some(0)
+                    {
                         // Good - not running as root
                     } else if security_context.run_as_user == Some(0) {
                         pods_running_as_root += 1;
@@ -182,10 +221,13 @@ impl<'a> SecurityInspector<'a> {
                         issues.push(Issue {
                             severity: IssueSeverity::Warning,
                             category: "Security".to_string(),
-                            description: format!("Pod {}/{} runs as root user", pod_namespace, pod_name),
+                            description: format!(
+                                "Pod {}/{} runs as root user",
+                                pod_namespace, pod_name
+                            ),
                             resource: Some(format!("{}/{}", pod_namespace, pod_name)),
                             recommendation: "Configure runAsUser to use non-root user".to_string(),
-                                rule_id: Some("SEC-004".to_string()),
+                            rule_id: Some("SEC-004".to_string()),
                         });
                     }
                 } else {
@@ -223,7 +265,8 @@ impl<'a> SecurityInspector<'a> {
                                     container.name, pod_namespace, pod_name
                                 ),
                                 resource: Some(format!("{}/{}", pod_namespace, pod_name)),
-                                recommendation: "Configure container to run as non-root user".to_string(),
+                                recommendation: "Configure container to run as non-root user"
+                                    .to_string(),
                                 rule_id: Some("SEC-006".to_string()),
                             });
                         }
@@ -281,7 +324,12 @@ impl<'a> SecurityInspector<'a> {
         Ok(())
     }
 
-    async fn check_network_policies(&self, namespace: Option<&str>, checks: &mut Vec<CheckResult>, issues: &mut Vec<Issue>) -> Result<()> {
+    async fn check_network_policies(
+        &self,
+        namespace: Option<&str>,
+        checks: &mut Vec<CheckResult>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<()> {
         let network_policies_api = self.client.network_policies(namespace);
         let network_policies = network_policies_api.list(&ListParams::default()).await?;
 
@@ -316,7 +364,8 @@ impl<'a> SecurityInspector<'a> {
 
         checks.push(CheckResult {
             name: "Network Policy Coverage".to_string(),
-            description: "Checks network policy implementation for traffic segmentation".to_string(),
+            description: "Checks network policy implementation for traffic segmentation"
+                .to_string(),
             status: if coverage_score >= 70.0 {
                 CheckStatus::Pass
             } else {
@@ -324,7 +373,11 @@ impl<'a> SecurityInspector<'a> {
             },
             score: coverage_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} namespaces with network policies", namespaces_with_policies.len(), total_namespaces)),
+            details: Some(format!(
+                "{}/{} namespaces with network policies",
+                namespaces_with_policies.len(),
+                total_namespaces
+            )),
             recommendations: if coverage_score < 70.0 {
                 vec!["Implement network policies for better traffic control".to_string()]
             } else {
@@ -335,7 +388,12 @@ impl<'a> SecurityInspector<'a> {
         Ok(())
     }
 
-    async fn check_service_accounts(&self, namespace: Option<&str>, checks: &mut Vec<CheckResult>, issues: &mut Vec<Issue>) -> Result<()> {
+    async fn check_service_accounts(
+        &self,
+        namespace: Option<&str>,
+        checks: &mut Vec<CheckResult>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<()> {
         let pods_api = self.client.pods(namespace);
         let pods = pods_api.list(&ListParams::default()).await?;
 
@@ -356,9 +414,14 @@ impl<'a> SecurityInspector<'a> {
                     issues.push(Issue {
                         severity: IssueSeverity::Warning,
                         category: "ServiceAccount".to_string(),
-                        description: format!("Pod {}/{} uses default service account", pod_namespace, pod_name),
+                        description: format!(
+                            "Pod {}/{} uses default service account",
+                            pod_namespace, pod_name
+                        ),
                         resource: Some(format!("{}/{}", pod_namespace, pod_name)),
-                        recommendation: "Create and use dedicated service accounts with minimal permissions".to_string(),
+                        recommendation:
+                            "Create and use dedicated service accounts with minimal permissions"
+                                .to_string(),
                         rule_id: Some("SEC-009".to_string()),
                     });
                 } else {
@@ -383,7 +446,10 @@ impl<'a> SecurityInspector<'a> {
             },
             score: sa_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} pods use custom service accounts", pods_with_custom_sa, total_pods)),
+            details: Some(format!(
+                "{}/{} pods use custom service accounts",
+                pods_with_custom_sa, total_pods
+            )),
             recommendations: if sa_score < 80.0 {
                 vec!["Create dedicated service accounts for applications".to_string()]
             } else {

@@ -3,8 +3,8 @@ use chrono::Utc;
 use kube::api::ListParams;
 use log::{info, warn};
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct NodeInspector<'a> {
     client: &'a K8sClient,
@@ -45,7 +45,8 @@ impl<'a> NodeInspector<'a> {
                                         category: "Node".to_string(),
                                         description: format!("Node {} is not ready", node_name),
                                         resource: Some(node_name.to_string()),
-                                        recommendation: "Check node logs and system resources".to_string(),
+                                        recommendation: "Check node logs and system resources"
+                                            .to_string(),
                                         rule_id: Some("NODE-001".to_string()),
                                     });
                                 }
@@ -56,9 +57,15 @@ impl<'a> NodeInspector<'a> {
                                     issues.push(Issue {
                                         severity: IssueSeverity::Warning,
                                         category: "Node".to_string(),
-                                        description: format!("Node {} has {}", node_name, condition.type_),
+                                        description: format!(
+                                            "Node {} has {}",
+                                            node_name, condition.type_
+                                        ),
                                         resource: Some(node_name.to_string()),
-                                        recommendation: format!("Investigate {} on node", condition.type_),
+                                        recommendation: format!(
+                                            "Investigate {} on node",
+                                            condition.type_
+                                        ),
                                         rule_id: Some("NODE-002".to_string()),
                                     });
                                 }
@@ -69,8 +76,15 @@ impl<'a> NodeInspector<'a> {
                 }
 
                 // Check node capacity and allocatable resources
-                if let (Some(capacity), Some(allocatable)) = (&status.capacity, &status.allocatable) {
-                    self.check_node_resources(node_name, capacity, allocatable, &mut checks, &mut issues)?;
+                if let (Some(capacity), Some(allocatable)) = (&status.capacity, &status.allocatable)
+                {
+                    self.check_node_resources(
+                        node_name,
+                        capacity,
+                        allocatable,
+                        &mut checks,
+                        &mut issues,
+                    )?;
                 }
             }
         }
@@ -121,7 +135,11 @@ impl<'a> NodeInspector<'a> {
             },
             score: pressure_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} nodes without pressure", total_nodes - nodes_with_pressure, total_nodes)),
+            details: Some(format!(
+                "{}/{} nodes without pressure",
+                total_nodes - nodes_with_pressure,
+                total_nodes
+            )),
             recommendations: if pressure_score < 100.0 {
                 vec!["Monitor node resource usage and consider scaling".to_string()]
             } else {
@@ -148,13 +166,21 @@ impl<'a> NodeInspector<'a> {
     fn check_node_resources(
         &self,
         node_name: &str,
-        capacity: &std::collections::BTreeMap<String, k8s_openapi::apimachinery::pkg::api::resource::Quantity>,
-        allocatable: &std::collections::BTreeMap<String, k8s_openapi::apimachinery::pkg::api::resource::Quantity>,
+        capacity: &std::collections::BTreeMap<
+            String,
+            k8s_openapi::apimachinery::pkg::api::resource::Quantity,
+        >,
+        allocatable: &std::collections::BTreeMap<
+            String,
+            k8s_openapi::apimachinery::pkg::api::resource::Quantity,
+        >,
         _checks: &mut Vec<CheckResult>,
         _issues: &mut Vec<Issue>,
     ) -> Result<()> {
         // Check CPU allocatable vs capacity
-        if let (Some(cpu_capacity), Some(cpu_allocatable)) = (capacity.get("cpu"), allocatable.get("cpu")) {
+        if let (Some(cpu_capacity), Some(cpu_allocatable)) =
+            (capacity.get("cpu"), allocatable.get("cpu"))
+        {
             let capacity_str = &cpu_capacity.0;
             let allocatable_str = &cpu_allocatable.0;
 
@@ -165,7 +191,9 @@ impl<'a> NodeInspector<'a> {
         }
 
         // Check memory allocatable vs capacity
-        if let (Some(memory_capacity), Some(memory_allocatable)) = (capacity.get("memory"), allocatable.get("memory")) {
+        if let (Some(memory_capacity), Some(memory_allocatable)) =
+            (capacity.get("memory"), allocatable.get("memory"))
+        {
             let capacity_str = &memory_capacity.0;
             let allocatable_str = &memory_allocatable.0;
 

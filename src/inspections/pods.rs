@@ -3,8 +3,8 @@ use chrono::Utc;
 use kube::api::ListParams;
 use log::info;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 /// Map container state reason to issue code (POD-004..POD-011 after renumbering; no POD-004 for "no limits", see RES-002).
 fn container_state_reason_to_rule_id(state_kind: &str, reason: &str) -> &'static str {
@@ -48,7 +48,8 @@ impl<'a> PodInspector<'a> {
         let mut failed_pods = 0;
         let mut pending_pods = 0;
         let mut pods_with_restarts = 0;
-        let mut reason_counts: std::collections::HashMap<String, u32> = std::collections::HashMap::new();
+        let mut reason_counts: std::collections::HashMap<String, u32> =
+            std::collections::HashMap::new();
         let mut pod_container_states: Vec<PodContainerStateRow> = Vec::new();
 
         for pod in &pods.items {
@@ -69,11 +70,8 @@ impl<'a> PodInspector<'a> {
                                         .as_deref()
                                         .unwrap_or("NotReady")
                                         .to_string();
-                                    let message = condition
-                                        .message
-                                        .as_deref()
-                                        .unwrap_or("")
-                                        .to_string();
+                                    let message =
+                                        condition.message.as_deref().unwrap_or("").to_string();
                                     let desc = if message.is_empty() {
                                         format!(
                                             "Pod {}/{} is Running but not Ready ({})",
@@ -103,7 +101,10 @@ impl<'a> PodInspector<'a> {
                         issues.push(Issue {
                             severity: IssueSeverity::Critical,
                             category: "Pod".to_string(),
-                            description: format!("Pod {}/{} is in Failed state", pod_namespace, pod_name),
+                            description: format!(
+                                "Pod {}/{} is in Failed state",
+                                pod_namespace, pod_name
+                            ),
                             resource: Some(format!("{}/{}", pod_namespace, pod_name)),
                             recommendation: "Check pod logs and events".to_string(),
                             rule_id: Some("POD-001".to_string()),
@@ -113,13 +114,18 @@ impl<'a> PodInspector<'a> {
                         pending_pods += 1;
                         if let Some(conditions) = &status.conditions {
                             for condition in conditions {
-                                if condition.type_ == "PodScheduled" && condition.status == "False" {
+                                if condition.type_ == "PodScheduled" && condition.status == "False"
+                                {
                                     issues.push(Issue {
                                         severity: IssueSeverity::Warning,
                                         category: "Pod".to_string(),
-                                        description: format!("Pod {}/{} cannot be scheduled", pod_namespace, pod_name),
+                                        description: format!(
+                                            "Pod {}/{} cannot be scheduled",
+                                            pod_namespace, pod_name
+                                        ),
                                         resource: Some(format!("{}/{}", pod_namespace, pod_name)),
-                                        recommendation: "Check resource requests and node capacity".to_string(),
+                                        recommendation: "Check resource requests and node capacity"
+                                            .to_string(),
                                         rule_id: Some("POD-002".to_string()),
                                     });
                                 }
@@ -142,11 +148,7 @@ impl<'a> PodInspector<'a> {
                 for container_status in &all_container_statuses {
                     if let Some(state) = &container_status.state {
                         if let Some(waiting) = &state.waiting {
-                            let reason = waiting
-                                .reason
-                                .as_deref()
-                                .unwrap_or("Waiting")
-                                .to_string();
+                            let reason = waiting.reason.as_deref().unwrap_or("Waiting").to_string();
                             *reason_counts.entry(reason.clone()).or_insert(0) += 1;
                             let message = waiting.message.as_deref().unwrap_or("").to_string();
                             pod_container_states.push(PodContainerStateRow {
@@ -193,7 +195,8 @@ impl<'a> PodInspector<'a> {
                                     reason: reason.clone(),
                                     detail,
                                 });
-                                let rule_id = container_state_reason_to_rule_id("terminated", &reason);
+                                let rule_id =
+                                    container_state_reason_to_rule_id("terminated", &reason);
                                 let desc = format!(
                                     "Pod {}/{} container {} terminated: reason={}, exit_code={}",
                                     pod_namespace,
@@ -241,7 +244,8 @@ impl<'a> PodInspector<'a> {
                             container_status.name, pod_namespace, pod_name, r
                         ),
                         resource: Some(format!("{}/{}", pod_namespace, pod_name)),
-                        recommendation: "Investigate container crashes and resource limits".to_string(),
+                        recommendation: "Investigate container crashes and resource limits"
+                            .to_string(),
                         rule_id: Some("POD-003".to_string()),
                     });
                 }
@@ -316,7 +320,10 @@ impl<'a> PodInspector<'a> {
             },
             score: restart_score,
             max_score: 100.0,
-            details: Some(format!("{}/{} pods with excessive restarts", pods_with_restarts, total_pods)),
+            details: Some(format!(
+                "{}/{} pods with excessive restarts",
+                pods_with_restarts, total_pods
+            )),
             recommendations: if restart_score < 90.0 {
                 vec!["Review application logs and resource limits".to_string()]
             } else {

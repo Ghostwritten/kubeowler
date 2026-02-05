@@ -23,9 +23,18 @@ pub fn write_report(report: &ClusterReport, path: &str) -> Result<()> {
             "section,cluster_name,report_id,cluster_version,node_count,ready_node_count,pod_count,namespace_count,cluster_age_days"
         )?;
         let cv = overview.cluster_version.as_deref().unwrap_or("");
-        let pc = overview.pod_count.map(|p| p.to_string()).unwrap_or_default();
-        let nc = overview.namespace_count.map(|n| n.to_string()).unwrap_or_default();
-        let age = overview.cluster_age_days.map(|d| d.to_string()).unwrap_or_default();
+        let pc = overview
+            .pod_count
+            .map(|p| p.to_string())
+            .unwrap_or_default();
+        let nc = overview
+            .namespace_count
+            .map(|n| n.to_string())
+            .unwrap_or_default();
+        let age = overview
+            .cluster_age_days
+            .map(|d| d.to_string())
+            .unwrap_or_default();
         writeln!(
             f,
             "cluster_overview,{},{},{},{},{},{},{},{}",
@@ -40,7 +49,10 @@ pub fn write_report(report: &ClusterReport, path: &str) -> Result<()> {
         )?;
     }
 
-    writeln!(f, "section,inspection_type,severity,category,description,resource,recommendation,rule_id")?;
+    writeln!(
+        f,
+        "section,inspection_type,severity,category,description,resource,recommendation,rule_id"
+    )?;
     for insp in &report.inspections {
         for issue in &insp.summary.issues {
             let sev = format!("{:?}", issue.severity);

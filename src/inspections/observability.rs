@@ -1,10 +1,10 @@
 use anyhow::Result;
 use chrono::Utc;
-use kube::api::ListParams;
 use k8s_openapi::api::core::v1::Pod;
+use kube::api::ListParams;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 const METRICS_SERVER_IDENTIFIERS: [&str; 2] = ["metrics-server", "metricsserver"];
 const KUBE_STATE_METRICS_IDENTIFIERS: [&str; 2] = ["kube-state-metrics", "kube_state_metrics"];
@@ -27,8 +27,12 @@ impl<'a> ObservabilityInspector<'a> {
 
         let metrics_check = self.inspect_metrics_components(&mut issues).await?;
         let coredns_check = self.inspect_coredns(&mut issues).await?;
-        let logging_check = self.inspect_logging_components(namespace, &mut issues).await?;
-        let alerting_check = self.inspect_alerting_components(namespace, &mut issues).await?;
+        let logging_check = self
+            .inspect_logging_components(namespace, &mut issues)
+            .await?;
+        let alerting_check = self
+            .inspect_alerting_components(namespace, &mut issues)
+            .await?;
 
         checks.push(metrics_check);
         checks.push(coredns_check);
@@ -65,10 +69,18 @@ impl<'a> ObservabilityInspector<'a> {
 
         for pod in &pods.items {
             if let Some(name) = pod.metadata.name.as_deref() {
-                if METRICS_SERVER_IDENTIFIERS.iter().any(|id| name.contains(id)) && is_pod_ready(pod) {
+                if METRICS_SERVER_IDENTIFIERS
+                    .iter()
+                    .any(|id| name.contains(id))
+                    && is_pod_ready(pod)
+                {
                     metrics_server_found = true;
                 }
-                if KUBE_STATE_METRICS_IDENTIFIERS.iter().any(|id| name.contains(id)) && is_pod_ready(pod) {
+                if KUBE_STATE_METRICS_IDENTIFIERS
+                    .iter()
+                    .any(|id| name.contains(id))
+                    && is_pod_ready(pod)
+                {
                     kube_state_metrics_found = true;
                 }
             }
@@ -81,7 +93,11 @@ impl<'a> ObservabilityInspector<'a> {
                 if let Ok(list) = api.list(&ListParams::default()).await {
                     for pod in &list.items {
                         if let Some(name) = pod.metadata.name.as_deref() {
-                            if KUBE_STATE_METRICS_IDENTIFIERS.iter().any(|id| name.contains(id)) && is_pod_ready(pod) {
+                            if KUBE_STATE_METRICS_IDENTIFIERS
+                                .iter()
+                                .any(|id| name.contains(id))
+                                && is_pod_ready(pod)
+                            {
                                 kube_state_metrics_found = true;
                                 break;
                             }
@@ -104,7 +120,8 @@ impl<'a> ObservabilityInspector<'a> {
                 category: "Observability".to_string(),
                 description: "metrics-server is missing or not ready".to_string(),
                 resource: Some("kube-system".to_string()),
-                recommendation: "Deploy metrics-server to enable HPA and kubectl top commands.".to_string(),
+                recommendation: "Deploy metrics-server to enable HPA and kubectl top commands."
+                    .to_string(),
                 rule_id: Some("OBS-001".to_string()),
             });
             recommendations.push("Install metrics-server for core metrics APIs.".to_string());
@@ -117,7 +134,8 @@ impl<'a> ObservabilityInspector<'a> {
                 category: "Observability".to_string(),
                 description: "kube-state-metrics is missing or not ready".to_string(),
                 resource: Some("kube-system".to_string()),
-                recommendation: "Deploy kube-state-metrics to expose Kubernetes object metrics.".to_string(),
+                recommendation: "Deploy kube-state-metrics to expose Kubernetes object metrics."
+                    .to_string(),
                 rule_id: Some("OBS-002".to_string()),
             });
             recommendations.push("Install kube-state-metrics for Prometheus scraping.".to_string());
@@ -139,8 +157,16 @@ impl<'a> ObservabilityInspector<'a> {
             max_score: 100.0,
             details: Some(format!(
                 "metrics-server: {}, kube-state-metrics: {}",
-                if metrics_server_found { "present" } else { "missing" },
-                if kube_state_metrics_found { "present" } else { "missing" }
+                if metrics_server_found {
+                    "present"
+                } else {
+                    "missing"
+                },
+                if kube_state_metrics_found {
+                    "present"
+                } else {
+                    "missing"
+                }
             )),
             recommendations,
         })
@@ -169,14 +195,11 @@ impl<'a> ObservabilityInspector<'a> {
                 category: "Observability".to_string(),
                 description: "CoreDNS (cluster DNS) not found in kube-system".to_string(),
                 resource: Some("kube-system".to_string()),
-                recommendation: "Ensure CoreDNS or kube-dns is deployed for cluster DNS.".to_string(),
+                recommendation: "Ensure CoreDNS or kube-dns is deployed for cluster DNS."
+                    .to_string(),
                 rule_id: Some("OBS-003".to_string()),
             });
-            (
-                CheckStatus::Critical,
-                0.0,
-                "CoreDNS: not found".to_string(),
-            )
+            (CheckStatus::Critical, 0.0, "CoreDNS: not found".to_string())
         } else if ready < total {
             (
                 CheckStatus::Warning,
@@ -202,7 +225,11 @@ impl<'a> ObservabilityInspector<'a> {
         })
     }
 
-    async fn inspect_logging_components(&self, namespace: Option<&str>, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+    async fn inspect_logging_components(
+        &self,
+        namespace: Option<&str>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<CheckResult> {
         let target_ns = namespace.unwrap_or("kube-system");
         let pods_api = self.client.pods(Some(target_ns));
         let pods = pods_api.list(&ListParams::default()).await?;
@@ -224,7 +251,10 @@ impl<'a> ObservabilityInspector<'a> {
                 status: CheckStatus::Pass,
                 score: 100.0,
                 max_score: 100.0,
-                details: Some(format!("Logging components detected in namespace {}", target_ns)),
+                details: Some(format!(
+                    "Logging components detected in namespace {}",
+                    target_ns
+                )),
                 recommendations: vec![],
             })
         } else {
@@ -233,7 +263,8 @@ impl<'a> ObservabilityInspector<'a> {
                 category: "Observability".to_string(),
                 description: "No logging collector pods detected".to_string(),
                 resource: Some(target_ns.to_string()),
-                recommendation: "Deploy Fluentd/Vector/Logstash to aggregate cluster logs.".to_string(),
+                recommendation: "Deploy Fluentd/Vector/Logstash to aggregate cluster logs."
+                    .to_string(),
                 rule_id: Some("OBS-003".to_string()),
             });
             Ok(CheckResult {
@@ -243,12 +274,18 @@ impl<'a> ObservabilityInspector<'a> {
                 score: 70.0,
                 max_score: 100.0,
                 details: Some("No logging stack found".to_string()),
-                recommendations: vec!["Install a logging stack (e.g., Fluent Bit + Loki).".to_string()],
+                recommendations: vec![
+                    "Install a logging stack (e.g., Fluent Bit + Loki).".to_string()
+                ],
             })
         }
     }
 
-    async fn inspect_alerting_components(&self, namespace: Option<&str>, issues: &mut Vec<Issue>) -> Result<CheckResult> {
+    async fn inspect_alerting_components(
+        &self,
+        namespace: Option<&str>,
+        issues: &mut Vec<Issue>,
+    ) -> Result<CheckResult> {
         let potential_namespaces = [
             namespace.unwrap_or("monitoring"),
             "prometheus",
@@ -262,7 +299,9 @@ impl<'a> ObservabilityInspector<'a> {
             if let Ok(pods) = pods_api.list(&ListParams::default()).await {
                 for pod in pods.items {
                     if let Some(name) = pod.metadata.name.as_deref() {
-                        if PROMETHEUS_IDENTIFIERS.iter().any(|id| name.contains(id)) && is_pod_ready(&pod) {
+                        if PROMETHEUS_IDENTIFIERS.iter().any(|id| name.contains(id))
+                            && is_pod_ready(&pod)
+                        {
                             prometheus_found = true;
                             break;
                         }
@@ -290,7 +329,8 @@ impl<'a> ObservabilityInspector<'a> {
                 category: "Observability".to_string(),
                 description: "No Prometheus-compatible monitoring found".to_string(),
                 resource: Some("monitoring".to_string()),
-                recommendation: "Deploy Prometheus/Thanos or integrate with managed monitoring.".to_string(),
+                recommendation: "Deploy Prometheus/Thanos or integrate with managed monitoring."
+                    .to_string(),
                 rule_id: Some("OBS-004".to_string()),
             });
             Ok(CheckResult {
@@ -300,7 +340,9 @@ impl<'a> ObservabilityInspector<'a> {
                 score: 65.0,
                 max_score: 100.0,
                 details: Some("No Prometheus/Thanos/VictoriaMetrics detected".to_string()),
-                recommendations: vec!["Install Prometheus and Alertmanager for proactive monitoring.".to_string()],
+                recommendations: vec![
+                    "Install Prometheus and Alertmanager for proactive monitoring.".to_string(),
+                ],
             })
         }
     }

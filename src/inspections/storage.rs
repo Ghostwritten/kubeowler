@@ -3,8 +3,8 @@ use chrono::Utc;
 use kube::api::ListParams;
 use log::info;
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct StorageInspector<'a> {
     client: &'a K8sClient,
@@ -43,9 +43,13 @@ impl<'a> StorageInspector<'a> {
                         issues.push(Issue {
                             severity: IssueSeverity::Critical,
                             category: "PersistentVolume".to_string(),
-                            description: format!("Persistent Volume {} is in Failed state", pv_name),
+                            description: format!(
+                                "Persistent Volume {} is in Failed state",
+                                pv_name
+                            ),
                             resource: Some(pv_name.to_string()),
-                            recommendation: "Check PV configuration and underlying storage".to_string(),
+                            recommendation: "Check PV configuration and underlying storage"
+                                .to_string(),
                             rule_id: Some("STO-001".to_string()),
                         });
                     }
@@ -53,9 +57,13 @@ impl<'a> StorageInspector<'a> {
                         issues.push(Issue {
                             severity: IssueSeverity::Warning,
                             category: "PersistentVolume".to_string(),
-                            description: format!("Persistent Volume {} is Released but not reclaimed", pv_name),
+                            description: format!(
+                                "Persistent Volume {} is Released but not reclaimed",
+                                pv_name
+                            ),
                             resource: Some(pv_name.to_string()),
-                            recommendation: "Check reclaim policy and clean up released PVs".to_string(),
+                            recommendation: "Check reclaim policy and clean up released PVs"
+                                .to_string(),
                             rule_id: Some("STO-002".to_string()),
                         });
                     }
@@ -72,12 +80,16 @@ impl<'a> StorageInspector<'a> {
                     Some("Retain") => {
                         // This might accumulate orphaned PVs
                         if pv.status.as_ref().and_then(|s| s.phase.as_deref()) == Some("Released") {
-                        issues.push(Issue {
+                            issues.push(Issue {
                                 severity: IssueSeverity::Info,
-                            category: "PersistentVolume".to_string(),
-                                description: format!("PV {} with Retain policy is Released", pv_name),
+                                category: "PersistentVolume".to_string(),
+                                description: format!(
+                                    "PV {} with Retain policy is Released",
+                                    pv_name
+                                ),
                                 resource: Some(pv_name.to_string()),
-                                recommendation: "Monitor and clean up retained PVs manually".to_string(),
+                                recommendation: "Monitor and clean up retained PVs manually"
+                                    .to_string(),
                                 rule_id: Some("STO-003".to_string()),
                             });
                         }
@@ -88,7 +100,8 @@ impl<'a> StorageInspector<'a> {
                             category: "PersistentVolume".to_string(),
                             description: format!("PV {} has unclear reclaim policy", pv_name),
                             resource: Some(pv_name.to_string()),
-                            recommendation: "Set explicit reclaim policy (Retain or Delete)".to_string(),
+                            recommendation: "Set explicit reclaim policy (Retain or Delete)"
+                                .to_string(),
                             rule_id: Some("STO-004".to_string()),
                         });
                     }
@@ -114,17 +127,18 @@ impl<'a> StorageInspector<'a> {
                     Some("Bound") => bound_pvcs += 1,
                     Some("Pending") => {
                         _pending_pvcs += 1;
-                    issues.push(Issue {
+                        issues.push(Issue {
                             severity: IssueSeverity::Warning,
-                        category: "PersistentVolumeClaim".to_string(),
+                            category: "PersistentVolumeClaim".to_string(),
                             description: format!("PVC {}/{} is pending", pvc_namespace, pvc_name),
                             resource: Some(format!("{}/{}", pvc_namespace, pvc_name)),
-                            recommendation: "Check storage class availability and node capacity".to_string(),
+                            recommendation: "Check storage class availability and node capacity"
+                                .to_string(),
                             rule_id: Some("STO-005".to_string()),
                         });
                     }
                     Some("Lost") => {
-                    issues.push(Issue {
+                        issues.push(Issue {
                             severity: IssueSeverity::Critical,
                         category: "PersistentVolumeClaim".to_string(),
                             description: format!("PVC {}/{} is lost", pvc_namespace, pvc_name),
@@ -143,9 +157,13 @@ impl<'a> StorageInspector<'a> {
                     issues.push(Issue {
                         severity: IssueSeverity::Info,
                         category: "PersistentVolumeClaim".to_string(),
-                        description: format!("PVC {}/{} has no storage class specified", pvc_namespace, pvc_name),
+                        description: format!(
+                            "PVC {}/{} has no storage class specified",
+                            pvc_namespace, pvc_name
+                        ),
                         resource: Some(format!("{}/{}", pvc_namespace, pvc_name)),
-                        recommendation: "Specify storage class for better provisioning control".to_string(),
+                        recommendation: "Specify storage class for better provisioning control"
+                            .to_string(),
                         rule_id: Some("STO-007".to_string()),
                     });
                 }
@@ -164,7 +182,9 @@ impl<'a> StorageInspector<'a> {
             total_storage_classes += 1;
 
             if let Some(annotations) = &sc.metadata.annotations {
-                if annotations.get("storageclass.kubernetes.io/is-default-class") == Some(&"true".to_string()) {
+                if annotations.get("storageclass.kubernetes.io/is-default-class")
+                    == Some(&"true".to_string())
+                {
                     default_storage_classes += 1;
                 }
             }
@@ -189,14 +209,18 @@ impl<'a> StorageInspector<'a> {
                 category: "StorageClass".to_string(),
                 description: "No default storage class configured".to_string(),
                 resource: None,
-                recommendation: "Configure a default storage class for automatic PV provisioning".to_string(),
+                recommendation: "Configure a default storage class for automatic PV provisioning"
+                    .to_string(),
                 rule_id: Some("STO-009".to_string()),
             });
         } else if default_storage_classes > 1 {
             issues.push(Issue {
                 severity: IssueSeverity::Warning,
                 category: "StorageClass".to_string(),
-                description: format!("{} default storage classes configured", default_storage_classes),
+                description: format!(
+                    "{} default storage classes configured",
+                    default_storage_classes
+                ),
                 resource: None,
                 recommendation: "Only one storage class should be marked as default".to_string(),
                 rule_id: Some("STO-010".to_string()),
@@ -281,7 +305,10 @@ impl<'a> StorageInspector<'a> {
             },
             score: sc_config_score,
             max_score: 100.0,
-            details: Some(format!("{} storage classes, {} default", total_storage_classes, default_storage_classes)),
+            details: Some(format!(
+                "{} storage classes, {} default",
+                total_storage_classes, default_storage_classes
+            )),
             recommendations: if sc_config_score < 90.0 {
                 vec!["Configure appropriate storage classes and set one as default".to_string()]
             } else {

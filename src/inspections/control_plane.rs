@@ -1,7 +1,7 @@
 use anyhow::Result;
 use chrono::Utc;
-use kube::{api::ListParams, Api};
 use k8s_openapi::api::core::v1::{ComponentStatus, Pod};
+use kube::{api::ListParams, Api};
 
 /// ComponentStatus API was removed in Kubernetes 1.24; list can return 404 or "not found".
 fn is_component_status_unavailable(err: &kube::Error) -> bool {
@@ -16,8 +16,8 @@ fn is_component_status_unavailable(err: &kube::Error) -> bool {
     }
 }
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 const CONTROL_PLANE_POD_KEYWORDS: [&str; 4] = [
     "kube-apiserver",
@@ -91,7 +91,10 @@ impl<'a> ControlPlaneInspector<'a> {
         let mut healthy = 0usize;
 
         for status in statuses {
-            let name = status.metadata.name.unwrap_or_else(|| "unknown".to_string());
+            let name = status
+                .metadata
+                .name
+                .unwrap_or_else(|| "unknown".to_string());
             if let Some(conditions) = status.conditions {
                 let mut component_healthy = true;
                 for condition in conditions {
@@ -135,7 +138,10 @@ impl<'a> ControlPlaneInspector<'a> {
             max_score: 100.0,
             details: Some(format!("{}/{} components healthy", healthy, total)),
             recommendations: if score < 100.0 {
-                vec!["Review kube-system pod logs and ensure all static pods are Running.".to_string()]
+                vec![
+                    "Review kube-system pod logs and ensure all static pods are Running."
+                        .to_string(),
+                ]
             } else {
                 vec![]
             },
@@ -159,7 +165,9 @@ impl<'a> ControlPlaneInspector<'a> {
                             category: "ControlPlane".to_string(),
                             description: format!("Control plane pod {} is not running", name),
                             resource: Some(name.clone()),
-                            recommendation: "Check the static pod manifest and node health for this component.".to_string(),
+                            recommendation:
+                                "Check the static pod manifest and node health for this component."
+                                    .to_string(),
                             rule_id: Some("CTRL-002".to_string()),
                         });
                     } else {
@@ -185,7 +193,8 @@ impl<'a> ControlPlaneInspector<'a> {
 
         Ok(CheckResult {
             name: "Control Plane Pods".to_string(),
-            description: "Validates that key control-plane pods in kube-system are running".to_string(),
+            description: "Validates that key control-plane pods in kube-system are running"
+                .to_string(),
             status,
             score,
             max_score: 100.0,

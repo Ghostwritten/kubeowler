@@ -1,22 +1,22 @@
 use anyhow::Result;
 use clap::Parser;
-use log::info;
 use colored::Colorize;
+use log::info;
 
 mod cli;
-mod k8s;
 mod inspections;
+mod k8s;
 mod node_inspection;
-mod scoring;
 mod reporting;
+mod scoring;
 mod utils;
 
-use cli::{Args, Commands, ReportFormat, InspectionType};
-use k8s::client::K8sClient;
-use inspections::InspectionRunner;
+use cli::{Args, Commands, InspectionType, ReportFormat};
 use inspections::types::ClusterReport;
+use inspections::InspectionRunner;
+use k8s::client::K8sClient;
+use reporting::generator::parse_check_level_filter;
 use reporting::ReportGenerator;
-use reporting::generator::{parse_check_level_filter};
 
 /// Sanitize cluster name for use in filename: replace invalid chars with `-`, collapse and trim.
 fn sanitize_cluster_name(name: &str) -> String {
@@ -27,7 +27,11 @@ fn sanitize_cluster_name(name: &str) -> String {
             _ => c,
         })
         .collect();
-    let s = s.split('-').filter(|p| !p.is_empty()).collect::<Vec<_>>().join("-");
+    let s = s
+        .split('-')
+        .filter(|p| !p.is_empty())
+        .collect::<Vec<_>>()
+        .join("-");
     if s.is_empty() {
         "cluster".to_string()
     } else {
@@ -35,7 +39,11 @@ fn sanitize_cluster_name(name: &str) -> String {
     }
 }
 
-fn output_path_with_extension(path: Option<String>, report: &ClusterReport, format: ReportFormat) -> String {
+fn output_path_with_extension(
+    path: Option<String>,
+    report: &ClusterReport,
+    format: ReportFormat,
+) -> String {
     let ext = match format {
         ReportFormat::Md => "md",
         ReportFormat::Json => "json",
@@ -96,8 +104,16 @@ async fn run_check_command(
     config_file: Option<String>,
     level: String,
 ) -> Result<()> {
-    println!("{}", "🔍 Kubeowler - Kubernetes Cluster Checker".bright_cyan().bold());
-    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_cyan());
+    println!(
+        "{}",
+        "🔍 Kubeowler - Kubernetes Cluster Checker"
+            .bright_cyan()
+            .bold()
+    );
+    println!(
+        "{}",
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_cyan()
+    );
 
     info!("Starting Kubernetes cluster check");
 
@@ -110,8 +126,14 @@ async fn run_check_command(
             .unwrap_or_else(|| "all namespaces".to_string())
             .bright_green()
     );
-    println!("   Node inspector DaemonSet: {}", node_inspector_namespace.bright_green());
-    println!("   Output File: {}", output.as_deref().unwrap_or("(auto)").bright_green());
+    println!(
+        "   Node inspector DaemonSet: {}",
+        node_inspector_namespace.bright_green()
+    );
+    println!(
+        "   Output File: {}",
+        output.as_deref().unwrap_or("(auto)").bright_green()
+    );
     println!();
 
     print!("🔗 Connecting to cluster... ");
@@ -152,11 +174,17 @@ async fn run_check_command(
 
     println!();
     println!("{}", "📊 Summary:".bright_yellow().bold());
-    println!("   Overall Score: {} {:.1}/100",
-        if results.overall_score >= 90.0 { "🟢" }
-        else if results.overall_score >= 80.0 { "🟡" }
-        else if results.overall_score >= 70.0 { "🟠" }
-        else { "🔴" },
+    println!(
+        "   Overall Score: {} {:.1}/100",
+        if results.overall_score >= 90.0 {
+            "🟢"
+        } else if results.overall_score >= 80.0 {
+            "🟡"
+        } else if results.overall_score >= 70.0 {
+            "🟠"
+        } else {
+            "🔴"
+        },
         results.overall_score
     );
 
@@ -166,7 +194,8 @@ async fn run_check_command(
         .map(|i| i.summary.issues.len())
         .sum();
 
-    println!("   Issues Found: {}",
+    println!(
+        "   Issues Found: {}",
         if total_issues == 0 {
             format!("{}", total_issues).bright_green()
         } else {
@@ -183,7 +212,10 @@ async fn run_check_command(
             serde_json::to_writer_pretty(file, &results)?;
             println!("{}", "✅ Done".bright_green());
             println!();
-            println!("{}", "🎉 Check completed successfully!".bright_green().bold());
+            println!(
+                "{}",
+                "🎉 Check completed successfully!".bright_green().bold()
+            );
             println!("   Report: {}", output_path.bright_cyan());
             Ok(())
         }
@@ -191,7 +223,10 @@ async fn run_check_command(
             reporting::csv::write_report(&results, &output_path)?;
             println!("{}", "✅ Done".bright_green());
             println!();
-            println!("{}", "🎉 Check completed successfully!".bright_green().bold());
+            println!(
+                "{}",
+                "🎉 Check completed successfully!".bright_green().bold()
+            );
             println!("   Report: {}", output_path.bright_cyan());
             Ok(())
         }
@@ -199,7 +234,10 @@ async fn run_check_command(
             reporting::html::write_report(&results, &output_path)?;
             println!("{}", "✅ Done".bright_green());
             println!();
-            println!("{}", "🎉 Check completed successfully!".bright_green().bold());
+            println!(
+                "{}",
+                "🎉 Check completed successfully!".bright_green().bold()
+            );
             println!("   Report: {}", output_path.bright_cyan());
             Ok(())
         }
@@ -219,7 +257,10 @@ async fn run_check_command(
                 .await?;
             println!("{}", "✅ Done".bright_green());
             println!();
-            println!("{}", "🎉 Check completed successfully!".bright_green().bold());
+            println!(
+                "{}",
+                "🎉 Check completed successfully!".bright_green().bold()
+            );
             println!("   Report: {}", output_path.bright_cyan());
             Ok(())
         }

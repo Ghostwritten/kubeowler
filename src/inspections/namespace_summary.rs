@@ -1,11 +1,11 @@
 use anyhow::Result;
 use chrono::Utc;
+use k8s_openapi::api::core::v1::{LimitRange, ResourceQuota};
 use kube::api::ListParams;
 use kube::Api;
-use k8s_openapi::api::core::v1::{LimitRange, ResourceQuota};
 
-use crate::k8s::K8sClient;
 use crate::inspections::types::*;
+use crate::k8s::K8sClient;
 
 pub struct NamespaceSummaryInspector<'a> {
     client: &'a K8sClient,

@@ -1,5 +1,5 @@
-# Build multi-arch binaries and publish to GitHub Releases on tag push (e.g. v0.1.0).
-# Artifacts: Linux (amd64, arm64), Windows (amd64), macOS (amd64, arm64).
+# Build Linux binaries (amd64, arm64) and publish to GitHub Releases on tag push (e.g. v0.1.0).
+# Artifacts: Linux x86_64, Linux aarch64 only.
 
 name: Release
 
@@ -24,15 +24,6 @@ jobs:
           - target: aarch64-unknown-linux-musl
             os: ubuntu-latest
             asset: aarch64-linux
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            asset: x86_64-windows
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            asset: x86_64-darwin
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            asset: aarch64-darwin
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -53,20 +44,13 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           targets: ${{ matrix.target }}
 
-      - name: Build release binary (Linux musl via cross, others via cargo)
-        run: |
-          if [[ "${{ matrix.target }}" == *-linux-musl ]]; then
-            cross build --release --target ${{ matrix.target }}
-          else
-            cargo build --release --target ${{ matrix.target }}
-          fi
+      - name: Build release binary
+        run: cross build --release --target ${{ matrix.target }}
 
-      - name: Strip binary (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Strip binary
         run: strip target/${{ matrix.target }}/release/kubeowler 2>/dev/null || true
 
-      - name: Prepare archive (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Prepare archive
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           BIN=target/${{ matrix.target }}/release/kubeowler
@@ -76,17 +60,6 @@ jobs:
           tar czvf "../kubeowler-${VERSION}-${{ matrix.asset }}.tar.gz" kubeowler
           cd ..
           echo "ASSET_PATH=kubeowler-${VERSION}-${{ matrix.asset }}.tar.gz" >> $GITHUB_ENV
-
-      - name: Prepare archive (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $version = "${{ github.ref_name }}"
-          $bin = "target/${{ matrix.target }}/release/kubeowler.exe"
-          New-Item -ItemType Directory -Force -Path release | Out-Null
-          Copy-Item $bin -Destination release/kubeowler.exe
-          Compress-Archive -Path release/* -DestinationPath "kubeowler-$version-${{ matrix.asset }}.zip" -Force
-          echo "ASSET_PATH=kubeowler-$version-${{ matrix.asset }}.zip" >> $env:GITHUB_ENV
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

@@ -48,23 +48,16 @@ kubeowler/
 
 Pre-built binaries are published on [GitHub Releases](https://github.com/Ghostwritten/kubeowler/releases). Each release includes:
 
-| Platform   | Architecture | File |
-|-----------|--------------|------|
-| Linux     | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` |
-| Linux     | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` |
-| Windows   | amd64        | `kubeowler-<version>-x86_64-windows.zip` |
-| macOS     | amd64 (Intel)| `kubeowler-<version>-x86_64-darwin.tar.gz` |
-| macOS     | arm64 (Apple Silicon) | `kubeowler-<version>-aarch64-darwin.tar.gz` |
+| Platform | Architecture | File |
+|----------|--------------|------|
+| Linux    | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` |
+| Linux    | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` |
 
-**Linux (example: amd64):**
+**Example (amd64):**
 ```bash
 curl -sSL https://github.com/Ghostwritten/kubeowler/releases/download/v0.1.0/kubeowler-v0.1.0-x86_64-linux.tar.gz | tar xz
 chmod +x kubeowler && ./kubeowler check --help
 ```
-
-**Windows:** download the `.zip`, extract, and run `kubeowler.exe check --help` in PowerShell or CMD.
-
-**macOS:** download the `.tar.gz` for your chip (Intel or Apple Silicon), then `tar xzf <file>` and `./kubeowler check --help`.
 
 ### Build from source
 

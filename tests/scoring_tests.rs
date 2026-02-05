@@ -1,6 +1,6 @@
-use kubeowler::scoring::scoring_engine::ScoringEngine;
-use kubeowler::inspections::types::*;
 use chrono::Utc;
+use kubeowler::inspections::types::*;
+use kubeowler::scoring::scoring_engine::ScoringEngine;
 
 #[test]
 fn test_scoring_engine_calculation() {
@@ -11,17 +11,15 @@ fn test_scoring_engine_calculation() {
         inspection_type: "Test".to_string(),
         timestamp: Utc::now(),
         overall_score: 85.0,
-        checks: vec![
-            CheckResult {
-                name: "Test Check".to_string(),
-                description: "Test description".to_string(),
-                status: CheckStatus::Pass,
-                score: 85.0,
-                max_score: 100.0,
-                details: None,
-                recommendations: vec![],
-            }
-        ],
+        checks: vec![CheckResult {
+            name: "Test Check".to_string(),
+            description: "Test description".to_string(),
+            status: CheckStatus::Pass,
+            score: 85.0,
+            max_score: 100.0,
+            details: None,
+            recommendations: vec![],
+        }],
         summary: InspectionSummary {
             total_checks: 1,
             passed_checks: 1,
@@ -46,11 +44,17 @@ fn test_scoring_engine_calculation() {
 fn test_health_status_calculation() {
     let engine = ScoringEngine::new();
 
-    assert!(matches!(engine.get_health_status(95.0), HealthStatus::Excellent));
+    assert!(matches!(
+        engine.get_health_status(95.0),
+        HealthStatus::Excellent
+    ));
     assert!(matches!(engine.get_health_status(85.0), HealthStatus::Good));
     assert!(matches!(engine.get_health_status(75.0), HealthStatus::Fair));
     assert!(matches!(engine.get_health_status(65.0), HealthStatus::Poor));
-    assert!(matches!(engine.get_health_status(50.0), HealthStatus::Critical));
+    assert!(matches!(
+        engine.get_health_status(50.0),
+        HealthStatus::Critical
+    ));
 }
 
 #[test]
@@ -75,7 +79,7 @@ fn test_check_scoring() {
             max_score: 100.0,
             details: None,
             recommendations: vec![],
-        }
+        },
     ];
 
     let score = engine.calculate_inspection_score(&checks);

@@ -1,0 +1,15 @@
+# Reduce build context: exclude build output and VCS
+target/
+.git/
+.gitignore
+*.md
+!README.md
+.cursor/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.env
+.env.local
+.DS_Store

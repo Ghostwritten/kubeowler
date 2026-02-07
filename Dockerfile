@@ -1,29 +1,24 @@
-# Multi-stage Dockerfile
-FROM rust:1.70 as builder
+# Multi-stage: fetch pre-built binary from GitHub Release (no Rust compile).
+# Build with: docker build --build-arg TAR_URL=<url> --build-arg VERSION=v0.1.1 -t ghostwritten/kubeowler:v0.1.1 .
 
-WORKDIR /app
-COPY . .
+ARG TAR_URL
+FROM debian:bookworm-slim AS getter
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
+ARG TAR_URL
+RUN mkdir -p /out && curl -sL "$TAR_URL" | tar xz -C /out
 
-# Build project
-RUN cargo build --release
-
-# Runtime image
 FROM debian:bookworm-slim
+ARG VERSION
+LABEL org.opencontainers.image.version="${VERSION}"
 
-# Install runtime dependencies
 RUN apt-get update && \
-    apt-get install -y ca-certificates && \
+    apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy built binary
-COPY --from=builder /app/target/release/kubeowler /usr/local/bin/kubeowler
-
-# Set executable permission
+COPY --from=getter /out/kubeowler /usr/local/bin/kubeowler
 RUN chmod +x /usr/local/bin/kubeowler
 
-# Create non-root user
 RUN useradd -r -s /bin/false kubeowler
-
 USER kubeowler
 
 ENTRYPOINT ["kubeowler"]

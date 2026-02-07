@@ -143,8 +143,9 @@ jobs:
             --build-arg VERSION="${VERSION}" \
             -t ghostwritten/kubeowler:${VERSION}-arm64 \
             --push -f Dockerfile .
+          sleep 5
           docker buildx imagetools create -t ghostwritten/kubeowler:${VERSION} \
-            --append ghostwritten/kubeowler:${VERSION}-amd64 \
+            ghostwritten/kubeowler:${VERSION}-amd64 \
             ghostwritten/kubeowler:${VERSION}-arm64
 
       - name: Build and push ghostwritten/kubeowler-node-inspector (multi-arch)

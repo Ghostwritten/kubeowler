@@ -63,6 +63,6 @@ The report generator takes ClusterReport and produces Markdown. It does not re-q
 
 ## 6. References
 
-- Node inspection JSON schema: [08-node-inspection-schema.md](08-node-inspection-schema.md)
-- Node inspector build and deploy: [06-node-inspector-build-deploy.md](06-node-inspector-build-deploy.md)
-- Installation and usage: [01-installation-guide.md](01-installation-guide.md)
+- Node inspection JSON schema: [node-inspection-schema.md](node-inspection-schema.md)
+- Node inspector build and deploy: [node-inspector-build-deploy.md](node-inspector-build-deploy.md)
+- Installation and usage: [installation.md](installation.md)

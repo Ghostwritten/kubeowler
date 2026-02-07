@@ -101,7 +101,7 @@ chmod +x build-multi-arch.sh
 ./build-multi-arch.sh --release
 ```
 
-Artifacts: `target/x86_64-unknown-linux-gnu/release/kubeowler` and `target/aarch64-unknown-linux-gnu/release/kubeowler`. For arm64 cross-compilation, some systems need the target linker (e.g. `gcc-aarch64-linux-gnu` on Debian/Ubuntu); see [01-installation-guide.md](01-installation-guide.md).
+Artifacts: `target/x86_64-unknown-linux-gnu/release/kubeowler` and `target/aarch64-unknown-linux-gnu/release/kubeowler`. For arm64 cross-compilation, some systems need the target linker (e.g. `gcc-aarch64-linux-gnu` on Debian/Ubuntu); see [installation.md](installation.md).
 
 ---
 
@@ -130,7 +130,7 @@ docker run --rm \
   kubeowler:latest check -o /app/reports/report.md
 ```
 
-See [02-docker-guide.md](02-docker-guide.md) for full Docker and Kubernetes usage.
+See [docker-and-kubernetes.md](docker-and-kubernetes.md) for full Docker and Kubernetes usage.
 
 ---
 
@@ -142,4 +142,4 @@ See [02-docker-guide.md](02-docker-guide.md) for full Docker and Kubernetes usag
 - **Slow crates.io:** use a proxy or a Cargo mirror if available.
 - **Kubeconfig:** use `-c /path/to/config` or set `KUBECONFIG`.
 
-For detailed troubleshooting, see [05-troubleshooting.md](05-troubleshooting.md).
+For detailed troubleshooting, see [troubleshooting.md](troubleshooting.md).

@@ -1,90 +1,90 @@
 #!/bin/bash
 
-# Kubeowler 编译和运行脚本
+# Kubeowler build and run script
 
 set -e
 
-echo "🔍 Kubeowler - Kubernetes 集群巡检工具"
+echo "🔍 Kubeowler - Kubernetes Cluster Checker"
 echo "========================================="
 
-# 检查 Rust 环境
+# Check Rust environment
 if ! command -v cargo &> /dev/null; then
-    echo "❌ 错误: 未找到 Cargo (Rust 包管理器)"
+    echo "❌ Error: Cargo (Rust package manager) not found"
     echo ""
-    echo "请先安装 Rust:"
+    echo "Please install Rust first:"
     echo "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
     echo "source ~/.cargo/env"
     exit 1
 fi
 
-echo "✅ 找到 Rust 环境"
-echo "   - Rust 版本: $(rustc --version)"
-echo "   - Cargo 版本: $(cargo --version)"
+echo "✅ Rust environment found"
+echo "   - Rust version: $(rustc --version)"
+echo "   - Cargo version: $(cargo --version)"
 echo ""
 
-# 检查项目文件
+# Check project files
 if [ ! -f "Cargo.toml" ]; then
-    echo "❌ 错误: 未找到 Cargo.toml 文件"
-    echo "请确保在项目根目录下运行此脚本"
+    echo "❌ Error: Cargo.toml not found"
+    echo "Please run this script from the project root directory"
     exit 1
 fi
 
-echo "✅ 项目文件检查通过"
+echo "✅ Project files OK"
 echo ""
 
-# 编译项目
-echo "🔧 开始编译项目..."
+# Build project
+echo "🔧 Building project..."
 if [ "$1" = "--release" ]; then
-    echo "   编译模式: 优化版本 (release)"
+    echo "   Build mode: release"
     cargo build --release
     BINARY_PATH="./target/release/kubeowler"
 else
-    echo "   编译模式: 开发版本 (debug)"
+    echo "   Build mode: debug"
     cargo build
     BINARY_PATH="./target/debug/kubeowler"
 fi
 
 if [ $? -eq 0 ]; then
-    echo "✅ 编译成功!"
+    echo "✅ Build succeeded!"
     echo ""
 
-    # 显示二进制文件信息
+    # Show binary info
     if [ -f "$BINARY_PATH" ]; then
-        echo "📦 二进制文件信息:"
-        echo "   路径: $BINARY_PATH"
-        echo "   大小: $(du -h $BINARY_PATH | cut -f1)"
+        echo "📦 Binary:"
+        echo "   Path: $BINARY_PATH"
+        echo "   Size: $(du -h $BINARY_PATH | cut -f1)"
         echo ""
 
-        # 显示使用示例
-        echo "🚀 使用示例:"
-        echo "   # 显示帮助"
+        # Usage examples
+        echo "🚀 Usage examples:"
+        echo "   # Show help"
         echo "   $BINARY_PATH check --help"
         echo ""
-        echo "   # 全集群巡检"
+        echo "   # Full cluster check"
         echo "   $BINARY_PATH check"
         echo ""
-        echo "   # 指定命名空间"
+        echo "   # Specific namespace"
         echo "   $BINARY_PATH check -n kube-system"
         echo ""
-        echo "   # 自定义输出文件与格式"
+        echo "   # Custom output file and format"
         echo "   $BINARY_PATH check -o my-report.md"
         echo "   $BINARY_PATH check -o report.json -f json"
         echo ""
     fi
 else
-    echo "❌ 编译失败"
+    echo "❌ Build failed"
     exit 1
 fi
 
-# 运行测试
+# Run tests
 if [ "$2" = "--test" ]; then
-    echo "🧪 运行测试..."
+    echo "🧪 Running tests..."
     cargo test
     if [ $? -eq 0 ]; then
-        echo "✅ 所有测试通过!"
+        echo "✅ All tests passed!"
     else
-        echo "❌ 部分测试失败"
+        echo "❌ Some tests failed"
     fi
 fi
 
-echo "🎉 准备完成! 现在可以使用 Kubeowler 进行集群巡检了。"
+echo "🎉 Done! You can now run Kubeowler to check your cluster."

@@ -191,7 +191,11 @@ impl ScoringEngine {
         }
 
         // Sort by impact score descending
-        recommendations.sort_by(|a, b| b.impact_score.partial_cmp(&a.impact_score).unwrap());
+        recommendations.sort_by(|a, b| {
+            b.impact_score
+                .partial_cmp(&a.impact_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         recommendations.truncate(10); // Top 10 recommendations
 
         recommendations

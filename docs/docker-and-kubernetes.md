@@ -1,6 +1,6 @@
 # Docker Build and Run Guide
 
-This guide covers building and running the **Kubeowler main binary** as a Docker image. Supported architectures and base environment align with the [main README](../README.md): **architectures** `linux/amd64` and `linux/arm64`; **base OS** glibc-compatible Linux. For multi-arch builds, see the multi-arch section in [01-installation-guide.md](01-installation-guide.md) or use Docker buildx.
+This guide covers building and running the **Kubeowler main binary** as a Docker image. Supported architectures and base environment align with the [main README](../README.md): **architectures** `linux/amd64` and `linux/arm64`; **base OS** glibc-compatible Linux. For multi-arch builds, see the multi-arch section in [installation.md](installation.md) or use Docker buildx.
 
 ---
 
@@ -94,7 +94,7 @@ spec:
           serviceAccountName: kubeowler
           containers:
           - name: kubeowler
-            image: ghostwritten/kubeowler:v0.1.0
+            image: ghostwritten/kubeowler:v0.1.1
             command: ["kubeowler"]
             args: ["check", "-o", "/tmp/cluster-report.md"]
             volumeMounts:
@@ -112,4 +112,4 @@ Apply to the cluster:
 kubectl apply -f kubeowler-cronjob.yaml
 ```
 
-Adjust the image name, schedule, and output path as needed. For node-level inspection, deploy the Node Inspector DaemonSet as described in [06-node-inspector-build-deploy.md](06-node-inspector-build-deploy.md).
+Adjust the image name, schedule, and output path as needed. For node-level inspection, deploy the Node Inspector DaemonSet as described in [node-inspector-build-deploy.md](node-inspector-build-deploy.md).

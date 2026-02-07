@@ -37,4 +37,3 @@ jobs:
 
       - name: Clippy
         run: cargo clippy --release -- -D warnings
-        continue-on-error: true

@@ -107,11 +107,11 @@ impl<'a> CertificateInspector<'a> {
                 let validity = x509.validity();
                 let expiry_utc = format!("{}", validity.not_after);
                 let days = match validity.time_to_expiration() {
-                    Some(d) => d.whole_days() as i64,
+                    Some(d) => d.whole_days(),
                     None => {
                         let now = time::OffsetDateTime::now_utc();
                         let not_after = validity.not_after.to_datetime();
-                        (not_after - now).whole_days() as i64
+                        (not_after - now).whole_days()
                     }
                 };
                 if days < 0 {
@@ -145,8 +145,6 @@ impl<'a> CertificateInspector<'a> {
             70.0
         } else if expiring_90 > 0 {
             85.0
-        } else if total_certs > 0 {
-            100.0
         } else {
             100.0
         };

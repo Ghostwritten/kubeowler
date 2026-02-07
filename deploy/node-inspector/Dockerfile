@@ -7,5 +7,5 @@ RUN apk add --no-cache bash coreutils openssl
 COPY scripts/node-check-universal.sh /node-check-universal.sh
 RUN chmod +x /node-check-universal.sh
 # NODE_NAME injected via env from DaemonSet (fieldRef spec.nodeName)
-# 输出 JSON 后保持容器运行，避免 DaemonSet 因 restartPolicy 仅支持 Always 而反复重启
+# Keep container running after JSON output so DaemonSet (restartPolicy: Always) does not restart repeatedly
 ENTRYPOINT ["sh", "-c", "/node-check-universal.sh; exec sleep infinity"]

@@ -36,4 +36,4 @@ This document describes limitations of the Node Inspector DaemonSet and how host
 
 The script (`scripts/node-check-universal.sh`) implements detection and fallback for `/host`; report output is in English.
 
-For the JSON schema and collection vs. report usage, see [08-node-inspection-schema.md](08-node-inspection-schema.md) and [09-node-inspector-collection-gaps.md](09-node-inspector-collection-gaps.md).
+For the JSON schema and collection vs. report usage, see [node-inspection-schema.md](node-inspection-schema.md) and [node-inspector-collection-gaps.md](node-inspector-collection-gaps.md).

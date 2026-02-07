@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Kubeowler Report</title>
+<style>
+:root {
+  --cell-padding-vertical: 0.25em;
+  --cell-padding-horizontal: 0.25em;
+  --font-family-sans: system-ui, -apple-system, sans-serif;
+}
+body {
+  max-width: 60em;
+  margin: auto;
+  font-family: var(--font-family-sans);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  border-top: 0.1em solid #333;
+  border-bottom: 0.1em solid #333;
+}
+thead {
+  border-bottom: 0.1em solid #333;
+}
+th, td {
+  padding-top: var(--cell-padding-vertical);
+  padding-bottom: var(--cell-padding-vertical);
+  padding-left: var(--cell-padding-horizontal);
+  padding-right: var(--cell-padding-horizontal);
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: #f5f5f5;
+}
+td > p {
+  margin: 0;
+  word-break: break-all;
+  hyphens: auto;
+}
+td {
+  word-break: break-all;
+  hyphens: auto;
+}
+.report-logo {
+  width: 25%;
+  max-width: 200px;
+  float: right;
+}
+</style>
+</head>
+<body>
+<img class="report-logo" src="data:image/png;base64,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" alt="Kubeowler"/>
+<h1>cluster-1 Kubernetes Cluster Check Report</h1>
+<p><strong>Report ID</strong>: <code>59d34074-28d4-45a8-bc04-8f0bb6eb9bc1</code></p>
+<p><strong>Cluster</strong>: cluster-1</p>
+<p><strong>Generated At</strong>: 2026-02-07 06:29:56 UTC</p>
+<h2>🖥️ Cluster Overview</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cluster Version</td>
+<td>v1.33.7</td>
+</tr>
+<tr>
+<td>Node Count</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Ready Nodes</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Pod Count</td>
+<td>83</td>
+</tr>
+<tr>
+<td>Namespace Count</td>
+<td>13</td>
+</tr>
+<tr>
+<td>Cluster Age (days)</td>
+<td>12</td>
+</tr>
+<tr>
+<td>Container Runtime</td>
+<td>containerd://2.1.5</td>
+</tr>
+<tr>
+<td>Overall Health</td>
+<td>🟡 Good (Score: 82.4)</td>
+</tr>
+</tbody>
+</table>
+<h3>Node conditions</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Ready</th>
+<th>MemoryPressure</th>
+<th>DiskPressure</th>
+<th>PIDPressure</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<h3>Workload summary</h3>
+<table>
+<thead>
+<tr>
+<th>Controller</th>
+<th>Total</th>
+<th>Ready</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deployment</td>
+<td>34</td>
+<td>32</td>
+</tr>
+<tr>
+<td>StatefulSet</td>
+<td>3</td>
+<td>3</td>
+</tr>
+<tr>
+<td>DaemonSet</td>
+<td>8</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<h3>Storage summary</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PV total</td>
+<td>6</td>
+</tr>
+<tr>
+<td>PVC total</td>
+<td>6</td>
+</tr>
+<tr>
+<td>PVC Bound</td>
+<td>6</td>
+</tr>
+<tr>
+<td>StorageClass count</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Default StorageClass</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3>Container resource usage (top 20 high usage)</h3>
+<p>Top 20 containers by usage vs limit (CPU or memory ≥ 80% of limit). Data from <strong>metrics-server</strong> (Pod metrics API) and <strong>Pod spec</strong> (limits). This section is <strong>omitted when metrics-server is unavailable</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Namespace</th>
+<th>Pod</th>
+<th>Container</th>
+<th>CPU used (m)</th>
+<th>CPU request (m)</th>
+<th>CPU limit (m)</th>
+<th>Mem used (Mi)</th>
+<th>Mem request (Mi)</th>
+<th>Mem limit (Mi)</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>upm-system</td>
+<td>consul-webhook-cert-manager-7667c64c6f-gvndk</td>
+<td>webhook-cert-manager</td>
+<td>0</td>
+<td>100</td>
+<td>100</td>
+<td>40</td>
+<td>50</td>
+<td>50</td>
+<td>High usage</td>
+</tr>
+</tbody>
+</table>
+<h2>Node Inspection</h2>
+<p>Per-node checks from kubeowler-node-inspector DaemonSet.</p>
+<h3>Node General Information</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>OS Version</th>
+<th>IP Address</th>
+<th>Kernel Version</th>
+<th>Uptime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>Red Hat Enterprise Linux 9.7 (Plow)</td>
+<td>192.168.22.151</td>
+<td>5.14.0-611.24.1.el9_7.x86_64</td>
+<td>3 day(s) 23 hour(s)</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>Red Hat Enterprise Linux 9.7 (Plow)</td>
+<td>192.168.22.152</td>
+<td>5.14.0-611.24.1.el9_7.x86_64</td>
+<td>3 day(s) 23 hour(s)</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>Red Hat Enterprise Linux 9.7 (Plow)</td>
+<td>192.168.22.153</td>
+<td>5.14.0-611.24.1.el9_7.x86_64</td>
+<td>3 day(s) 23 hour(s)</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>Red Hat Enterprise Linux 9.7 (Plow)</td>
+<td>192.168.22.154</td>
+<td>5.14.0-611.24.1.el9_7.x86_64</td>
+<td>3 day(s) 23 hour(s)</td>
+</tr>
+</tbody>
+</table>
+<h3>Node resources</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>CPU (cores)</th>
+<th>CPU Used</th>
+<th>CPU %</th>
+<th>Mem Total (Gi)</th>
+<th>Mem Used (Gi)</th>
+<th>Mem %</th>
+<th>Swap Total (Gi)</th>
+<th>Swap Used (Gi)</th>
+<th>Swap %</th>
+<th>Load (1m, 5m, 15m)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>4</td>
+<td>0.29</td>
+<td>7.2%</td>
+<td>7.5</td>
+<td>2.8</td>
+<td>36.7%</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.0%</td>
+<td>0.25, 0.28, 0.33</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>32</td>
+<td>0.19</td>
+<td>0.6%</td>
+<td>31.1</td>
+<td>14.2</td>
+<td>45.8%</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.0%</td>
+<td>0.25, 0.22, 0.13</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>12</td>
+<td>0.04</td>
+<td>0.3%</td>
+<td>23.2</td>
+<td>2.7</td>
+<td>11.7%</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.0%</td>
+<td>0.13, 0.17, 0.09</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>16</td>
+<td>0.05</td>
+<td>0.3%</td>
+<td>23.2</td>
+<td>4.5</td>
+<td>19.5%</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.0%</td>
+<td>0.00, 0.08, 0.14</td>
+</tr>
+</tbody>
+</table>
+<h3>Node disk usage</h3>
+<p>Per-node filesystem usage by mount. Status: Info (&lt;60% used), Warning (60–90%), Critical (≥90%).</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Mount Point</th>
+<th>Device</th>
+<th>FSType</th>
+<th>Total (Gi)</th>
+<th>Used (Gi)</th>
+<th>Used %</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>/host/boot</td>
+<td>/dev/sda2</td>
+<td>-</td>
+<td>0.9</td>
+<td>0.4</td>
+<td>46.7%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>master01</td>
+<td>/etc</td>
+<td>/dev/mapper/rhel-root</td>
+<td>-</td>
+<td>58.4</td>
+<td>9.4</td>
+<td>16.1%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>master01</td>
+<td>/</td>
+<td>overlay</td>
+<td>-</td>
+<td>58.4</td>
+<td>9.4</td>
+<td>16.1%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>/host/boot</td>
+<td>/dev/sda2</td>
+<td>-</td>
+<td>0.9</td>
+<td>0.4</td>
+<td>46.7%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>/etc</td>
+<td>/dev/mapper/rhel-root</td>
+<td>-</td>
+<td>58.4</td>
+<td>22.2</td>
+<td>38.1%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>/</td>
+<td>overlay</td>
+<td>-</td>
+<td>58.4</td>
+<td>22.2</td>
+<td>38.1%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>/host/boot</td>
+<td>/dev/sda2</td>
+<td>-</td>
+<td>0.9</td>
+<td>0.4</td>
+<td>46.7%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>/etc</td>
+<td>/dev/mapper/rhel-root</td>
+<td>-</td>
+<td>58.4</td>
+<td>12.5</td>
+<td>21.3%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>/</td>
+<td>overlay</td>
+<td>-</td>
+<td>58.4</td>
+<td>12.5</td>
+<td>21.3%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>/host/boot</td>
+<td>/dev/sda2</td>
+<td>-</td>
+<td>0.9</td>
+<td>0.4</td>
+<td>46.7%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>/</td>
+<td>overlay</td>
+<td>-</td>
+<td>58.4</td>
+<td>13.7</td>
+<td>23.4%</td>
+<td>Info</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>/etc</td>
+<td>/dev/mapper/rhel-root</td>
+<td>-</td>
+<td>58.4</td>
+<td>13.7</td>
+<td>23.4%</td>
+<td>Info</td>
+</tr>
+</tbody>
+</table>
+<h3>Node container state counts</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Running</th>
+<th>Waiting</th>
+<th>Exited</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>9</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>40</td>
+<td>0</td>
+<td>12</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>18</td>
+<td>1</td>
+<td>7</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>23</td>
+<td>2</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<h2>Node service status</h2>
+<table>
+<thead>
+<tr>
+<th>Node/Service</th>
+<th>NTP synced</th>
+<th>Journald</th>
+<th>Crontab</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>disabled</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>disabled</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>disabled</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>disabled</td>
+<td>None</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<h3>Node security</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>SELinux</th>
+<th>Firewalld</th>
+<th>IPVS loaded</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>Permissive</td>
+<td>Inactive</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>Permissive</td>
+<td>Inactive</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>Permissive</td>
+<td>Inactive</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>Permissive</td>
+<td>Inactive</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<h3>Node kernel parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>net.ipv4.ip_forward</th>
+<th>vm.swappiness</th>
+<th>net.core.somaxconn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>0</td>
+<td>60</td>
+<td>4096</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>0</td>
+<td>60</td>
+<td>4096</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>0</td>
+<td>60</td>
+<td>4096</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>0</td>
+<td>60</td>
+<td>4096</td>
+</tr>
+</tbody>
+</table>
+<h3>Node process health</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Zombie count</th>
+<th>Issue code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>0</td>
+<td>-</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>0</td>
+<td>-</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>0</td>
+<td>-</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>0</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h3>Node Certificate Status</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Path</th>
+<th>Expired</th>
+<th>Expiration Date</th>
+<th>Days to Expiry</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>master01</td>
+<td>/etc/kubernetes/ssl/apiserver-kubelet-client.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+<tr>
+<td>master01</td>
+<td>/etc/kubernetes/ssl/apiserver.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+<tr>
+<td>master01</td>
+<td>/etc/kubernetes/ssl/ca.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+<tr>
+<td>master01</td>
+<td>/etc/kubernetes/ssl/front-proxy-ca.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+<tr>
+<td>master01</td>
+<td>/etc/kubernetes/ssl/front-proxy-client.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+<tr>
+<td>worker01</td>
+<td>/etc/kubernetes/ssl/ca.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+<tr>
+<td>worker02</td>
+<td>/etc/kubernetes/ssl/ca.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+<tr>
+<td>worker03</td>
+<td>/etc/kubernetes/ssl/ca.crt</td>
+<td>No</td>
+<td>Jan  2 04:05:42 2126 GMT</td>
+<td>36487</td>
+</tr>
+</tbody>
+</table>
+<h2>Recent cluster events (Warning / Error)</h2>
+<table>
+<thead>
+<tr>
+<th>Namespace</th>
+<th>Object</th>
+<th>Level</th>
+<th>Reason</th>
+<th>Message</th>
+<th>Last seen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>upm-system</td>
+<td>Pod/consul-connect-injector-6b4b944cd5-jwhpg</td>
+<td>Warning</td>
+<td>BackOff</td>
+<td>Back-off restarting failed container sidecar-injector in ...</td>
+<td>2026-02-07 06:28:30</td>
+</tr>
+<tr>
+<td>default</td>
+<td>Pod/nginx-deployment-fail-5cff74b894-jsls4</td>
+<td>Warning</td>
+<td>Failed</td>
+<td>Error: ImagePullBackOff</td>
+<td>2026-02-07 06:28:03</td>
+</tr>
+<tr>
+<td>default</td>
+<td>Pod/nginx-deployment-fail-5cff74b894-nwdvc</td>
+<td>Warning</td>
+<td>Failed</td>
+<td>Error: ImagePullBackOff</td>
+<td>2026-02-07 06:28:03</td>
+</tr>
+<tr>
+<td>upm-system</td>
+<td>Pod/consul-connect-injector-69b8cc47c5-ssqhv</td>
+<td>Warning</td>
+<td>BackOff</td>
+<td>Back-off restarting failed container sidecar-injector in ...</td>
+<td>2026-02-07 06:27:40</td>
+</tr>
+<tr>
+<td>upm-system</td>
+<td>Pod/consul-connect-injector-6b4b944cd5-jwhpg</td>
+<td>Warning</td>
+<td>Unhealthy</td>
+<td>Startup probe failed: Get &quot;http://10.233.69.134:9445/read...</td>
+<td>2026-02-07 06:23:49</td>
+</tr>
+<tr>
+<td>upm-system</td>
+<td>Pod/consul-connect-injector-69b8cc47c5-ssqhv</td>
+<td>Warning</td>
+<td>Unhealthy</td>
+<td>Startup probe failed: Get &quot;http://10.233.94.112:9445/read...</td>
+<td>2026-02-07 06:22:58</td>
+</tr>
+<tr>
+<td>default</td>
+<td>Pod/nginx-deployment-fail-5cff74b894-jsls4</td>
+<td>Warning</td>
+<td>Failed</td>
+<td>Failed to pull image &quot;nginx:non-existent-tag&quot;: rpc error:...</td>
+<td>2026-02-07 06:03:20</td>
+</tr>
+<tr>
+<td>default</td>
+<td>Pod/nginx-deployment-fail-5cff74b894-nwdvc</td>
+<td>Warning</td>
+<td>Failed</td>
+<td>Failed to pull image &quot;nginx:non-existent-tag&quot;: rpc error:...</td>
+<td>2026-02-07 05:38:21</td>
+</tr>
+</tbody>
+</table>
+<h2>📋 Detailed Results</h2>
+<h3>Check Results</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Check Item</th>
+<th>Status</th>
+<th>Score</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service</td>
+<td>Network Policy Coverage</td>
+<td>⚠️ Warning</td>
+<td>0.0/100.0</td>
+<td>0/13 namespaces with network policies</td>
+</tr>
+<tr>
+<td>PersistentVolume</td>
+<td>Storage Class Configuration</td>
+<td>⚠️ Warning</td>
+<td>70.0/100.0</td>
+<td>1 storage classes, 0 default</td>
+</tr>
+<tr>
+<td>Pod</td>
+<td>Resource Requests</td>
+<td>⚠️ Warning</td>
+<td>65.0/100.0</td>
+<td>65/100 containers with resource requests</td>
+</tr>
+<tr>
+<td>Pod</td>
+<td>Resource Limits</td>
+<td>⚠️ Warning</td>
+<td>38.0/100.0</td>
+<td>38/100 containers with resource limits</td>
+</tr>
+<tr>
+<td>Pod</td>
+<td>Complete Resource Configuration</td>
+<td>⚠️ Warning</td>
+<td>38.0/100.0</td>
+<td>38/100 containers with complete resource configuration</td>
+</tr>
+<tr>
+<td>Pod</td>
+<td>Pod Health</td>
+<td>⚠️ Warning</td>
+<td>91.6/100.0</td>
+<td>Running: 76, Failed: 0, Pending: 2, Total: 83. Container ...</td>
+</tr>
+<tr>
+<td>Pod</td>
+<td>Pod Stability</td>
+<td>⚠️ Warning</td>
+<td>83.1/100.0</td>
+<td>14/83 pods with excessive restarts</td>
+</tr>
+<tr>
+<td>HorizontalPodAutoscaler</td>
+<td>Horizontal Pod Autoscalers</td>
+<td>⚠️ Warning</td>
+<td>70.0/100.0</td>
+<td>No HPAs detected in the target scope</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>CronJobs</td>
+<td>⚠️ Warning</td>
+<td>70.0/100.0</td>
+<td>No CronJobs detected</td>
+</tr>
+<tr>
+<td>NetworkPolicy</td>
+<td>RBAC Configuration</td>
+<td>⚠️ Warning</td>
+<td>63.5/100.0</td>
+<td>Risky roles: 10, Risky bindings: 2</td>
+</tr>
+<tr>
+<td>NetworkPolicy</td>
+<td>Pod Security Standards</td>
+<td>⚠️ Warning</td>
+<td>78.3/100.0</td>
+<td>Secure pods: 65/83, Running as root: 7, Privileged: 11</td>
+</tr>
+<tr>
+<td>NetworkPolicy</td>
+<td>Network Policy Coverage</td>
+<td>⚠️ Warning</td>
+<td>0.0/100.0</td>
+<td>0/13 namespaces with network policies</td>
+</tr>
+<tr>
+<td>ResourceQuota</td>
+<td>Resource Quotas</td>
+<td>⚠️ Warning</td>
+<td>60.0/100.0</td>
+<td>No ResourceQuota objects found</td>
+</tr>
+<tr>
+<td>ResourceQuota</td>
+<td>Limit Ranges</td>
+<td>⚠️ Warning</td>
+<td>65.0/100.0</td>
+<td>No LimitRange objects found</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>Logging Stack</td>
+<td>⚠️ Warning</td>
+<td>70.0/100.0</td>
+<td>No logging stack found</td>
+</tr>
+<tr>
+<td>Certificate</td>
+<td>TLS certificate expiry</td>
+<td>⚠️ Warning</td>
+<td>70.0/100.0</td>
+<td>5 certificate(s); 2 expiring in 90 days, 1 in 30 days, 0 ...</td>
+</tr>
+</tbody>
+</table>
+<h3>Namespace summary</h3>
+<table>
+<thead>
+<tr>
+<th>Namespace</th>
+<th>Pods</th>
+<th>Deployments</th>
+<th>NetworkPolicy</th>
+<th>ResourceQuota</th>
+<th>LimitRange</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cert-manager</td>
+<td>3</td>
+<td>3</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>default</td>
+<td>2</td>
+<td>1</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>demo</td>
+<td>0</td>
+<td>0</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>kube-node-lease</td>
+<td>0</td>
+<td>0</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>kube-public</td>
+<td>0</td>
+<td>0</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>kube-system</td>
+<td>23</td>
+<td>4</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>kubeowler</td>
+<td>4</td>
+<td>0</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>kubeowler-inspector</td>
+<td>0</td>
+<td>0</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>metallb-system</td>
+<td>5</td>
+<td>1</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>openebs</td>
+<td>4</td>
+<td>1</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>prometheus</td>
+<td>11</td>
+<td>3</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>upm-system</td>
+<td>24</td>
+<td>20</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>velero</td>
+<td>7</td>
+<td>1</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>Pod</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>upm-system/consul-connect-injector-69b8cc47c5-ssqhv</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-007.md">POD-007</a></td>
+<td>CrashLoopBackOff</td>
+</tr>
+<tr>
+<td><code>upm-system/consul-connect-injector-6b4b944cd5-jwhpg</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-007.md">POD-007</a></td>
+<td>CrashLoopBackOff</td>
+</tr>
+<tr>
+<td><code>kube-system/nginx-proxy-worker03</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-012.md">POD-012</a></td>
+<td>Pod Running but not Ready</td>
+</tr>
+<tr>
+<td><code>upm-system/consul-connect-injector-69b8cc47c5-ssqhv</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-012.md">POD-012</a></td>
+<td>Pod Running but not Ready</td>
+</tr>
+<tr>
+<td><code>upm-system/consul-connect-injector-6b4b944cd5-jwhpg</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-012.md">POD-012</a></td>
+<td>Pod Running but not Ready</td>
+</tr>
+<tr>
+<td><code>default/nginx-deployment-fail-5cff74b894-jsls4</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-005.md">POD-005</a></td>
+<td>ImagePullBackOff</td>
+</tr>
+<tr>
+<td><code>default/nginx-deployment-fail-5cff74b894-nwdvc</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-005.md">POD-005</a></td>
+<td>ImagePullBackOff</td>
+</tr>
+<tr>
+<td><code>upm-system/consul-connect-injector-69b8cc47c5-ssqhv</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/consul-connect-injector-6b4b944cd5-jwhpg</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>cert-manager/cert-manager-7b8b89f89d-dvmjv</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>cert-manager/cert-manager-cainjector-7f9fdd5dd5-zkd9g</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>cert-manager/cert-manager-webhook-769f6b94cb-d4pc7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-4sc5z</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-6vskm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-jv8kb</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-sk4cn</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>metallb-system/controller-9c6cff498-6qhm5</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-bjsz8</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-kgprs</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-ps8b8</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-tstgb</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-f8zn7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-f8zn7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-f8zn7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-n8rht</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-n8rht</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-n8rht</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-kube-state-metrics-7547645674-rmh26</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-kube-prometheus-prometheus-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-kube-prometheus-prometheus-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-5jllf</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-98djg</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-jtndm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-x7xfw</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-57pwr</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-kjplw</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-twwbk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>velero/upm-system-minio-backups-kopia-maintain-job-1770434977894-cv6pk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>velero/upm-system-minio-backups-kopia-maintain-job-1770438877903-686vz</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>velero/upm-system-minio-backups-kopia-maintain-job-1770442777911-4wtcg</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>velero/velero-7b88f944d5-tdznx</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-001.md">RES-001</a></td>
+<td>Container has no resource requests</td>
+</tr>
+<tr>
+<td><code>cert-manager/cert-manager-7b8b89f89d-dvmjv</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>cert-manager/cert-manager-cainjector-7f9fdd5dd5-zkd9g</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>cert-manager/cert-manager-webhook-769f6b94cb-d4pc7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/dns-autoscaler-56cb45595c-8jsd8</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-apiserver-master01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-controller-manager-master01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-4sc5z</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-6vskm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-jv8kb</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-sk4cn</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-scheduler-master01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/metrics-server-56ff78d5b7-xc7sk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/nginx-proxy-worker01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/nginx-proxy-worker02</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>kube-system/nginx-proxy-worker03</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>metallb-system/controller-9c6cff498-6qhm5</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-bjsz8</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-kgprs</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-ps8b8</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>metallb-system/speaker-tstgb</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/alertmanager-prometheus-kube-prometheus-alertmanager-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-f8zn7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-f8zn7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-f8zn7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-n8rht</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-n8rht</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-grafana-75f54c4cdd-n8rht</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-kube-prometheus-operator-76694676bc-6dpx6</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-kube-prometheus-operator-76694676bc-h76s6</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-kube-state-metrics-7547645674-rmh26</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-kube-prometheus-prometheus-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-kube-prometheus-prometheus-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-5jllf</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-98djg</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-jtndm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>prometheus/prometheus-prometheus-node-exporter-x7xfw</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-auth-7cb945f67d-hvl9m</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-db-mysql-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-db-redis-0</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-elasticsearch-ms-6bdff4b79b-2jwm9</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-gateway-bb4cc77d4-9rl6d</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-innodb-cluster-ms-5fb56d898b-sh7xq</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-kafka-ms-77c4ccd4d6-66kjt</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-milvus-ms-68f994794f-thjjm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-mongodb-ms-6c5c6ffc4-hbr2c</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-mysql-ms-598d6cf7db-9w42l</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-nginx-6b9b4df87d-lzhbl</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-postgresql-ms-65676ffccc-sz27w</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-redis-cluster-ms-6c4f9db698-qdfr6</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-redis-ms-5d4bf984f-pr2rs</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-resource-78d8494fdb-kmlvs</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-user-5494c99b96-dqmp5</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-view-7c4476d5cb-qpc2t</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-zookeeper-ms-668877c9f8-zprtm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-57pwr</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-kjplw</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-twwbk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>velero/upm-system-minio-backups-kopia-maintain-job-1770434977894-cv6pk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>velero/upm-system-minio-backups-kopia-maintain-job-1770438877903-686vz</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>velero/upm-system-minio-backups-kopia-maintain-job-1770442777911-4wtcg</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>velero/velero-7b88f944d5-tdznx</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-002.md">RES-002</a></td>
+<td>Container has no resource limits</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-auth-7cb945f67d-hvl9m</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-elasticsearch-ms-6bdff4b79b-2jwm9</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-innodb-cluster-ms-5fb56d898b-sh7xq</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-kafka-ms-77c4ccd4d6-66kjt</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-milvus-ms-68f994794f-thjjm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-mongodb-ms-6c5c6ffc4-hbr2c</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-mysql-ms-598d6cf7db-9w42l</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-postgresql-ms-65676ffccc-sz27w</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-redis-cluster-ms-6c4f9db698-qdfr6</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-redis-ms-5d4bf984f-pr2rs</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-resource-78d8494fdb-kmlvs</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+<tr>
+<td><code>upm-system/upm-platform-zookeeper-ms-668877c9f8-zprtm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POD-003.md">POD-003</a></td>
+<td>Container restart count too high</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>StorageClass</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>StorageClass</td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/STO-009.md">STO-009</a></td>
+<td>No default StorageClass</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>ClusterRole</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metallb-system:speaker</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-001.md">SEC-001</a></td>
+<td>ClusterRole has excessive permissions</td>
+</tr>
+<tr>
+<td><code>openebs-lvm-provisioner-role</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-001.md">SEC-001</a></td>
+<td>ClusterRole has excessive permissions</td>
+</tr>
+<tr>
+<td><code>prometheus-kube-prometheus-operator</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-001.md">SEC-001</a></td>
+<td>ClusterRole has excessive permissions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>ClusterRoleBinding</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>velero</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-003.md">SEC-003</a></td>
+<td>ServiceAccount has cluster-admin</td>
+</tr>
+<tr>
+<td><code>velero-server</code></td>
+<td>Critical</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-003.md">SEC-003</a></td>
+<td>ServiceAccount has cluster-admin</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>ServiceAccount</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default/nginx-deployment-fail-5cff74b894-jsls4</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>default/nginx-deployment-fail-5cff74b894-nwdvc</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-apiserver-master01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-controller-manager-master01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-scheduler-master01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kube-system/nginx-proxy-worker01</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kube-system/nginx-proxy-worker02</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kube-system/nginx-proxy-worker03</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-58vk2</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-l5cb2</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-lq67c</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-qpr5h</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-009.md">SEC-009</a></td>
+<td>Uses default ServiceAccount</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>NetworkPolicy</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cluster</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-008.md">SEC-008</a></td>
+<td>Insufficient network policy coverage</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>Certificate</h3>
+<h4>TLS Certificate Expiry</h4>
+<table>
+<thead>
+<tr>
+<th>Secret (namespace/name)</th>
+<th>Certificate (subject)</th>
+<th>Expiry (UTC)</th>
+<th>Days until expiry</th>
+<th>Level</th>
+<th>Issue Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>demo/demo-cm-ss-root-ca</td>
+<td>CN=demo</td>
+<td>Feb  3 09:06:59 2027 +00:00</td>
+<td>361</td>
+<td>Info</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/CERT-002.md">CERT-002</a></td>
+</tr>
+<tr>
+<td>upm-system/consul-connect-inject-webhook-cert</td>
+<td>CN=Consul Webhook Certificates Service</td>
+<td>Feb  8 00:06:35 2026 +00:00</td>
+<td>0</td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/CERT-002.md">CERT-002</a></td>
+</tr>
+<tr>
+<td>upm-system/consul-server-cert</td>
+<td>CN=server.upm.consul</td>
+<td>Feb  2 09:34:47 2028 +00:00</td>
+<td>725</td>
+<td>Info</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/CERT-002.md">CERT-002</a></td>
+</tr>
+<tr>
+<td>upm-system/upm-engine-compose-operator-webhook-server-certs</td>
+<td></td>
+<td>May  3 08:51:37 2026 +00:00</td>
+<td>85</td>
+<td>Info</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/CERT-002.md">CERT-002</a></td>
+</tr>
+<tr>
+<td>upm-system/upm-engine-unit-operator-webhook-server-certs</td>
+<td></td>
+<td>May  3 08:51:16 2026 +00:00</td>
+<td>85</td>
+<td>Info</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/CERT-002.md">CERT-002</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>Policy</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cluster</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/POLICY-002.md">POLICY-002</a></td>
+<td>No LimitRange configured</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>Observability</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kube-system</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/OBS-003.md">OBS-003</a></td>
+<td>Log aggregation not deployed</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>Security</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-58vk2</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-006.md">SEC-006</a></td>
+<td>Container runs as root</td>
+</tr>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-l5cb2</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-006.md">SEC-006</a></td>
+<td>Container runs as root</td>
+</tr>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-lq67c</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-006.md">SEC-006</a></td>
+<td>Container runs as root</td>
+</tr>
+<tr>
+<td><code>kubeowler/kubeowler-node-inspector-qpr5h</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-006.md">SEC-006</a></td>
+<td>Container runs as root</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-57pwr</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-004.md">SEC-004</a></td>
+<td>Pod runs as root</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-kjplw</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-004.md">SEC-004</a></td>
+<td>Pod runs as root</td>
+</tr>
+<tr>
+<td><code>velero/node-agent-twwbk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-004.md">SEC-004</a></td>
+<td>Pod runs as root</td>
+</tr>
+<tr>
+<td><code>openebs/openebs-lvmlocalpv-lvm-localpv-node-9t7xq</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-007.md">SEC-007</a></td>
+<td>Container allows privilege escalation</td>
+</tr>
+<tr>
+<td><code>openebs/openebs-lvmlocalpv-lvm-localpv-node-gtw6r</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-007.md">SEC-007</a></td>
+<td>Container allows privilege escalation</td>
+</tr>
+<tr>
+<td><code>openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-007.md">SEC-007</a></td>
+<td>Container allows privilege escalation</td>
+</tr>
+<tr>
+<td><code>kube-system/calico-node-dlmbk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>kube-system/calico-node-fjv6b</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>kube-system/calico-node-s2zwk</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>kube-system/calico-node-xndg7</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-4sc5z</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-6vskm</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-jv8kb</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>kube-system/kube-proxy-sk4cn</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>openebs/openebs-lvmlocalpv-lvm-localpv-node-9t7xq</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>openebs/openebs-lvmlocalpv-lvm-localpv-node-gtw6r</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+<tr>
+<td><code>openebs/openebs-lvmlocalpv-lvm-localpv-node-gw6kd</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/SEC-005.md">SEC-005</a></td>
+<td>Container runs privileged</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3>Resource Management</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Level</th>
+<th>Issue Code</th>
+<th>Short Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metallb-system</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-003.md">RES-003</a></td>
+<td>Namespace has no resource quota</td>
+</tr>
+<tr>
+<td><code>prometheus</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-003.md">RES-003</a></td>
+<td>Namespace has no resource quota</td>
+</tr>
+<tr>
+<td><code>upm-system</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-003.md">RES-003</a></td>
+<td>Namespace has no resource quota</td>
+</tr>
+<tr>
+<td><code>velero</code></td>
+<td>Warning</td>
+<td><a href="https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/RES-003.md">RES-003</a></td>
+<td>Namespace has no resource quota</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<hr />
+<p><em>Report generated by <a href="https://github.com/username/kubeowler">kubeowler</a>.</em></p>
+
+</body>
+</html>

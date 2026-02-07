@@ -97,15 +97,15 @@ cargo test --release
 
 ## Deployment (development reference)
 
-- **Container:** Use a multi-stage Dockerfile (Rust build stage + minimal runtime image); see [02-docker-guide.md](02-docker-guide.md).  
-- **Kubernetes:** Run as a CronJob or one-off Job with a dedicated ServiceAccount and ClusterRole; see [02-docker-guide.md](02-docker-guide.md).
+- **Container:** Use a multi-stage Dockerfile (Rust build stage + minimal runtime image); see [docker-and-kubernetes.md](docker-and-kubernetes.md).  
+- **Kubernetes:** Run as a CronJob or one-off Job with a dedicated ServiceAccount and ClusterRole; see [docker-and-kubernetes.md](docker-and-kubernetes.md).
 
 ---
 
 ## Troubleshooting
 
-- Build or dependency issues: [05-troubleshooting.md](05-troubleshooting.md).  
-- Linux dev environment and multi-arch: [04-linux-dev-setup.md](04-linux-dev-setup.md).
+- Build or dependency issues: [troubleshooting.md](troubleshooting.md).  
+- Linux dev environment and multi-arch: [development-environment.md](development-environment.md).
 
 ---
 

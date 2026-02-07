@@ -1,27 +1,27 @@
-# 多阶段构建 Dockerfile
+# Multi-stage Dockerfile
 FROM rust:1.70 as builder
 
 WORKDIR /app
 COPY . .
 
-# 构建项目
+# Build project
 RUN cargo build --release
 
-# 运行时镜像
+# Runtime image
 FROM debian:bookworm-slim
 
-# 安装必要的运行时依赖
+# Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# 复制编译好的二进制文件
+# Copy built binary
 COPY --from=builder /app/target/release/kubeowler /usr/local/bin/kubeowler
 
-# 设置执行权限
+# Set executable permission
 RUN chmod +x /usr/local/bin/kubeowler
 
-# 创建非root用户
+# Create non-root user
 RUN useradd -r -s /bin/false kubeowler
 
 USER kubeowler

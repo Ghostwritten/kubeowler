@@ -68,7 +68,7 @@ impl<'a> NetworkInspector<'a> {
                         if let Some(ports) = &spec.ports {
                             for port in ports {
                                 if let Some(node_port) = port.node_port {
-                                    if node_port < 30000 || node_port > 32767 {
+                                    if !(30000..=32767).contains(&node_port) {
                                         issues.push(Issue {
                                             severity: IssueSeverity::Info,
                                             category: "Service".to_string(),

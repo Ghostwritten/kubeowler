@@ -15,7 +15,7 @@ N/A
 ## Symptoms
 
 - Report shows: Node &lt;name&gt; has N zombie process(es)
-- Node Inspection "Node 进程健康" table shows a non-zero zombie count and issue code [NODE-003](NODE-003.md)
+- Node Inspection "Node process health" table shows a non-zero zombie count and issue code [NODE-003](NODE-003.md)
 - On the node, `ps` or inspection of `/proc/*/stat` shows processes in state Z
 
 ## Resolution

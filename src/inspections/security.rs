@@ -75,7 +75,7 @@ impl<'a> SecurityInspector<'a> {
                         || rule
                             .resources
                             .as_ref()
-                            .map_or(false, |r| r.contains(&"*".to_string()))
+                            .is_some_and(|r| r.contains(&"*".to_string()))
                     {
                         dangerous_cluster_roles += 1;
 

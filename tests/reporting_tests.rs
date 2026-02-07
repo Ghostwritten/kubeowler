@@ -128,7 +128,11 @@ async fn test_report_generation() {
                 map
             },
         },
-        cluster_overview: None,
+        cluster_overview: Some(ClusterOverview {
+            node_count: 1,
+            ready_node_count: 1,
+            ..Default::default()
+        }),
         node_inspection_results: None,
         recent_events: None,
     };
@@ -149,11 +153,13 @@ async fn test_report_generation() {
     let summary_path = temp_dir.path().join("test-report-summary.md");
     assert!(summary_path.exists());
 
-    // Check content (report uses English title and Executive Summary)
+    // Check content: Cluster Overview includes Overall Health and score; Executive Summary section removed
     let content = std::fs::read_to_string(&report_path).unwrap();
-    assert!(content.contains("Executive Summary"));
+    assert!(content.contains("Cluster Overview"));
+    assert!(content.contains("Overall Health"));
     assert!(content.contains("test-cluster"));
     assert!(content.contains("85.5"));
+    assert!(!content.contains("Executive Summary"));
 }
 
 #[test]

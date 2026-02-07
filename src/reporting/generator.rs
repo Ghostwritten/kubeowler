@@ -92,16 +92,14 @@ fn slugify(s: &str) -> String {
     let mut out = String::new();
     for c in s.chars() {
         if c.is_ascii_alphanumeric() {
-            let lower = if c >= 'A' && c <= 'Z' {
+            let lower = if c.is_ascii_uppercase() {
                 (c as u8 + 32) as char
             } else {
                 c
             };
             out.push(lower);
-        } else if c == ' ' || c == '-' {
-            if !out.ends_with('-') {
-                out.push('-');
-            }
+        } else if (c == ' ' || c == '-') && !out.ends_with('-') {
+            out.push('-');
         }
     }
     out.trim_matches('-').to_string()
@@ -137,16 +135,15 @@ impl ReportGenerator {
         .await
     }
 
-    pub async fn generate_report_with_filters(
+    /// Returns the main report as Markdown string (same filtering as generate_report_with_filters, no disk write).
+    pub fn generate_markdown_string(
         &self,
         cluster_report: &ClusterReport,
-        output_path: &str,
         filter_category: Option<&Vec<String>>,
-        no_summary: bool,
         max_recommendations: Option<usize>,
         min_severity: Option<IssueSeverity>,
         check_level_filter: Option<CheckLevelFilter>,
-    ) -> Result<()> {
+    ) -> Result<String> {
         let filtered = if let Some(min) = min_severity {
             Self::apply_severity_filter(cluster_report, min)
         } else {
@@ -157,14 +154,40 @@ impl ReportGenerator {
         } else {
             filtered
         };
+        self.generate_main_report(&filtered, max_recommendations, check_level_filter)
+    }
 
-        let main_report =
-            self.generate_main_report(&filtered, max_recommendations, check_level_filter)?;
-
-        // Write main report
+    #[allow(clippy::too_many_arguments)]
+    pub async fn generate_report_with_filters(
+        &self,
+        cluster_report: &ClusterReport,
+        output_path: &str,
+        filter_category: Option<&Vec<String>>,
+        no_summary: bool,
+        max_recommendations: Option<usize>,
+        min_severity: Option<IssueSeverity>,
+        check_level_filter: Option<CheckLevelFilter>,
+    ) -> Result<()> {
+        let main_report = self.generate_markdown_string(
+            cluster_report,
+            filter_category,
+            max_recommendations,
+            min_severity.clone(),
+            check_level_filter,
+        )?;
         fs::write(output_path, main_report)?;
 
         if !no_summary {
+            let filtered = if let Some(min) = min_severity {
+                Self::apply_severity_filter(cluster_report, min)
+            } else {
+                cluster_report.clone()
+            };
+            let filtered = if let Some(filters) = filter_category {
+                Self::apply_category_filters(&filtered, filters, max_recommendations)
+            } else {
+                filtered
+            };
             let summary_report = self.generate_summary_report(&filtered)?;
             let summary_path = output_path.replace(".md", "-summary.md");
             fs::write(summary_path, summary_report)?;
@@ -216,7 +239,7 @@ impl ReportGenerator {
 
     fn apply_category_filters(
         report: &ClusterReport,
-        filters: &Vec<String>,
+        filters: &[String],
         max_recommendations: Option<usize>,
     ) -> ClusterReport {
         let lower: Vec<String> = filters.iter().map(|s| s.to_lowercase()).collect();
@@ -332,6 +355,7 @@ impl ReportGenerator {
                 }
             }
         }
+        #[allow(clippy::type_complexity)]
         let mut rows: Vec<(IssueSeverity, Option<String>, String, String, Vec<String>)> = groups
             .into_iter()
             .map(|((rid, _cat, _rec), (sev, title, rec, resources))| {
@@ -371,15 +395,13 @@ impl ReportGenerator {
                             severity_label, code, title, n, doc, resource_list
                         )
                     }
+                } else if resource_list.is_empty() {
+                    format!("[{}] {}: Recommendation: {}", severity_label, title, rec)
                 } else {
-                    if resource_list.is_empty() {
-                        format!("[{}] {}: Recommendation: {}", severity_label, title, rec)
-                    } else {
-                        format!(
-                            "[{}] {} ({} issues): {}. Affected: {}. Recommendation: {}",
-                            severity_label, title, n, title, resource_list, rec
-                        )
-                    }
+                    format!(
+                        "[{}] {} ({} issues): {}. Affected: {}. Recommendation: {}",
+                        severity_label, title, n, title, resource_list, rec
+                    )
                 }
             })
             .collect()
@@ -434,15 +456,13 @@ impl ReportGenerator {
                         code, title, n, doc, resource_list
                     ));
                 }
+            } else if resource_list.is_empty() {
+                rows.push(format!("[error] {}: Recommendation: {}", title, rec));
             } else {
-                if resource_list.is_empty() {
-                    rows.push(format!("[error] {}: Recommendation: {}", title, rec));
-                } else {
-                    rows.push(format!(
-                        "[error] {} ({} issues): {}. Affected: {}. Recommendation: {}",
-                        title, n, title, resource_list, rec
-                    ));
-                }
+                rows.push(format!(
+                    "[error] {} ({} issues): {}. Affected: {}. Recommendation: {}",
+                    title, n, title, resource_list, rec
+                ));
             }
         }
         rows
@@ -497,11 +517,13 @@ impl ReportGenerator {
 
     /// Group issues by severity; within severity, group by rule_id when present, else by (category, recommendation).
     /// Each group yields (rule_id, title, recommendation, resources). Title is short_title(code) or first description.
+    #[allow(clippy::type_complexity)]
     fn group_issues_by_severity_and_type(
         issues: &[Issue],
     ) -> HashMap<IssueSeverity, Vec<(Option<String>, String, String, Vec<String>)>> {
         // Key: when rule_id present use (Some(rule_id), "", ""); else (None, category, recommendation)
         type Key = (Option<String>, String, String);
+        #[allow(clippy::type_complexity)]
         let mut by_sev: HashMap<IssueSeverity, HashMap<Key, (String, String, Vec<String>)>> =
             HashMap::new();
         for issue in issues {
@@ -781,7 +803,7 @@ impl ReportGenerator {
                 n.node_name, os_ver, ip, kernel, uptime
             ));
         }
-        out.push_str("\n");
+        out.push('\n');
 
         // (1) Node resources: CPU, Mem, Swap, Load (CPU Used/CPU % placeholder "-" until script provides)
         out.push_str("### Node resources\n\n");
@@ -852,10 +874,11 @@ impl ReportGenerator {
                 load_merged
             ));
         }
-        out.push_str("\n");
+        out.push('\n');
 
         // (1a) Node disk usage: per node show top 3 by used% + all with used% > 60%; Status: Info (<60%), Warning (60–90%), Critical (>=90%)
         out.push_str("### Node disk usage\n\n");
+        out.push_str("Per-node filesystem usage by mount. Status: Info (<60% used), Warning (60–90%), Critical (≥90%).\n\n");
         out.push_str(
             "| Node | Mount Point | Device | FSType | Total (Gi) | Used (Gi) | Used % | Status |\n",
         );
@@ -912,18 +935,21 @@ impl ReportGenerator {
                     out.push_str(&format!(
                         "| {} | {} | {} | {} | {} | {} | {} | {} |\n",
                         n.node_name,
-                        d.mount_point
-                            .is_empty()
-                            .then(|| "-".to_string())
-                            .unwrap_or(d.mount_point.clone()),
-                        d.device
-                            .is_empty()
-                            .then(|| "-".to_string())
-                            .unwrap_or(d.device.clone()),
-                        d.fstype
-                            .is_empty()
-                            .then(|| "-".to_string())
-                            .unwrap_or(d.fstype.clone()),
+                        if d.mount_point.is_empty() {
+                            "-".to_string()
+                        } else {
+                            d.mount_point.clone()
+                        },
+                        if d.device.is_empty() {
+                            "-".to_string()
+                        } else {
+                            d.device.clone()
+                        },
+                        if d.fstype.is_empty() {
+                            "-".to_string()
+                        } else {
+                            d.fstype.clone()
+                        },
                         total_g,
                         used_g,
                         used_pct_str,
@@ -932,7 +958,7 @@ impl ReportGenerator {
                 }
             }
         }
-        out.push_str("\n");
+        out.push('\n');
 
         // (1b) Node container state counts: Node | Running | Waiting | Exited
         out.push_str("### Node container state counts\n\n");
@@ -948,10 +974,10 @@ impl ReportGenerator {
                 n.node_name, running, waiting, exited
             ));
         }
-        out.push_str("\n");
+        out.push('\n');
 
         // (2) Node services: rows = nodes, columns = Node/Service, NTP synced, Journald, Crontab; cell = enabled/disabled/None
-        out.push_str("## 节点服务状态检查表\n\n");
+        out.push_str("## Node service status\n\n");
         fn service_cell(v: Option<bool>) -> &'static str {
             match v {
                 Some(true) => "enabled",
@@ -970,7 +996,7 @@ impl ReportGenerator {
                 n.node_name, ntp, journald, crontab
             ));
         }
-        out.push_str("\n");
+        out.push('\n');
 
         // (3) Node security: Node | SELinux | Firewalld | IPVS loaded
         out.push_str("### Node security\n\n");
@@ -993,10 +1019,10 @@ impl ReportGenerator {
                 n.node_name, se, fw, ipvs
             ));
         }
-        out.push_str("\n");
+        out.push('\n');
 
-        // (4) Node kernel: Node | net.ipv4.ip_forward | vm.swappiness | net.core.somaxconn
-        out.push_str("### Node kernel\n\n");
+        // (4) Node kernel parameters: Node | net.ipv4.ip_forward | vm.swappiness | net.core.somaxconn
+        out.push_str("### Node kernel parameters\n\n");
         out.push_str("| Node | net.ipv4.ip_forward | vm.swappiness | net.core.somaxconn |\n");
         out.push_str("|------|---------------------|--------------|--------------------|\n");
         for n in nodes {
@@ -1008,7 +1034,7 @@ impl ReportGenerator {
                 n.node_name, fwd, sw, somax
             ));
         }
-        out.push_str("\n");
+        out.push('\n');
 
         // (5) Node process health: Node | Zombie count | Issue code (NODE-003 when > 0)
         out.push_str("### Node process health\n\n");
@@ -1020,7 +1046,7 @@ impl ReportGenerator {
             let code_cell = if z > 0 { node_003_link.as_str() } else { "-" };
             out.push_str(&format!("| {} | {} | {} |\n", n.node_name, z, code_cell));
         }
-        out.push_str("\n");
+        out.push('\n');
 
         // (6) Node Certificate Status: Node | Path | Expired | Expiration Date | Days to Expiry
         out.push_str("### Node Certificate Status\n\n");
@@ -1040,7 +1066,7 @@ impl ReportGenerator {
                 }
             }
         }
-        out.push_str("\n");
+        out.push('\n');
 
         out
     }
@@ -1107,7 +1133,25 @@ impl ReportGenerator {
                     content.push_str(&format!("| Container Runtime | {} |\n", rt_str.join(", ")));
                 }
             }
-            content.push_str("\n");
+            let health_emoji = match report.executive_summary.health_status {
+                HealthStatus::Excellent => "🟢",
+                HealthStatus::Good => "🟡",
+                HealthStatus::Fair => "🟠",
+                HealthStatus::Poor => "🔴",
+                HealthStatus::Critical => "🚨",
+            };
+            let health_text = match report.executive_summary.health_status {
+                HealthStatus::Excellent => "Excellent",
+                HealthStatus::Good => "Good",
+                HealthStatus::Fair => "Fair",
+                HealthStatus::Poor => "Poor",
+                HealthStatus::Critical => "Critical",
+            };
+            content.push_str(&format!(
+                "| Overall Health | {} {} (Score: {:.1}) |\n",
+                health_emoji, health_text, report.overall_score
+            ));
+            content.push('\n');
             if let Some(ref conds) = overview.node_conditions {
                 if !conds.is_empty() {
                     content.push_str("### Node conditions\n\n");
@@ -1127,7 +1171,7 @@ impl ReportGenerator {
                             r.pid_pressure
                         ));
                     }
-                    content.push_str("\n");
+                    content.push('\n');
                 }
             }
             // Workload summary
@@ -1198,7 +1242,7 @@ impl ReportGenerator {
                                 note
                             ));
                         }
-                        content.push_str("\n");
+                        content.push('\n');
                     }
                 }
             }
@@ -1240,33 +1284,9 @@ impl ReportGenerator {
                         e.last_seen
                     ));
                 }
-                content.push_str("\n");
+                content.push('\n');
             }
         }
-
-        // Executive Summary
-        content.push_str("## 📊 Executive Summary\n\n");
-
-        let health_emoji = match report.executive_summary.health_status {
-            HealthStatus::Excellent => "🟢",
-            HealthStatus::Good => "🟡",
-            HealthStatus::Fair => "🟠",
-            HealthStatus::Poor => "🔴",
-            HealthStatus::Critical => "🚨",
-        };
-
-        let health_text = match report.executive_summary.health_status {
-            HealthStatus::Excellent => "Excellent",
-            HealthStatus::Good => "Good",
-            HealthStatus::Fair => "Fair",
-            HealthStatus::Poor => "Poor",
-            HealthStatus::Critical => "Critical",
-        };
-
-        content.push_str(&format!(
-            "### Overall Health: {} {} (Score: {:.1})\n\n",
-            health_emoji, health_text, report.overall_score
-        ));
 
         // Detailed results grouped by Kubernetes resource object
         content.push_str("## 📋 Detailed Results\n\n");
@@ -1300,7 +1320,7 @@ impl ReportGenerator {
                 ));
             }
         }
-        content.push_str("\n");
+        content.push('\n');
 
         // Namespace summary table (from Namespace inspection)
         if let Some(rows) = report
@@ -1326,7 +1346,7 @@ impl ReportGenerator {
                     if r.has_limit_range { "Yes" } else { "No" },
                 ));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         // Per-resource sections: only emit if at least one issue or one detail block (Pod container state table omitted)
@@ -1383,7 +1403,7 @@ impl ReportGenerator {
                             code_link
                         ));
                     }
-                    content.push_str("\n");
+                    content.push('\n');
                 }
             }
             if !issues.is_empty() {
@@ -1417,8 +1437,8 @@ impl ReportGenerator {
                                 .unwrap_or_else(|| "-".to_string());
                             if resources.is_empty() {
                                 content.push_str(&format!(
-                                    "| - | {} | {} | {} |\n",
-                                    level, code_link, title
+                                    "| {} | {} | {} | {} |\n",
+                                    resource, level, code_link, title
                                 ));
                             } else {
                                 for r in resources {
@@ -1431,7 +1451,7 @@ impl ReportGenerator {
                         }
                     }
                 }
-                content.push_str("\n");
+                content.push('\n');
             }
             content.push_str("---\n\n");
         }
@@ -1496,7 +1516,7 @@ impl ReportGenerator {
                 (info_issues.len() as f64 / total_issues as f64) * 100.0
             ));
         }
-        content.push_str("\n");
+        content.push('\n');
 
         // Critical: one table
         let critical_flat: Vec<_> = critical_issues.iter().map(|(_, i)| (*i).clone()).collect();
@@ -1520,7 +1540,7 @@ impl ReportGenerator {
                     }
                 }
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         // Warning and Info: single "Other Issues" table
@@ -1557,7 +1577,7 @@ impl ReportGenerator {
                     truncate_string(&rec, 50)
                 ));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         // Recommendations by category: sort by issue count, show "N issues" per recommendation
@@ -1579,15 +1599,16 @@ impl ReportGenerator {
         category_totals.sort_by(|a, b| b.1.cmp(&a.1));
 
         for (category, _total) in category_totals {
-            let rec_map = category_rec_counts.get(&category).unwrap();
-            let mut rec_list: Vec<(String, usize)> =
-                rec_map.iter().map(|(r, c)| (r.clone(), *c)).collect();
-            rec_list.sort_by(|a, b| b.1.cmp(&a.1));
-            content.push_str(&format!("### {}\n\n", category));
-            for (recommendation, count) in rec_list {
-                content.push_str(&format!("- {} ({} issues)\n", recommendation, count));
+            if let Some(rec_map) = category_rec_counts.get(&category) {
+                let mut rec_list: Vec<(String, usize)> =
+                    rec_map.iter().map(|(r, c)| (r.clone(), *c)).collect();
+                rec_list.sort_by(|a, b| b.1.cmp(&a.1));
+                content.push_str(&format!("### {}\n\n", category));
+                for (recommendation, count) in rec_list {
+                    content.push_str(&format!("- {} ({} issues)\n", recommendation, count));
+                }
+                content.push('\n');
             }
-            content.push_str("\n");
         }
 
         Ok(content)
@@ -1717,7 +1738,7 @@ impl ReportGenerator {
                         code_link
                     ));
                 }
-                content.push_str("\n");
+                content.push('\n');
             }
         }
 
@@ -1746,9 +1767,10 @@ impl ReportGenerator {
                             .map(|c| format!("[{}]({})", c, issue_codes::doc_path(c)))
                             .unwrap_or_else(|| "-".to_string());
                         if resources.is_empty() {
+                            let res_label = inspection_type_to_resource(&inspection.inspection_type);
                             content.push_str(&format!(
-                                "| - | {} | {} | {} |\n",
-                                level, code_link, title
+                                "| {} | {} | {} | {} |\n",
+                                res_label, level, code_link, title
                             ));
                         } else {
                             for r in resources {
@@ -1761,7 +1783,7 @@ impl ReportGenerator {
                     }
                 }
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         content.push_str("---\n\n");

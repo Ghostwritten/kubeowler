@@ -114,4 +114,4 @@ Per-mount entry from `gather_disk_mounts`; used in the Node disk usage table and
 
 ---
 
-For which fields are collected but not shown in the report, see [09-node-inspector-collection-gaps.md](09-node-inspector-collection-gaps.md).
+For which fields are collected but not shown in the report, see [node-inspector-collection-gaps.md](node-inspector-collection-gaps.md).

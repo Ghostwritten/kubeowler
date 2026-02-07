@@ -220,7 +220,17 @@ async fn run_check_command(
             Ok(())
         }
         ReportFormat::Csv => {
-            reporting::csv::write_report(&results, &output_path)?;
+            let generator = ReportGenerator::new();
+            let check_level_filter = Some(parse_check_level_filter(&level));
+            let md_string = generator.generate_markdown_string(
+                &results,
+                None,
+                None,
+                None,
+                check_level_filter,
+            )?;
+            let csv_content = reporting::md_export::md_to_csv(&md_string)?;
+            std::fs::write(&output_path, csv_content)?;
             println!("{}", "✅ Done".bright_green());
             println!();
             println!(
@@ -231,7 +241,17 @@ async fn run_check_command(
             Ok(())
         }
         ReportFormat::Html => {
-            reporting::html::write_report(&results, &output_path)?;
+            let generator = ReportGenerator::new();
+            let check_level_filter = Some(parse_check_level_filter(&level));
+            let md_string = generator.generate_markdown_string(
+                &results,
+                None,
+                None,
+                None,
+                check_level_filter,
+            )?;
+            let html_content = reporting::md_export::md_to_html(&md_string)?;
+            std::fs::write(&output_path, html_content)?;
             println!("{}", "✅ Done".bright_green());
             println!();
             println!(

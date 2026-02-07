@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-02-06
+
+### Added
+
+- HTML report: Kubescape-style layout (CSS variables, table styling, word-break). Logo shown in report; logo embedded as Data URI so the generated HTML is self-contained (no external assets folder needed when using the released binary).
+- Logo assets in `assets/` (logo.png, logo.svg); README and report reference updated.
+
+### Changed
+
+- Documentation reorganized: topic-based filenames in `docs/` (e.g. installation.md, cli-reference.md). Example report filenames unified to `report.*` (md, json, csv, html).
+- GitHub Release notes: release workflow now uses CHANGELOG content as the release body so the [Releases](https://github.com/Ghostwritten/kubeowler/releases) page shows a clear update overview.
+
+[0.1.1]: https://github.com/Ghostwritten/kubeowler/releases/tag/v0.1.1
+
 ## [0.1.0] - 2026-02-05
 
 ### Added

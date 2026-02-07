@@ -110,8 +110,8 @@ impl<'a> ResourceInspector<'a> {
         }
 
         // Check namespaces for resource quotas
-        let namespaces = if namespace.is_some() {
-            vec![namespace.unwrap().to_string()]
+        let namespaces = if let Some(ref ns) = namespace {
+            vec![ns.to_string()]
         } else {
             let ns_api = self.client.namespaces();
             let ns_list = ns_api.list(&ListParams::default()).await?;

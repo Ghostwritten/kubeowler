@@ -808,8 +808,8 @@ impl InspectionRunner {
             },
             metrics_available,
             node_usage,
-            total_usage_cpu_cores: total_usage_cpu_cores,
-            total_usage_memory_gi: total_usage_memory_gi,
+            total_usage_cpu_cores,
+            total_usage_memory_gi,
             node_conditions: if node_conditions.is_empty() {
                 None
             } else {

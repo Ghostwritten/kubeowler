@@ -1,4 +1,4 @@
-# Build Linux binaries (amd64, arm64) and publish to GitHub Releases on tag push (e.g. v0.1.0).
+# Build Linux binaries (amd64, arm64) and publish to GitHub Releases on tag push (e.g. v0.1.1).
 # Artifacts: Linux x86_64, Linux aarch64 only.
 
 name: Release
@@ -71,6 +71,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout (for CHANGELOG)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -82,11 +87,25 @@ jobs:
           find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec cp {} release/ \;
           ls -la release/
 
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VER="${GITHUB_REF#refs/tags/}"
+          VER_NUM="${VER#v}"
+          awk -v ver="$VER_NUM" '
+            $0 ~ "^## \\[" ver "\\]" { found=1; print; next }
+            found && $0 ~ /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release_notes.md || true
+          if [ ! -s release_notes.md ]; then
+            echo "See [CHANGELOG](https://github.com/${{ github.repository }}/blob/${GITHUB_REF}/CHANGELOG.md) for details." > release_notes.md
+          fi
+
       - name: Create GitHub Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
           files: release/*
-          generate_release_notes: true
+          body_path: release_notes.md
+          generate_release_notes: false
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

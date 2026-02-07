@@ -1,35 +1,66 @@
 # Kubeowler Documentation
 
-This directory contains the official documentation for Kubeowler, organized by number and topic. In addition to the root [README.md](../README.md), all project documentation is maintained here for reference and contribution.
+Official documentation for [Kubeowler](https://github.com/Ghostwritten/kubeowler) — a Kubernetes cluster health checking tool. Documentation is organized by audience and topic, following common open-source doc conventions.
 
 ---
 
-## Document Index
+## Documentation Structure
 
-| No. | Document | Description |
-|-----|----------|-------------|
-| 01 | [01-installation-guide.md](01-installation-guide.md) | **Installation and Running Guide** — Supported environments, Rust setup, build, run, report output, troubleshooting, and production deployment |
-| 02 | [02-docker-guide.md](02-docker-guide.md) | **Docker and Kubernetes Deployment** — Image build, container run, CronJob example, and RBAC |
-| 03 | [03-development-guide.md](03-development-guide.md) | **Development Guide** — Project structure, adding inspection types, scoring weights, report extension, testing, and contribution workflow |
-| 04 | [04-linux-dev-setup.md](04-linux-dev-setup.md) | **Linux Development Environment** — Proxy, system dependencies, Rust install, build and run on Linux (including enterprise and offline setups) |
-| 05 | [05-troubleshooting.md](05-troubleshooting.md) | **Troubleshooting** — Dependencies and build, network and proxy, runtime, logging and debugging |
-| 06 | [06-node-inspector-build-deploy.md](06-node-inspector-build-deploy.md) | **Node Inspector: Build and Deploy** — Image build, push to registry, DaemonSet deployment, and integration with Kubeowler |
-| 07 | [07-data-collection.md](07-data-collection.md) | **How Kubeowler Collects Cluster Data** — Connection and K8s client, cluster overview, module-based inspections, node inspection (DaemonSet and Pod logs), report structure and generation |
-| 08 | [08-node-inspection-schema.md](08-node-inspection-schema.md) | **Node Inspection JSON Schema** — Structure and field definitions of the DaemonSet script output consumed by Kubeowler |
-| 09 | [09-node-inspector-collection-gaps.md](09-node-inspector-collection-gaps.md) | **Node Inspector: Collection vs. Report Usage** — Fields that are collected and parsed but not currently displayed in the report |
-| 10 | [10-node-inspector-limitations.md](10-node-inspector-limitations.md) | **Node Inspector: Limitations** — DaemonSet constraints, host visibility, and data-source caveats |
+### Getting Started
+
+| Document | Description |
+|----------|-------------|
+| [Installation](installation.md) | Supported environments, install from release binary, node inspector DaemonSet, Docker, and production deployment |
+| [Docker and Kubernetes](docker-and-kubernetes.md) | Image build, container run, CronJob example, and RBAC for running Kubeowler in cluster |
+
+### User Guide
+
+| Document | Description |
+|----------|-------------|
+| [CLI Reference](cli-reference.md) | `kubeowler check` options, examples, and output formats (MD, JSON, CSV, HTML) |
+
+### Concepts
+
+| Document | Description |
+|----------|-------------|
+| [Data Collection](data-collection.md) | How Kubeowler connects to the cluster, runs module-based inspections, collects node inspector output, and generates the report |
+
+### Node Inspector
+
+Per-node inspection is provided by an optional DaemonSet that runs a script on each node. Kubeowler aggregates its JSON output into the report.
+
+| Document | Description |
+|----------|-------------|
+| [Build and Deploy](node-inspector-build-deploy.md) | Build and push the node-inspector image, deploy the DaemonSet, integrate with Kubeowler |
+| [Node Inspection Schema](node-inspection-schema.md) | JSON structure and field definitions of the DaemonSet script output |
+| [Collection vs. Report Usage](node-inspector-collection-gaps.md) | Fields that are collected and parsed but not yet displayed in the report |
+| [Limitations](node-inspector-limitations.md) | DaemonSet constraints, host visibility, and data-source caveats |
+
+### Development
+
+| Document | Description |
+|----------|-------------|
+| [Development Guide](development-guide.md) | Project structure, adding inspection types, scoring weights, report extension, contribution workflow |
+| [Development Environment](development-environment.md) | Linux dev setup: proxy, system dependencies, Rust install, build and run (including enterprise and offline) |
+| [Build and Test](build-and-test.md) | Rust toolchain, clone, build, test, format and clippy, multi-arch and cross builds |
+
+### Operations
+
+| Document | Description |
+|----------|-------------|
+| [Troubleshooting](troubleshooting.md) | Dependencies and build, network and proxy, runtime, logging and debugging |
 
 ---
 
-## Issue Codes and Reference Docs
+## Issue Codes Reference
 
-Inspection findings use **issue codes** (e.g. NODE-001, POD-003). Detailed descriptions (summary, severity, symptoms, resolution, references) are in [docs/issues/](issues/). The index is at [issues/README.md](issues/README.md).
+Inspection findings use **issue codes** (e.g. `NODE-001`, `POD-003`). Detailed descriptions (summary, severity, symptoms, resolution, references) are in [docs/issues/](issues/). Index: [issues/README.md](issues/README.md).
 
 ---
 
-## Recommended Reading Order
+## Recommended Reading
 
-- **First-time users:** 01 → 02 (if using container deployment).
-- **Node inspection (DaemonSet):** 06, 08, 09, 10.
-- **Contributors:** 03, 04, 05.
-- **Data flow and report design:** 07.
+- **First-time users:** [Installation](installation.md) → [CLI Reference](cli-reference.md); [Docker and Kubernetes](docker-and-kubernetes.md) if using containers.
+- **Node inspection (DaemonSet):** [Build and Deploy](node-inspector-build-deploy.md) → [Node Inspection Schema](node-inspection-schema.md) → [Collection vs. Report Usage](node-inspector-collection-gaps.md) → [Limitations](node-inspector-limitations.md).
+- **Contributors:** [Development Guide](development-guide.md) → [Development Environment](development-environment.md) → [Build and Test](build-and-test.md).
+- **Data flow and report design:** [Data Collection](data-collection.md).

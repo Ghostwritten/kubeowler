@@ -89,7 +89,10 @@ pub fn short_title(code: &str) -> Option<&'static str> {
     }
 }
 
-/// Relative path to the issue doc from repo root (e.g. for report links).
+/// GitHub URL to the issue doc (for report links; works for binary-only users).
 pub fn doc_path(code: &str) -> String {
-    format!("docs/issues/{}.md", code)
+    format!(
+        "https://github.com/Ghostwritten/kubeowler/blob/main/docs/issues/{}.md",
+        code
+    )
 }

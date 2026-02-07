@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo.png" alt="Kubeowler" width="200"/>
+</div>
+
 # Kubeowler - Kubernetes Cluster Checker
 
 > 🔍 A high-performance Kubernetes cluster health checking tool written in Rust
@@ -40,24 +44,34 @@ kubeowler/
 
 ### Supported platforms
 
-- **Kubernetes**: 1.23 or later (see [docs/01-installation-guide.md](docs/01-installation-guide.md) for details).
+- **Kubernetes**: 1.23 or later (see [docs/installation.md](docs/installation.md) for details).
 - **Architectures**: `amd64` (x86_64), `arm64` (aarch64) for both the kubeowler binary and the node-inspector image.
-- **Operating systems** (Linux): Pre-built Linux binaries are **statically linked (musl)** and do not depend on glibc version, so they run on RHEL 7/8/9, CentOS 7.x, Rocky Linux 8+, AlmaLinux 8+, Ubuntu 18.04+, SUSE / openSUSE, OpenAnolis (龙蜥), Kylin (麒麟), and other distros. The node-inspector DaemonSet image runs on the same OS when used on cluster nodes.
+- **Operating systems** (Linux): Pre-built Linux binaries are **statically linked (musl)** and do not depend on glibc version, so they run on RHEL 7/8/9, CentOS 7.x, Rocky Linux 8+, AlmaLinux 8+, Ubuntu 18.04+, SUSE / openSUSE, OpenAnolis, Kylin, and other distros. The node-inspector DaemonSet image runs on the same OS when used on cluster nodes.
 
-### Download (pre-built binaries)
+### Installation
 
-Pre-built binaries are published on [GitHub Releases](https://github.com/Ghostwritten/kubeowler/releases). Each release includes:
+Pre-built binaries are on [GitHub Releases](https://github.com/Ghostwritten/kubeowler/releases). Download, install to `/usr/local/bin`, and verify:
 
 | Platform | Architecture | File |
 |----------|--------------|------|
 | Linux    | amd64        | `kubeowler-<version>-x86_64-linux.tar.gz` |
 | Linux    | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` |
 
-**Example (amd64):**
 ```bash
-curl -sSL https://github.com/Ghostwritten/kubeowler/releases/download/v0.1.0/kubeowler-v0.1.0-x86_64-linux.tar.gz | tar xz
-chmod +x kubeowler && ./kubeowler check --help
+curl -sSL https://github.com/Ghostwritten/kubeowler/releases/download/v0.1.1/kubeowler-v0.1.1-x86_64-linux.tar.gz | tar xz
+sudo cp kubeowler /usr/local/bin/
+kubeowler check --help
 ```
+
+### Node inspector (optional)
+
+For per-node data (disk, services, kernel parameters) in the report, deploy the DaemonSet:
+
+```bash
+kubectl apply -f deploy/node-inspector/daemonset.yaml
+```
+
+See [docs/node-inspector-build-deploy.md](docs/node-inspector-build-deploy.md) for image build and details.
 
 ### Build from source
 
@@ -69,35 +83,28 @@ cargo build --release
 
 ## 📚 Usage
 
-### Basic
-
 ```bash
 # Full cluster check (default)
-./target/release/kubeowler check
+kubeowler check
 
 # Specify namespace
-./target/release/kubeowler check --namespace kube-system
+kubeowler check --namespace kube-system
 
 # Custom output file and format (md, json, csv, html)
-./target/release/kubeowler check --output my-report.md
-./target/release/kubeowler check -o report.json -f json
+kubeowler check --output my-report.md
+kubeowler check -o report.json -f json
 
-# Use custom kubeconfig
-./target/release/kubeowler check --config-file ~/.kube/config
+# Custom kubeconfig
+kubeowler check --config-file ~/.kube/config
 
 # Node inspector DaemonSet namespace (default: kubeowler)
-./target/release/kubeowler check --node-inspector-namespace kubeowler
+kubeowler check --node-inspector-namespace kubeowler
 
-# Check levels in report: all, or comma-separated (e.g. warning,critical)
-./target/release/kubeowler check --level warning,critical
+# Report levels: all, or comma-separated (e.g. warning,critical)
+kubeowler check --level warning,critical
 ```
 
-### Environment Variables
-
-```bash
-export RUST_LOG=info
-export KUBECONFIG=/path/to/config
-```
+Set `KUBECONFIG` if not using the default. For more options see [docs/cli-reference.md](docs/cli-reference.md).
 
 ## 🧪 Testing
 

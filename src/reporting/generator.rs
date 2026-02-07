@@ -524,8 +524,10 @@ impl ReportGenerator {
         // Key: when rule_id present use (Some(rule_id), "", ""); else (None, category, recommendation)
         type Key = (Option<String>, String, String);
         #[allow(clippy::type_complexity)]
-        let mut by_sev: HashMap<IssueSeverity, HashMap<Key, (String, String, Vec<String>)>> =
-            HashMap::new();
+        let mut by_sev: HashMap<
+            IssueSeverity,
+            HashMap<Key, (String, String, Vec<String>)>,
+        > = HashMap::new();
         for issue in issues {
             let key: Key = if let Some(ref rid) = issue.rule_id {
                 (Some(rid.clone()), String::new(), String::new())
@@ -1767,7 +1769,8 @@ impl ReportGenerator {
                             .map(|c| format!("[{}]({})", c, issue_codes::doc_path(c)))
                             .unwrap_or_else(|| "-".to_string());
                         if resources.is_empty() {
-                            let res_label = inspection_type_to_resource(&inspection.inspection_type);
+                            let res_label =
+                                inspection_type_to_resource(&inspection.inspection_type);
                             content.push_str(&format!(
                                 "| {} | {} | {} | {} |\n",
                                 res_label, level, code_link, title

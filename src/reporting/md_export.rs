@@ -78,8 +78,7 @@ td {{
 {}
 </body>
 </html>"#,
-        logo_src,
-        body
+        logo_src, body
     );
     Ok(html)
 }
@@ -132,14 +131,23 @@ pub fn md_to_csv(md: &str) -> Result<String> {
                 .trim_matches('`')
                 .trim()
                 .to_string();
-        } else if line.contains("Cluster Overview") && (line.starts_with("##") || line.contains("🖥️")) {
+        } else if line.contains("Cluster Overview")
+            && (line.starts_with("##") || line.contains("🖥️"))
+        {
             seen_cluster_overview = true;
         } else if (seen_cluster_overview || in_overview_table) && line.starts_with('|') {
-            let cells: Vec<&str> = line.split('|').map(|c| c.trim()).filter(|c| !c.is_empty()).collect();
+            let cells: Vec<&str> = line
+                .split('|')
+                .map(|c| c.trim())
+                .filter(|c| !c.is_empty())
+                .collect();
             if cells.len() >= 2 && cells[0] == "Metric" && cells[1] == "Value" {
                 in_overview_table = true;
                 seen_cluster_overview = false;
-            } else if in_overview_table && cells.len() >= 2 && !cells[0].chars().all(|c| c == '-' || c == ' ') {
+            } else if in_overview_table
+                && cells.len() >= 2
+                && !cells[0].chars().all(|c| c == '-' || c == ' ')
+            {
                 overview.insert(cells[0].to_string(), cells[1].to_string());
             }
         } else if in_overview_table && (!line.starts_with('|') || line.trim().is_empty()) {
@@ -153,20 +161,35 @@ pub fn md_to_csv(md: &str) -> Result<String> {
             current_section = line.trim_start_matches("### ").trim().to_string();
         }
 
-        if line.starts_with('|') && (line.contains("Resource") && line.contains("Level") && line.contains("Issue Code") && line.contains("Short Title")) {
+        if line.starts_with('|')
+            && (line.contains("Resource")
+                && line.contains("Level")
+                && line.contains("Issue Code")
+                && line.contains("Short Title"))
+        {
             i += 1;
             if i < lines.len() && lines[i].contains("---") {
                 i += 1;
             }
             while i < lines.len() && lines[i].starts_with('|') {
                 let row = lines[i];
-                let cells: Vec<&str> = row.split('|').map(|c| c.trim()).filter(|c| !c.is_empty()).collect();
+                let cells: Vec<&str> = row
+                    .split('|')
+                    .map(|c| c.trim())
+                    .filter(|c| !c.is_empty())
+                    .collect();
                 if cells.len() >= 4 && !cells[0].chars().all(|c| c == '-') {
                     let resource = cells[0].trim_matches('`').to_string();
                     let level = cells[1].to_string();
                     let rule_id = extract_rule_id(cells.get(2).unwrap_or(&""));
                     let short_title = cells.get(3).unwrap_or(&"").to_string();
-                    issue_rows.push((current_section.clone(), resource, level, rule_id, short_title));
+                    issue_rows.push((
+                        current_section.clone(),
+                        resource,
+                        level,
+                        rule_id,
+                        short_title,
+                    ));
                 }
                 i += 1;
             }
@@ -181,7 +204,10 @@ pub fn md_to_csv(md: &str) -> Result<String> {
     let rn = overview.get("Ready Nodes").cloned().unwrap_or_default();
     let pc = overview.get("Pod Count").cloned().unwrap_or_default();
     let ns = overview.get("Namespace Count").cloned().unwrap_or_default();
-    let age = overview.get("Cluster Age (days)").cloned().unwrap_or_default();
+    let age = overview
+        .get("Cluster Age (days)")
+        .cloned()
+        .unwrap_or_default();
     out.push_str(&format!(
         "cluster_overview,{},{},{},{},{},{},{},{}\n",
         escape_csv(&cluster_name),
@@ -194,7 +220,9 @@ pub fn md_to_csv(md: &str) -> Result<String> {
         escape_csv(&age)
     ));
 
-    out.push_str("section,inspection_type,severity,category,description,resource,recommendation,rule_id\n");
+    out.push_str(
+        "section,inspection_type,severity,category,description,resource,recommendation,rule_id\n",
+    );
     for (section, resource, level, rule_id, short_title) in issue_rows {
         out.push_str(&format!(
             "issue,{0},{1},{2},{3},{4},{5},{6},{7}\n",
@@ -238,10 +266,24 @@ mod tests {
 "#;
         let csv = md_to_csv(md).unwrap();
         assert!(csv.contains("section,cluster_name,report_id,cluster_version,node_count,ready_node_count,pod_count,namespace_count,cluster_age_days"));
-        assert!(csv.contains("cluster_overview"), "CSV must have cluster_overview row");
-        assert!(csv.contains("my-cluster") && csv.contains("test-id"), "cluster name and report id");
-        assert!(csv.contains("v1.33.7") && csv.contains(",4,4,83,13,11"), "overview metrics from Metric|Value table");
-        assert!(csv.contains("POD-003") && csv.contains("Restart count high") && csv.contains("ns/pod-1"), "issue row from Resource|Level|Issue Code|Short Title table");
+        assert!(
+            csv.contains("cluster_overview"),
+            "CSV must have cluster_overview row"
+        );
+        assert!(
+            csv.contains("my-cluster") && csv.contains("test-id"),
+            "cluster name and report id"
+        );
+        assert!(
+            csv.contains("v1.33.7") && csv.contains(",4,4,83,13,11"),
+            "overview metrics from Metric|Value table"
+        );
+        assert!(
+            csv.contains("POD-003")
+                && csv.contains("Restart count high")
+                && csv.contains("ns/pod-1"),
+            "issue row from Resource|Level|Issue Code|Short Title table"
+        );
     }
 
     #[test]
@@ -253,7 +295,10 @@ mod tests {
 | Nodes | 4 |
 "#;
         let html = md_to_html(md).unwrap();
-        assert!(html.contains("<table>"), "HTML should contain <table> when extension.table is enabled");
+        assert!(
+            html.contains("<table>"),
+            "HTML should contain <table> when extension.table is enabled"
+        );
         assert!(html.contains("<tr>"));
         assert!(html.contains("<td>"));
         assert!(

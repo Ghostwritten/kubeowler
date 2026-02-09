@@ -261,12 +261,14 @@ impl InspectionRunner {
             .and_then(|nodes| nodes.first())
             .and_then(|n| n.timestamp_local.as_ref())
             .and_then(|s| {
-                chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z").ok().map(|dt| {
-                    (
-                        dt.format("%Y-%m-%d %H:%M:%S %:z").to_string(),
-                        dt.format("%Y-%m-%d-%H%M%S").to_string(),
-                    )
-                })
+                chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z")
+                    .ok()
+                    .map(|dt| {
+                        (
+                            dt.format("%Y-%m-%d %H:%M:%S %:z").to_string(),
+                            dt.format("%Y-%m-%d-%H%M%S").to_string(),
+                        )
+                    })
             })
             .map(|(h, f)| (Some(h), Some(f)))
             .unwrap_or((None, None));

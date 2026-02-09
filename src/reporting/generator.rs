@@ -794,8 +794,12 @@ impl ReportGenerator {
 
         // (0) Node General Information: Node | OS Version | IP Address | Kernel Version | Uptime | Collection time
         out.push_str("### Node General Information\n\n");
-        out.push_str("| Node | OS Version | IP Address | Kernel Version | Uptime | Collection time |\n");
-        out.push_str("|------|-------------|------------|----------------|--------|------------------|\n");
+        out.push_str(
+            "| Node | OS Version | IP Address | Kernel Version | Uptime | Collection time |\n",
+        );
+        out.push_str(
+            "|------|-------------|------------|----------------|--------|------------------|\n",
+        );
         for n in nodes {
             let (api_os, api_kernel) = node_api_os_kernel
                 .get(&n.node_name)
@@ -811,7 +815,11 @@ impl ReportGenerator {
                 .or(n.kernel_version.as_deref())
                 .unwrap_or("-");
             let uptime = n.uptime.as_deref().unwrap_or("-");
-            let timestamp = if n.timestamp.is_empty() { "-" } else { n.timestamp.as_str() };
+            let timestamp = if n.timestamp.is_empty() {
+                "-"
+            } else {
+                n.timestamp.as_str()
+            };
             out.push_str(&format!(
                 "| {} | {} | {} | {} | {} | {} |\n",
                 n.node_name, os_ver, ip, kernel, uptime, timestamp
@@ -999,7 +1007,9 @@ impl ReportGenerator {
                 None => "None",
             }
         }
-        out.push_str("| Node/Service | Kubelet | Container runtime | NTP synced | Journald | Crontab |\n");
+        out.push_str(
+            "| Node/Service | Kubelet | Container runtime | NTP synced | Journald | Crontab |\n",
+        );
         out.push_str("|------|--------|-------------------|------------|----------|----------|\n");
         for n in nodes {
             let kubelet = service_cell(n.services.kubelet_running);
@@ -1017,8 +1027,12 @@ impl ReportGenerator {
         // (3) Node security and kernel modules: Node | SELinux | Firewalld | IPVS | br_netfilter | overlay | nf_conntrack
         out.push_str("### Node security and kernel modules\n\n");
         out.push_str("SELinux, firewalld, IPVS, br_netfilter, overlay, and nf_conntrack status; helps troubleshoot network and security policy.\n\n");
-        out.push_str("| Node | SELinux | Firewalld | IPVS | br_netfilter | overlay | nf_conntrack |\n");
-        out.push_str("|------|---------|------------|------|--------------|---------|---------------|\n");
+        out.push_str(
+            "| Node | SELinux | Firewalld | IPVS | br_netfilter | overlay | nf_conntrack |\n",
+        );
+        out.push_str(
+            "|------|---------|------------|------|--------------|---------|---------------|\n",
+        );
         fn yes_no(v: Option<bool>) -> &'static str {
             match v {
                 Some(true) => "Yes",
@@ -1117,7 +1131,13 @@ impl ReportGenerator {
                     };
                     out.push_str(&format!(
                         "| {} | {} | {} | {} | {} | {} | {} |\n",
-                        n.node_name, host_path_display(&c.path), expired, c.expiration_date, c.days_remaining, level, issue_code
+                        n.node_name,
+                        host_path_display(&c.path),
+                        expired,
+                        c.expiration_date,
+                        c.days_remaining,
+                        level,
+                        issue_code
                     ));
                 }
             }
@@ -1433,7 +1453,11 @@ impl ReportGenerator {
                     content.push_str("| Secret (namespace/name) | Expired | Expiry (UTC) | Days to Expiry | Level | Issue Code |\n");
                     content.push_str("|--------------------------|---------|--------------|----------------|-------|------------|\n");
                     for row in expiries {
-                        let expired = if row.days_until_expiry < 0 { "Yes" } else { "No" };
+                        let expired = if row.days_until_expiry < 0 {
+                            "Yes"
+                        } else {
+                            "No"
+                        };
                         let (level, code_link) = if row.days_until_expiry < 0 {
                             (
                                 "Critical",
@@ -1770,7 +1794,11 @@ impl ReportGenerator {
                 content.push_str("| Secret (namespace/name) | Expired | Expiry (UTC) | Days to Expiry | Level | Issue Code |\n");
                 content.push_str("|--------------------------|---------|--------------|----------------|-------|------------|\n");
                 for row in expiries {
-                    let expired = if row.days_until_expiry < 0 { "Yes" } else { "No" };
+                    let expired = if row.days_until_expiry < 0 {
+                        "Yes"
+                    } else {
+                        "No"
+                    };
                     let (level, code_link) = if row.days_until_expiry < 0 {
                         (
                             "Critical",

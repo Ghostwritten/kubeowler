@@ -87,8 +87,7 @@ async fn poll_for_logs(
 
         println!(
             "   {}  ({}, {}/{} pods have logs)",
-            "Waiting for node inspector logs..."
-                .bright_yellow(),
+            "Waiting for node inspector logs...".bright_yellow(),
             format_duration(elapsed_secs),
             ready_count,
             total
@@ -128,7 +127,10 @@ pub async fn ensure_node_inspector_ready(
     let pods = match pods_api.list(&list_params).await {
         Ok(l) => l,
         Err(e) => {
-            debug!("Node inspector DaemonSet pods list failed in {}: {}", namespace, e);
+            debug!(
+                "Node inspector DaemonSet pods list failed in {}: {}",
+                namespace, e
+            );
             return NodeInspectorStatus::NotDeployed;
         }
     };
@@ -210,7 +212,10 @@ pub async fn ensure_node_inspector_ready(
         .await
         .is_err()
     {
-        debug!("Failed to patch DaemonSet {} in {}", DAEMONSET_NAME, namespace);
+        debug!(
+            "Failed to patch DaemonSet {} in {}",
+            DAEMONSET_NAME, namespace
+        );
         return NodeInspectorStatus::NotDeployed;
     }
 

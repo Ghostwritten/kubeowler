@@ -96,4 +96,4 @@ kubeowler check -n default -o report.md -f md -l warning,critical
 - **csv**: Flat CSV for spreadsheets.
 - **html**: HTML report.
 
-The default output filename is derived from the cluster name and current timestamp; use `--output` to override.
+The default output filename is derived from the cluster name and a timestamp. When node inspection data is available, the timestamp is in **cluster host local time** (from the first node's `timestamp_local`); otherwise it is UTC. Use `--output` to override.

@@ -10,7 +10,8 @@ Single JSON object per node, stdout from the DaemonSet script (`node-check-unive
 |-------|------|----------|-------------|
 | node_name | string | yes | Node name (hostname or K8s node name) |
 | hostname | string | no | Same as node_name if omitted |
-| timestamp | string | no | ISO8601 or simple date-time |
+| timestamp | string | no | ISO8601 or simple date-time (UTC) |
+| timestamp_local | string | no | Node local time for report header/filename, e.g. 2026-02-09T18:38:22+0800 |
 | runtime | string | no | "containerd" \| "docker" \| "cri-o" \| "unknown" |
 | os_version | string | no | OS version (e.g. from /etc/os-release PRETTY_NAME) |
 | kernel_version | string | no | Kernel release (e.g. from /proc/sys/kernel/osrelease) |

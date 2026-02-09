@@ -52,7 +52,10 @@ fn output_path_with_extension(
     };
     let default_name = {
         let safe_name = sanitize_cluster_name(&report.cluster_name);
-        let ts = report.timestamp.format("%Y-%m-%d-%H%M%S");
+        let ts = report
+            .display_timestamp_filename
+            .clone()
+            .unwrap_or_else(|| report.timestamp.format("%Y-%m-%d-%H%M%S").to_string());
         format!("{}-kubernetes-inspection-report-{}.{}", safe_name, ts, ext)
     };
     let path = path.unwrap_or(default_name);

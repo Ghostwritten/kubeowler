@@ -12,6 +12,9 @@ pub struct NodeInspectionResult {
     pub hostname: String,
     #[serde(default)]
     pub timestamp: String,
+    /// Node local time (cluster host time) for report header/filename, e.g. 2026-02-09T18:38:22+0800
+    #[serde(default)]
+    pub timestamp_local: Option<String>,
     /// containerd | docker | cri-o | unknown
     #[serde(default)]
     pub runtime: String,
@@ -30,6 +33,8 @@ pub struct NodeInspectionResult {
     pub services: NodeServices,
     #[serde(default)]
     pub security: NodeSecurity,
+    #[serde(default)]
+    pub stability: Option<NodeStability>,
     #[serde(default)]
     pub kernel: NodeKernel,
     /// Number of zombie processes on the node (state Z in /proc).
@@ -121,7 +126,7 @@ pub struct NodeResources {
     pub detail: String,
 }
 
-/// Services: runtime, journald, crontab, ntp_synced.
+/// Services: runtime, journald, crontab, ntp_synced, kubelet, container_runtime.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NodeServices {
     #[serde(default)]
@@ -133,12 +138,16 @@ pub struct NodeServices {
     #[serde(default)]
     pub ntp_synced: Option<bool>,
     #[serde(default)]
+    pub kubelet_running: Option<bool>,
+    #[serde(default)]
+    pub container_runtime_running: Option<bool>,
+    #[serde(default)]
     pub status: String,
     #[serde(default)]
     pub detail: String,
 }
 
-/// Security: SELinux, firewalld, IPVS.
+/// Security: SELinux, firewalld, IPVS, br_netfilter, overlay, nf_conntrack.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NodeSecurity {
     #[serde(default)]
@@ -148,9 +157,32 @@ pub struct NodeSecurity {
     #[serde(default)]
     pub ipvs_loaded: Option<bool>,
     #[serde(default)]
+    pub br_netfilter_loaded: Option<bool>,
+    #[serde(default)]
+    pub overlay_loaded: Option<bool>,
+    #[serde(default)]
+    pub nf_conntrack_loaded: Option<bool>,
+    #[serde(default)]
+    pub nf_conntrack_count: Option<u64>,
+    #[serde(default)]
+    pub nf_conntrack_max: Option<u64>,
+    #[serde(default)]
     pub status: String,
     #[serde(default)]
     pub detail: String,
+}
+
+/// Network and stability: inode, OOM, file descriptors.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct NodeStability {
+    #[serde(default)]
+    pub inode_used_pct: Option<f64>,
+    #[serde(default)]
+    pub oom_kill_count: Option<u64>,
+    #[serde(default)]
+    pub file_nr_open: Option<u64>,
+    #[serde(default)]
+    pub file_nr_max: Option<u64>,
 }
 
 /// Kernel: key sysctl values (2–3 keys).

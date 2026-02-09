@@ -45,23 +45,38 @@ Inspection modules use K8sClient to list/get resources, run domain-specific chec
 
 ### 3.3 Node inspection (DaemonSet + Pod logs)
 
-For per-node host-level data (CPU, memory, root disk, load, runtime, journald, SELinux, sysctl), Kubeowler relies on an optional DaemonSet. One Pod per node runs a script that writes one JSON object to stdout; that stdout is the Pod log. Kubeowler does not read files from PVC or node; it only reads Pod logs via the Kubernetes API. When the user runs `kubeowler check` with type all or nodes, the code lists Pods in kube-system with label app=kubeowler-node-inspector, fetches each Pod log, parses JSON into NodeInspectionResult, and stores in ClusterReport.node_inspection_results. If no DaemonSet Pods exist, node_inspection_results is empty and the report omits the Node Inspection section.
+For per-node host-level data (CPU, memory, root disk, load, runtime, journald, SELinux, sysctl), Kubeowler relies on an optional DaemonSet. One Pod per node runs a script that writes one JSON object to stdout; that stdout is the Pod log. Kubeowler does not read files from PVC or node; it only reads Pod logs via the Kubernetes API. When the user runs `kubeowler check` with type all or nodes, the code lists Pods in the node-inspector namespace (default **kubeowler**) with label app=kubeowler-node-inspector, fetches each Pod log, parses JSON into NodeInspectionResult, and stores in ClusterReport.node_inspection_results. If no DaemonSet Pods exist, node_inspection_results is empty and the report omits the Node Inspection section.
 
 ---
 
 ## 4. In-Memory Report Structure
 
-ClusterReport holds: cluster_name, report_id, timestamp, overall_score, inspections (list of InspectionResult), executive_summary, cluster_overview (optional), node_inspection_results (optional). No database or external storage is used.
+ClusterReport holds: cluster_name, report_id, timestamp, overall_score, inspections (list of InspectionResult), executive_summary, cluster_overview (optional), node_inspection_results (optional), display_timestamp (optional, from first node's timestamp_local for report header), display_timestamp_filename (optional, for filename in cluster local time). No database or external storage is used.
 
 ---
 
 ## 5. Report Generation
 
-The report generator takes ClusterReport and produces Markdown. It does not re-query the cluster. It renders: Cluster Overview, Node Inspection (if node_inspection_results present), Executive Summary, Detailed Results (check results, issues grouped by resource), Key Findings and Recommendations. Filters are applied at generation time.
+The report generator takes ClusterReport and produces Markdown. It does not re-query the cluster. It renders: Cluster Overview, Node Inspection (if node_inspection_results present), Executive Summary, Detailed Results (check results, issues grouped by resource), Key Findings and Recommendations. Filters are applied at generation time. Node disk and certificate paths in the report are shown in **host perspective** (any `/host` prefix from the Pod view is stripped). Node Certificate Status and TLS Certificate Expiry tables include Level and Issue Code (e.g. CERT-002, CERT-003); the TLS table also has an Expired (Yes/No) column and "Days to Expiry". Time semantics (header/filename vs. TLS vs. node cert) are described in §6.
 
 ---
 
-## 6. References
+## 6. Time Semantics in Reports
+
+Kubeowler uses different time conventions depending on context:
+
+| Location | Time convention | Notes |
+|----------|-----------------|-------|
+| Report header ("Generated At") | Cluster host local time | Taken from the first node's `timestamp_local` when node inspection data is available; falls back to UTC otherwise. Example: `2026-02-09 18:38:22 +08:00`. |
+| Report filename | Cluster host local time | Same as header; the timestamp portion (e.g. `2026-02-09-183822`) reflects cluster local time when node inspection ran. |
+| TLS Certificate Expiry table | UTC | Expiration dates come from x509 validity parsed in Rust; labeled "Expiry (UTC)". |
+| Node Certificate Status table | Node local time | Expiration dates come from the node script (`openssl x509 -noout -enddate`), which uses the node/container local timezone. Labeled "Expiration Date (node local)". |
+
+Node certificate fix workflows differ from TLS Secret certificate workflows (node renewal vs. Secret update), but both use the same issue codes (CERT-002, CERT-003) for "expiring soon" and "expired".
+
+---
+
+## 7. References
 
 - Node inspection JSON schema: [node-inspection-schema.md](node-inspection-schema.md)
 - Node inspector build and deploy: [node-inspector-build-deploy.md](node-inspector-build-deploy.md)

@@ -312,6 +312,12 @@ pub struct ClusterReport {
     /// Per-node inspection from kubeowler-node-inspector DaemonSet (JSON from each node).
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub node_inspection_results: Option<Vec<super::super::node_inspection::NodeInspectionResult>>,
+    /// Cluster host local time for report header (from first node's timestamp_local).
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub display_timestamp: Option<String>,
+    /// Timestamp for filename (YYYY-MM-DD-HHMMSS) in cluster local time.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub display_timestamp_filename: Option<String>,
     /// Recent cluster events (Warning/Error), for report section.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub recent_events: Option<Vec<EventRow>>,

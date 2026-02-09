@@ -94,7 +94,7 @@ spec:
           serviceAccountName: kubeowler
           containers:
           - name: kubeowler
-            image: ghostwritten/kubeowler:v0.1.1
+            image: ghostwritten/kubeowler:v0.1.2
             command: ["kubeowler"]
             args: ["check", "-o", "/tmp/cluster-report.md"]
             volumeMounts:

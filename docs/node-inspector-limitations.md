@@ -36,4 +36,22 @@ This document describes limitations of the Node Inspector DaemonSet and how host
 
 The script (`scripts/node-check-universal.sh`) implements detection and fallback for `/host`; report output is in English.
 
+---
+
+## 4. Node inspector: supported host operating systems
+
+The node inspection script runs **inside the DaemonSet container** (Alpine-based). It does not execute commands on the host; it only **reads** host paths via the read-only mount (`/host`) and, when `hostPID: true`, via `$HOST_PROC` (host `/proc`).
+
+**Requirements for the host (node):**
+
+| Requirement | Description |
+|-------------|-------------|
+| **Kernel** | Linux; the host must expose **/proc** and **/sys** so that the container can read them (via `/host/proc`, `/host/sys` or the script’s fallback when `/host` is not used). |
+| **OS version** | The script detects OS from **os-release** or **redhat-release**: `/host/etc/os-release`, `/host/usr/lib/os-release`, or `$HOST_ETC/os-release`, `$HOST_ETC/redhat-release`. Any distribution providing one of these works. |
+| **No host commands** | The script does **not** rely on host binaries (e.g. systemctl, getenforce). Service and security state are inferred from host **process names** (via `/proc` cmdline) and from files under `/proc` and `/sys`. |
+
+**Alignment with README / installation:** The same operating systems listed in [README.md](../README.md) and [installation.md](installation.md) are supported for the node inspector: **RHEL 7+, CentOS 7.x, Rocky Linux 8+, AlmaLinux 8+, Ubuntu 18.04+, SUSE / openSUSE, OpenAnolis, Kylin**, and other compatible Linux distributions that provide `/proc`, `/sys`, and os-release or redhat-release.
+
+---
+
 For the JSON schema and collection vs. report usage, see [node-inspection-schema.md](node-inspection-schema.md) and [node-inspector-collection-gaps.md](node-inspector-collection-gaps.md).

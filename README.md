@@ -58,7 +58,7 @@ Pre-built binaries are on [GitHub Releases](https://github.com/Ghostwritten/kube
 | Linux    | arm64        | `kubeowler-<version>-aarch64-linux.tar.gz` |
 
 ```bash
-curl -sSL https://github.com/Ghostwritten/kubeowler/releases/download/v0.1.1/kubeowler-v0.1.1-x86_64-linux.tar.gz | tar xz
+curl -sSL https://github.com/Ghostwritten/kubeowler/releases/download/v0.1.2/kubeowler-v0.1.2-x86_64-linux.tar.gz | tar xz
 sudo cp kubeowler /usr/local/bin/
 kubeowler check --help
 ```
@@ -72,6 +72,17 @@ kubectl apply -f deploy/node-inspector/daemonset.yaml
 ```
 
 See [docs/node-inspector-build-deploy.md](docs/node-inspector-build-deploy.md) for image build and details.
+
+**Expected output when running `kubeowler check`:**
+
+| Scenario | Output |
+|----------|--------|
+| DaemonSet not deployed | `ℹ️  Node inspector DaemonSet not deployed in namespace 'kubeowler'. Node inspection skipped.` |
+| DaemonSet just deployed | `Waiting for node inspector logs... (Xs, Y/Z pods have logs)` — polled every 6s until all Running pods have logs (timeout 5 min) |
+| Data older than 24h | `⚠️  Node inspector data was stale (>24h). Restarted DaemonSet pods and refreshed.` |
+| Timeout with partial data | `⚠️  Node inspector: X/Y pods have logs (timeout 5 min). Proceeding with partial data.` |
+
+Example: after deploying the DaemonSet and immediately running `kubeowler check`, you may see the "Waiting for node inspector logs..." messages while pods run the collection script. This is normal.
 
 ### Build from source
 

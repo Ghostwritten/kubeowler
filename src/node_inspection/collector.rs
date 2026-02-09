@@ -1,15 +1,20 @@
-//! Collects node inspection JSON from kubeowler-node-inspector DaemonSet pods via exec.
+//! Collects node inspection JSON from kubeowler-node-inspector DaemonSet pods via Pod logs.
 //! Does not deploy the DaemonSet; only identifies and collects from existing pods.
-//! Runs the script in each pod and reads JSON from stdout (script must write only JSON to stdout; use stderr for diagnostics).
-//! Container state counts are filled via Kubernetes API (runtime-agnostic: works with Docker, containerd, CRI-O).
+//! The container runs the script once at startup and writes JSON to stdout (Pod logs).
+//! Kubeowler fetches each pod's log and parses the JSON. Data is from container start time;
+//! restart DaemonSet pods to refresh. Container state counts are filled via Kubernetes API.
 
 use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
+use colored::Colorize;
+use k8s_openapi::api::apps::v1::DaemonSet;
 use k8s_openapi::api::core::v1::Pod;
-use kube::api::{AttachParams, ListParams};
+use kube::api::{ListParams, LogParams, Patch, PatchParams};
 use kube::Api;
 use log::debug;
 use std::collections::HashMap;
-use tokio::io::AsyncReadExt;
+use std::time::{Duration, Instant};
+use tokio::time::sleep;
 
 use crate::k8s::K8sClient;
 use crate::node_inspection::NodeInspectionResult;
@@ -17,12 +22,262 @@ use crate::node_inspection::NodeInspectionResult;
 const NODE_INSPECTOR_LABEL: &str = "app=kubeowler-node-inspector";
 const DEFAULT_NODE_INSPECTOR_NAMESPACE: &str = "kubeowler";
 const CONTAINER_NAME: &str = "inspector";
-const SCRIPT_PATH: &str = "/node-check-universal.sh";
+const DAEMONSET_NAME: &str = "kubeowler-node-inspector";
+#[allow(dead_code)]
+const STALENESS_THRESHOLD_HOURS: u64 = 24;
+const ROLLOUT_WAIT_TIMEOUT_SECS: u64 = 180;
+const LOG_POLL_INTERVAL_SECS: u64 = 6;
+const LOG_POLL_TIMEOUT_SECS: u64 = 300; // 5 minutes
+
+/// Status of node inspector pre-check before collection.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum NodeInspectorStatus {
+    /// No DaemonSet pods found in the given namespace.
+    NotDeployed,
+    /// Data is fresh (within staleness threshold), ready to collect.
+    Ready,
+    /// Data was stale, DaemonSet pods were restarted and are ready for collection.
+    RestartedAndReady,
+    /// Timeout waiting for logs; proceed with partial data (ready of total pods have logs).
+    ReadyPartial { ready: usize, total: usize },
+}
+
+/// Polls for non-empty logs from Running pods. Returns (timestamps, ready_count, total_running, timed_out).
+async fn poll_for_logs(
+    pods_api: &Api<Pod>,
+    running_pod_names: &[String],
+    log_params: &LogParams,
+) -> (Vec<DateTime<Utc>>, usize, usize, bool) {
+    let total = running_pod_names.len();
+    let deadline = Instant::now() + Duration::from_secs(LOG_POLL_TIMEOUT_SECS);
+    let mut elapsed_secs: u64 = 0;
+
+    loop {
+        let mut timestamps: Vec<DateTime<Utc>> = Vec::with_capacity(total);
+        let mut ready_count = 0usize;
+        for name in running_pod_names {
+            let log_content = match pods_api.logs(name, log_params).await {
+                Ok(s) => s,
+                Err(_) => continue,
+            };
+            let trimmed = log_content.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            ready_count += 1;
+            let v: serde_json::Value = match serde_json::from_str(trimmed) {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+            let ts_str = match v.get("timestamp").and_then(|t| t.as_str()) {
+                Some(s) if !s.is_empty() => s,
+                _ => continue,
+            };
+            if let Ok(dt) = DateTime::parse_from_rfc3339(ts_str) {
+                timestamps.push(dt.with_timezone(&Utc));
+            }
+        }
+
+        if ready_count >= total {
+            return (timestamps, ready_count, total, false);
+        }
+        if Instant::now() >= deadline {
+            return (timestamps, ready_count, total, true);
+        }
+
+        println!(
+            "   {}  ({}, {}/{} pods have logs)",
+            "Waiting for node inspector logs..."
+                .bright_yellow(),
+            format_duration(elapsed_secs),
+            ready_count,
+            total
+        );
+        sleep(Duration::from_secs(LOG_POLL_INTERVAL_SECS)).await;
+        elapsed_secs += LOG_POLL_INTERVAL_SECS;
+    }
+}
+
+fn format_duration(secs: u64) -> String {
+    if secs >= 60 {
+        format!("{}m{}s", secs / 60, secs % 60)
+    } else {
+        format!("{}s", secs)
+    }
+}
+
+fn is_pod_running(pod: &Pod) -> bool {
+    pod.status
+        .as_ref()
+        .and_then(|s| s.phase.as_deref())
+        .map(|p| p == "Running")
+        .unwrap_or(false)
+}
+
+/// Ensures node inspector data is fresh before collection.
+/// 1. No pods running → NotDeployed. 2. Pods running but no logs → poll (6s interval, 5 min timeout).
+/// 3. Has logs → check staleness; if >24h restart DaemonSet and poll again.
+/// On timeout: proceed with partial data (ReadyPartial).
+pub async fn ensure_node_inspector_ready(
+    client: &K8sClient,
+    namespace: &str,
+    staleness_hours: u64,
+) -> NodeInspectorStatus {
+    let pods_api: Api<Pod> = client.pods(Some(namespace));
+    let list_params = ListParams::default().labels(NODE_INSPECTOR_LABEL);
+    let pods = match pods_api.list(&list_params).await {
+        Ok(l) => l,
+        Err(e) => {
+            debug!("Node inspector DaemonSet pods list failed in {}: {}", namespace, e);
+            return NodeInspectorStatus::NotDeployed;
+        }
+    };
+
+    if pods.items.is_empty() {
+        debug!("No kubeowler-node-inspector pods found in {}", namespace);
+        return NodeInspectorStatus::NotDeployed;
+    }
+
+    let running_pod_names: Vec<String> = pods
+        .items
+        .iter()
+        .filter(|p| is_pod_running(p))
+        .filter_map(|p| p.metadata.name.clone())
+        .collect();
+
+    if running_pod_names.is_empty() {
+        debug!("No Running kubeowler-node-inspector pods in {}", namespace);
+        return NodeInspectorStatus::NotDeployed;
+    }
+
+    let log_params = LogParams {
+        container: Some(CONTAINER_NAME.to_string()),
+        ..LogParams::default()
+    };
+
+    // Poll for logs (6s interval, 5 min timeout)
+    let (timestamps, ready_count, total, timed_out) =
+        poll_for_logs(&pods_api, &running_pod_names, &log_params).await;
+
+    if timed_out {
+        println!(
+            "{}  Node inspector: {}/{} pods have logs (timeout 5 min). Proceeding with partial data.",
+            "⚠️".bright_yellow(),
+            ready_count,
+            total
+        );
+        return NodeInspectorStatus::ReadyPartial {
+            ready: ready_count,
+            total,
+        };
+    }
+
+    // Check staleness
+    let oldest = timestamps.iter().min().copied();
+    let now = Utc::now();
+    let needs_restart = match oldest {
+        Some(oldest_ts) => {
+            let age_hours = (now - oldest_ts).num_seconds() as u64 / 3600;
+            age_hours >= staleness_hours
+        }
+        None => false,
+    };
+
+    if !needs_restart {
+        return NodeInspectorStatus::Ready;
+    }
+
+    // Patch DaemonSet to trigger rollout restart
+    let ds_api: Api<DaemonSet> = client.daemon_sets(Some(namespace));
+    let restarted_at = now.to_rfc3339();
+    let patch = serde_json::json!({
+        "spec": {
+            "template": {
+                "metadata": {
+                    "annotations": {
+                        "kubectl.kubernetes.io/restartedAt": restarted_at
+                    }
+                }
+            }
+        }
+    });
+    if ds_api
+        .patch(
+            DAEMONSET_NAME,
+            &PatchParams::default(),
+            &Patch::Merge(&patch),
+        )
+        .await
+        .is_err()
+    {
+        debug!("Failed to patch DaemonSet {} in {}", DAEMONSET_NAME, namespace);
+        return NodeInspectorStatus::NotDeployed;
+    }
+
+    // Wait for rollout
+    let deadline = Instant::now() + Duration::from_secs(ROLLOUT_WAIT_TIMEOUT_SECS);
+    while Instant::now() < deadline {
+        let ds = match ds_api.get(DAEMONSET_NAME).await {
+            Ok(d) => d,
+            Err(_) => {
+                sleep(Duration::from_secs(2)).await;
+                continue;
+            }
+        };
+        let status = match &ds.status {
+            Some(s) => s,
+            None => {
+                sleep(Duration::from_secs(2)).await;
+                continue;
+            }
+        };
+        let desired = status.desired_number_scheduled;
+        let ready = status.number_ready;
+        if desired > 0 && ready >= desired {
+            break;
+        }
+        sleep(Duration::from_secs(2)).await;
+    }
+
+    // Re-list and poll for logs again (new pods after restart)
+    let pods2 = match pods_api.list(&list_params).await {
+        Ok(l) => l,
+        Err(_) => return NodeInspectorStatus::NotDeployed,
+    };
+    let running_pod_names2: Vec<String> = pods2
+        .items
+        .iter()
+        .filter(|p| is_pod_running(p))
+        .filter_map(|p| p.metadata.name.clone())
+        .collect();
+    if running_pod_names2.is_empty() {
+        return NodeInspectorStatus::NotDeployed;
+    }
+
+    let (_, ready_count2, total2, timed_out2) =
+        poll_for_logs(&pods_api, &running_pod_names2, &log_params).await;
+
+    if timed_out2 {
+        println!(
+            "{}  Node inspector: restarted; {}/{} pods have logs (timeout 5 min). Proceeding with partial data.",
+            "⚠️".bright_yellow(),
+            ready_count2,
+            total2
+        );
+        return NodeInspectorStatus::ReadyPartial {
+            ready: ready_count2,
+            total: total2,
+        };
+    }
+
+    NodeInspectorStatus::RestartedAndReady
+}
 
 /// Collects one NodeInspectionResult per node from DaemonSet pods.
 /// Lists pods with label app=kubeowler-node-inspector in the given namespace
-/// (or `kubeowler` when `namespace` is None). Runs the inspection script via exec in each pod,
-/// reads JSON from stdout, parses it. Returns empty vec if DaemonSet is not deployed or no pods found.
+/// (or `kubeowler` when `namespace` is None). Fetches each pod's container log
+/// (script output from startup), parses JSON. Returns empty vec if DaemonSet is not deployed or no pods found.
+/// Note: Data reflects node state at pod start time; restart pods to refresh.
 pub async fn collect_node_inspections(
     client: &K8sClient,
     namespace: Option<&str>,
@@ -43,12 +298,10 @@ pub async fn collect_node_inspections(
         return Ok(Vec::new());
     }
 
-    let attach_params = AttachParams::default()
-        .container(CONTAINER_NAME.to_string())
-        .stdout(true)
-        .stderr(true)
-        .stdin(false)
-        .tty(false);
+    let log_params = LogParams {
+        container: Some(CONTAINER_NAME.to_string()),
+        ..LogParams::default()
+    };
 
     let mut results = Vec::with_capacity(pods.items.len());
     for pod in pods.items {
@@ -60,33 +313,21 @@ pub async fn collect_node_inspections(
             .unwrap_or("")
             .to_string();
 
-        let mut attached = match pods_api.exec(name, [SCRIPT_PATH], &attach_params).await {
-            Ok(a) => a,
+        let log_content = match pods_api.logs(name, &log_params).await {
+            Ok(s) => s,
             Err(e) => {
-                debug!("Exec failed for pod {}: {}", name, e);
+                debug!("Fetch logs failed for pod {}: {}", name, e);
                 continue;
             }
         };
 
-        let mut stdout_buf = String::new();
-        if let Some(mut stdout) = attached.stdout() {
-            if let Err(e) = stdout.read_to_string(&mut stdout_buf).await {
-                debug!("Read stdout failed for pod {}: {}", name, e);
-                let _ = attached.join().await;
-                continue;
-            }
-        }
-        if let Err(e) = attached.join().await {
-            debug!("Exec join failed for pod {}: {}", name, e);
-        }
-
-        let trimmed = stdout_buf.trim();
+        let trimmed = log_content.trim();
         if trimmed.is_empty() {
-            debug!("Empty stdout for pod {}", name);
+            debug!("Empty logs for pod {}", name);
             continue;
         }
 
-        // Script outputs a single JSON object to stdout
+        // Script outputs a single JSON object to stdout at container start
         let parsed: NodeInspectionResult = serde_json::from_str(trimmed).with_context(|| {
             format!("Parse node inspection JSON from pod {}: {}", name, trimmed)
         })?;

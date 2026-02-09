@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-02-09
+
+### Added
+
+- Report header and filename use cluster host local time (from first node `timestamp_local` when node inspection present; fallback UTC).
+- Node Certificate Status table: Level and Issue Code columns (CERT-002/CERT-003).
+- TLS Certificate Expiry table: Expired (Yes/No) column, "Days to Expiry" column name, column order aligned with node cert table; Certificate (subject) column removed.
+- Short English descriptions before Node security/kernel/network and Node kernel parameters tables.
+- `timestamp_local` in node script and NodeInspectionResult for report time.
+
+### Changed
+
+- Node disk and certificate paths in report shown in host perspective (strip `/host` prefix).
+- Node Certificate Status time column labeled "Expiration Date (node local)".
+- Documentation: node-inspector namespace default is `kubeowler` (not kube-system); data-collection and node-inspector-build-deploy updated; node-inspection-schema and collection-gaps updated for `timestamp_local`, path display, and cert columns.
+
+### Fixed
+
+- Report page footer link: corrected repository URL from username/kubeowler to Ghostwritten/kubeowler.
+- `timestamp_local` now uses host timezone when `/host/etc/localtime` is available so report header/filename reflect cluster host local time (e.g. CST).
+
+[0.1.2]: https://github.com/Ghostwritten/kubeowler/releases/tag/v0.1.2
+
 ## [0.1.1] - 2026-02-06
 
 ### Added

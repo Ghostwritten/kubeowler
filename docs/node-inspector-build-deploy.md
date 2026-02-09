@@ -12,8 +12,8 @@ This document describes how to build, push, and deploy the **kubeowler-node-insp
 |-----------|-------------|
 | **node-check-universal.sh** | Per-node script: reads `/proc`, `/sys`, `/etc`, etc., gathers resource, service, security, and kernel data; outputs one line of JSON to stdout. **Does not depend on any runtime socket**; container state counts are filled by Kubeowler via the Kubernetes API per node. |
 | **Dockerfile** | Alpine-based image with bash/coreutils; script is the ENTRYPOINT. Must be built from the **project root** so `COPY scripts/` works. |
-| **DaemonSet** | Deployed in `kube-system`, one Pod per node; read-only hostPath mounts for `/proc`, `/sys`, `/etc`; `NODE_NAME` injected via Downward API; container runs the script once (JSON to stdout), then `sleep infinity` so the Pod stays Running and the JSON remains in **Pod logs** for Kubeowler to fetch. |
-| **Kubeowler** | Lists Pods in `kube-system` with label `app=kubeowler-node-inspector`, fetches each Pod's log, parses JSON; merges into node inspection results and writes the "Node Inspection" section of the report. |
+| **DaemonSet** | Deployed in the **kubeowler** namespace (or custom via `--node-inspector-namespace`), one Pod per node; read-only hostPath mounts for `/proc`, `/sys`, `/etc`; `NODE_NAME` injected via Downward API; container runs the script once (JSON to stdout), then `sleep infinity` so the Pod stays Running and the JSON remains in **Pod logs** for Kubeowler to fetch. |
+| **Kubeowler** | Lists Pods in the node-inspector namespace (default **kubeowler**) with label `app=kubeowler-node-inspector`, fetches each Pod's log, parses JSON; merges into node inspection results and writes the "Node Inspection" section of the report. |
 
 ### 1.2 Directory layout
 
@@ -46,10 +46,10 @@ kubeowler/
 ```bash
 cd /path/to/kubeowler
 docker build -f deploy/node-inspector/Dockerfile \
-  -t docker.io/ghostwritten/kubeowler-node-inspector:v0.1.1 .
+  -t docker.io/ghostwritten/kubeowler-node-inspector:v0.1.2 .
 ```
 
-For multi-arch (linux/amd64 and linux/arm64), use Docker Buildx or run `./deploy/node-inspector/build-push-multiarch.sh v0.1.1`.
+For multi-arch (linux/amd64 and linux/arm64), use Docker Buildx or run `./deploy/node-inspector/build-push-multiarch.sh v0.1.2`.
 
 ---
 
@@ -59,8 +59,8 @@ Push to your registry, then:
 
 ```bash
 kubectl apply -f deploy/node-inspector/daemonset.yaml
-kubectl get pods -n kube-system -l app=kubeowler-node-inspector
-kubectl logs -n kube-system -l app=kubeowler-node-inspector --tail=1 -c inspector
+kubectl get pods -n kubeowler -l app=kubeowler-node-inspector
+kubectl logs -n kubeowler -l app=kubeowler-node-inspector --tail=1 -c inspector
 ```
 
 ---

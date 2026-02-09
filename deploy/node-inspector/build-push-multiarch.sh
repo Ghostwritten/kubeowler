@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Multi-arch build and push for kubeowler-node-inspector image (manifest list)
 # Usage: run from repo root: ./deploy/node-inspector/build-push-multiarch.sh [tag]
-# Example: ./deploy/node-inspector/build-push-multiarch.sh v0.1.1
-# Default tag: v0.1.1
+# Example: ./deploy/node-inspector/build-push-multiarch.sh v0.1.2
+# Default tag: v0.1.2
 # Requires: Docker buildx (docker buildx create --use)
 
 set -e
 
-TAG="${1:-v0.1.1}"
+TAG="${1:-v0.1.2}"
 IMAGE="${IMAGE:-docker.io/ghostwritten/kubeowler-node-inspector}"
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 

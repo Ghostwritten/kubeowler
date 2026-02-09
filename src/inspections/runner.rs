@@ -1,5 +1,6 @@
 use anyhow::Result;
 use chrono::Utc;
+use colored::Colorize;
 use k8s_openapi::api::core::v1::Pod;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use kube::api::ListParams;
@@ -18,7 +19,10 @@ use super::{
 };
 use crate::cli::InspectionType;
 use crate::k8s::K8sClient;
-use crate::node_inspection::{collect_node_inspections, NodeInspectionResult};
+use crate::node_inspection::{
+    collect_node_inspections, ensure_node_inspector_ready, NodeInspectionResult,
+    NodeInspectorStatus,
+};
 use crate::utils::resource_quantity::{parse_cpu_str, parse_memory_str};
 
 fn parse_cpu_quantity(q: Option<&Quantity>) -> Option<i64> {
@@ -163,11 +167,35 @@ impl InspectionRunner {
 
         // Collect per-node inspection JSON from DaemonSet pods when doing full or node-only inspection.
         // DaemonSet is always looked up in node_inspector_namespace (e.g. kubeowler); inspection scope is namespace.
+        // Pre-check: if data is stale (>24h), restart DaemonSet; if not deployed, skip with prompt.
         let node_inspection_results: Option<Vec<NodeInspectionResult>> = match inspection_type {
             InspectionType::All | InspectionType::Nodes => {
-                collect_node_inspections(&self.client, Some(node_inspector_namespace))
-                    .await
-                    .ok()
+                let status =
+                    ensure_node_inspector_ready(&self.client, node_inspector_namespace, 24).await;
+                match status {
+                    NodeInspectorStatus::NotDeployed => {
+                        println!(
+                            "{}  Node inspector DaemonSet not deployed in namespace '{}'. Node inspection skipped.",
+                            "ℹ️".bright_blue(),
+                            node_inspector_namespace.bright_green()
+                        );
+                        None
+                    }
+                    NodeInspectorStatus::RestartedAndReady => {
+                        println!(
+                            "{}  Node inspector data was stale (>24h). Restarted DaemonSet pods and refreshed.",
+                            "⚠️".bright_yellow()
+                        );
+                        collect_node_inspections(&self.client, Some(node_inspector_namespace))
+                            .await
+                            .ok()
+                    }
+                    NodeInspectorStatus::Ready | NodeInspectorStatus::ReadyPartial { .. } => {
+                        collect_node_inspections(&self.client, Some(node_inspector_namespace))
+                            .await
+                            .ok()
+                    }
+                }
             }
             _ => None,
         };
@@ -228,6 +256,21 @@ impl InspectionRunner {
             }
         }
 
+        let (display_timestamp, display_timestamp_filename) = node_inspection_results
+            .as_ref()
+            .and_then(|nodes| nodes.first())
+            .and_then(|n| n.timestamp_local.as_ref())
+            .and_then(|s| {
+                chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z").ok().map(|dt| {
+                    (
+                        dt.format("%Y-%m-%d %H:%M:%S %:z").to_string(),
+                        dt.format("%Y-%m-%d-%H%M%S").to_string(),
+                    )
+                })
+            })
+            .map(|(h, f)| (Some(h), Some(f)))
+            .unwrap_or((None, None));
+
         Ok(ClusterReport {
             cluster_name,
             report_id: Uuid::new_v4().to_string(),
@@ -238,6 +281,8 @@ impl InspectionRunner {
             cluster_overview,
             node_inspection_results,
             recent_events,
+            display_timestamp,
+            display_timestamp_filename,
         })
     }
 

@@ -87,6 +87,17 @@ fn format_affected_resources(resources: &[String]) -> String {
         .join("  \n")
 }
 
+/// Convert pod-mounted path to host perspective. Strips /host prefix so /host/boot -> /boot, /host -> /.
+fn host_path_display(path: &str) -> String {
+    if path == "/host" {
+        return "/".to_string();
+    }
+    if path.starts_with("/host/") {
+        return path["/host/".len()..].to_string();
+    }
+    path.to_string()
+}
+
 /// Build a Markdown anchor slug from a module title (e.g. "Node Health" -> "node-health").
 fn slugify(s: &str) -> String {
     let mut out = String::new();
@@ -781,10 +792,10 @@ impl ReportGenerator {
         out.push_str("## Node Inspection\n\n");
         out.push_str("Per-node checks from kubeowler-node-inspector DaemonSet.\n\n");
 
-        // (0) Node General Information: Node | OS Version | IP Address | Kernel Version | Uptime (API preferred for OS/Kernel when available)
+        // (0) Node General Information: Node | OS Version | IP Address | Kernel Version | Uptime | Collection time
         out.push_str("### Node General Information\n\n");
-        out.push_str("| Node | OS Version | IP Address | Kernel Version | Uptime |\n");
-        out.push_str("|------|-------------|------------|----------------|--------|\n");
+        out.push_str("| Node | OS Version | IP Address | Kernel Version | Uptime | Collection time |\n");
+        out.push_str("|------|-------------|------------|----------------|--------|------------------|\n");
         for n in nodes {
             let (api_os, api_kernel) = node_api_os_kernel
                 .get(&n.node_name)
@@ -800,9 +811,10 @@ impl ReportGenerator {
                 .or(n.kernel_version.as_deref())
                 .unwrap_or("-");
             let uptime = n.uptime.as_deref().unwrap_or("-");
+            let timestamp = if n.timestamp.is_empty() { "-" } else { n.timestamp.as_str() };
             out.push_str(&format!(
-                "| {} | {} | {} | {} | {} |\n",
-                n.node_name, os_ver, ip, kernel, uptime
+                "| {} | {} | {} | {} | {} | {} |\n",
+                n.node_name, os_ver, ip, kernel, uptime, timestamp
             ));
         }
         out.push('\n');
@@ -940,7 +952,7 @@ impl ReportGenerator {
                         if d.mount_point.is_empty() {
                             "-".to_string()
                         } else {
-                            d.mount_point.clone()
+                            host_path_display(&d.mount_point)
                         },
                         if d.device.is_empty() {
                             "-".to_string()
@@ -978,8 +990,8 @@ impl ReportGenerator {
         }
         out.push('\n');
 
-        // (2) Node services: rows = nodes, columns = Node/Service, NTP synced, Journald, Crontab; cell = enabled/disabled/None
-        out.push_str("## Node service status\n\n");
+        // (2) Node component and service status: Node | Kubelet | Container runtime | NTP synced | Journald | Crontab
+        out.push_str("## Node component and service status\n\n");
         fn service_cell(v: Option<bool>) -> &'static str {
             match v {
                 Some(true) => "enabled",
@@ -987,44 +999,91 @@ impl ReportGenerator {
                 None => "None",
             }
         }
-        out.push_str("| Node/Service | NTP synced | Journald | Crontab |\n");
-        out.push_str("|------|------------|----------|----------|\n");
+        out.push_str("| Node/Service | Kubelet | Container runtime | NTP synced | Journald | Crontab |\n");
+        out.push_str("|------|--------|-------------------|------------|----------|----------|\n");
         for n in nodes {
+            let kubelet = service_cell(n.services.kubelet_running);
+            let runtime = service_cell(n.services.container_runtime_running);
             let ntp = service_cell(n.services.ntp_synced);
             let journald = service_cell(n.services.journald_active);
             let crontab = service_cell(n.services.crontab_present);
             out.push_str(&format!(
-                "| {} | {} | {} | {} |\n",
-                n.node_name, ntp, journald, crontab
+                "| {} | {} | {} | {} | {} | {} |\n",
+                n.node_name, kubelet, runtime, ntp, journald, crontab
             ));
         }
         out.push('\n');
 
-        // (3) Node security: Node | SELinux | Firewalld | IPVS loaded
-        out.push_str("### Node security\n\n");
-        out.push_str("| Node | SELinux | Firewalld | IPVS loaded |\n");
-        out.push_str("|------|---------|------------|-------------|\n");
+        // (3) Node security and kernel modules: Node | SELinux | Firewalld | IPVS | br_netfilter | overlay | nf_conntrack
+        out.push_str("### Node security and kernel modules\n\n");
+        out.push_str("SELinux, firewalld, IPVS, br_netfilter, overlay, and nf_conntrack status; helps troubleshoot network and security policy.\n\n");
+        out.push_str("| Node | SELinux | Firewalld | IPVS | br_netfilter | overlay | nf_conntrack |\n");
+        out.push_str("|------|---------|------------|------|--------------|---------|---------------|\n");
+        fn yes_no(v: Option<bool>) -> &'static str {
+            match v {
+                Some(true) => "Yes",
+                Some(false) => "No",
+                None => "-",
+            }
+        }
         for n in nodes {
             let fw = n
                 .security
                 .firewalld_active
                 .map(|b| if b { "Active" } else { "Inactive" })
                 .unwrap_or("-");
-            let ipvs = n
-                .security
-                .ipvs_loaded
-                .map(|b| if b { "Yes" } else { "No" })
-                .unwrap_or("-");
+            let ipvs = yes_no(n.security.ipvs_loaded);
+            let br_netfilter = yes_no(n.security.br_netfilter_loaded);
+            let overlay = yes_no(n.security.overlay_loaded);
+            let nf_conntrack = yes_no(n.security.nf_conntrack_loaded);
             let se = n.security.selinux.as_deref().unwrap_or("-");
             out.push_str(&format!(
-                "| {} | {} | {} | {} |\n",
-                n.node_name, se, fw, ipvs
+                "| {} | {} | {} | {} | {} | {} | {} |\n",
+                n.node_name, se, fw, ipvs, br_netfilter, overlay, nf_conntrack
+            ));
+        }
+        out.push('\n');
+
+        // (3b) Node network and stability: Node | Conntrack usage % | Inode usage % | OOM count | FD (open/max) | Zombie count
+        out.push_str("### Node network and stability\n\n");
+        out.push_str("Conntrack usage, inode usage, OOM count, open FDs, and zombie count; used to assess node stability and resource pressure.\n\n");
+        out.push_str("| Node | Conntrack usage % | Inode usage % | OOM count | FD (open/max) | Zombie count |\n");
+        out.push_str("|------|-------------------|---------------|-----------|---------------|---------------|\n");
+        for n in nodes {
+            let conntrack_pct = match (n.security.nf_conntrack_count, n.security.nf_conntrack_max) {
+                (Some(c), Some(m)) if m > 0 => format!("{:.1}%", (c as f64 / m as f64) * 100.0),
+                _ => "-".to_string(),
+            };
+            let inode_pct = n
+                .stability
+                .as_ref()
+                .and_then(|s| s.inode_used_pct)
+                .map(|p| format!("{:.1}%", p))
+                .unwrap_or_else(|| "-".to_string());
+            let oom = n
+                .stability
+                .as_ref()
+                .and_then(|s| s.oom_kill_count)
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| "-".to_string());
+            let fd = match (
+                n.stability.as_ref().and_then(|s| s.file_nr_open),
+                n.stability.as_ref().and_then(|s| s.file_nr_max),
+            ) {
+                (Some(o), Some(m)) => format!("{}/{}", o, m),
+                _ => "-".to_string(),
+            };
+            let zombie = n.zombie_count.unwrap_or(0);
+            out.push_str(&format!(
+                "| {} | {} | {} | {} | {} | {} |\n",
+                n.node_name, conntrack_pct, inode_pct, oom, fd, zombie
             ));
         }
         out.push('\n');
 
         // (4) Node kernel parameters: Node | net.ipv4.ip_forward | vm.swappiness | net.core.somaxconn
         out.push_str("### Node kernel parameters\n\n");
+        out.push_str("ip_forward, swappiness, and somaxconn; affects network forwarding, memory swapping, and connection queue.\n\n");
         out.push_str("| Node | net.ipv4.ip_forward | vm.swappiness | net.core.somaxconn |\n");
         out.push_str("|------|---------------------|--------------|--------------------|\n");
         for n in nodes {
@@ -1038,32 +1097,27 @@ impl ReportGenerator {
         }
         out.push('\n');
 
-        // (5) Node process health: Node | Zombie count | Issue code (NODE-003 when > 0)
-        out.push_str("### Node process health\n\n");
-        out.push_str("| Node | Zombie count | Issue code |\n");
-        out.push_str("|------|------------|----------|\n");
-        let node_003_link = format!("[NODE-003]({})", issue_codes::doc_path("NODE-003"));
-        for n in nodes {
-            let z = n.zombie_count.unwrap_or(0);
-            let code_cell = if z > 0 { node_003_link.as_str() } else { "-" };
-            out.push_str(&format!("| {} | {} | {} |\n", n.node_name, z, code_cell));
-        }
-        out.push('\n');
-
-        // (6) Node Certificate Status: Node | Path | Expired | Expiration Date | Days to Expiry
+        // (5) Node Certificate Status: Node | Path | Expired | Expiration Date (node local) | Days to Expiry | Level | Issue Code
         out.push_str("### Node Certificate Status\n\n");
-        out.push_str("| Node | Path | Expired | Expiration Date | Days to Expiry |\n");
-        out.push_str("|------|------|---------|-----------------|----------------|\n");
+        out.push_str("| Node | Path | Expired | Expiration Date (node local) | Days to Expiry | Level | Issue Code |\n");
+        out.push_str("|------|------|---------|------------------------------|----------------|-------|------------|\n");
         for n in nodes {
             let certs = n.node_certificates.as_deref().unwrap_or(&[]);
             if certs.is_empty() {
-                out.push_str(&format!("| {} | - | - | - | - |\n", n.node_name));
+                out.push_str(&format!("| {} | - | - | - | - | - | - |\n", n.node_name));
             } else {
                 for c in certs {
                     let expired = if c.status == "Expired" { "Yes" } else { "No" };
+                    let (level, issue_code) = if c.days_remaining < 0 {
+                        ("Critical", "CERT-003")
+                    } else if c.days_remaining <= 30 {
+                        ("Warning", "CERT-002")
+                    } else {
+                        ("Info", "CERT-002")
+                    };
                     out.push_str(&format!(
-                        "| {} | {} | {} | {} | {} |\n",
-                        n.node_name, c.path, expired, c.expiration_date, c.days_remaining
+                        "| {} | {} | {} | {} | {} | {} | {} |\n",
+                        n.node_name, host_path_display(&c.path), expired, c.expiration_date, c.days_remaining, level, issue_code
                     ));
                 }
             }
@@ -1097,10 +1151,11 @@ impl ReportGenerator {
 
         content.push_str(&format!("**Cluster**: {}\n\n", report.cluster_name));
 
-        content.push_str(&format!(
-            "**Generated At**: {}\n\n",
-            report.timestamp.format("%Y-%m-%d %H:%M:%S UTC")
-        ));
+        let generated_at = report
+            .display_timestamp
+            .clone()
+            .unwrap_or_else(|| report.timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string());
+        content.push_str(&format!("**Generated At**: {}\n\n", generated_at));
 
         // Cluster Overview: always output section (placeholder if no data); core metrics in table
         content.push_str("## 🖥️ Cluster Overview\n\n");
@@ -1259,7 +1314,7 @@ impl ReportGenerator {
             }
             _ => {
                 content.push_str("## Node Inspection\n\n");
-                content.push_str("No data (kubeowler-node-inspector DaemonSet not deployed or exec failed / no pods ready).\n\n");
+                content.push_str("No data (kubeowler-node-inspector DaemonSet not deployed or log fetch failed / no pods ready).\n\n");
             }
         }
 
@@ -1375,9 +1430,10 @@ impl ReportGenerator {
             if has_cert_expiries {
                 if let Some(expiries) = cert_expiries {
                     content.push_str("#### TLS Certificate Expiry\n\n");
-                    content.push_str("| Secret (namespace/name) | Certificate (subject) | Expiry (UTC) | Days until expiry | Level | Issue Code |\n");
-                    content.push_str("|--------------------------|-----------------------|--------------|-------------------|-------|------------|\n");
+                    content.push_str("| Secret (namespace/name) | Expired | Expiry (UTC) | Days to Expiry | Level | Issue Code |\n");
+                    content.push_str("|--------------------------|---------|--------------|----------------|-------|------------|\n");
                     for row in expiries {
+                        let expired = if row.days_until_expiry < 0 { "Yes" } else { "No" };
                         let (level, code_link) = if row.days_until_expiry < 0 {
                             (
                                 "Critical",
@@ -1398,7 +1454,7 @@ impl ReportGenerator {
                         content.push_str(&format!(
                             "| {} | {} | {} | {} | {} | {} |\n",
                             secret_cell,
-                            truncate_string(&row.subject_or_cn, 50),
+                            expired,
                             row.expiry_utc,
                             row.days_until_expiry,
                             level,
@@ -1461,7 +1517,7 @@ impl ReportGenerator {
         // Footer
         content.push_str("---\n\n");
         content.push_str(
-            "*Report generated by [kubeowler](https://github.com/username/kubeowler).*\n",
+            "*Report generated by [kubeowler](https://github.com/Ghostwritten/kubeowler).*\n",
         );
 
         Ok(content)
@@ -1474,10 +1530,11 @@ impl ReportGenerator {
 
         content.push_str(&format!("**Cluster**: {}\n\n", report.cluster_name));
 
-        content.push_str(&format!(
-            "**Generated At**: {}\n\n",
-            report.timestamp.format("%Y-%m-%d %H:%M:%S UTC")
-        ));
+        let generated_at = report
+            .display_timestamp
+            .clone()
+            .unwrap_or_else(|| report.timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string());
+        content.push_str(&format!("**Generated At**: {}\n\n", generated_at));
 
         // Group by 3 severities
         let mut critical_issues = Vec::new();
@@ -1710,9 +1767,10 @@ impl ReportGenerator {
         if let Some(ref expiries) = inspection.certificate_expiries {
             if !expiries.is_empty() {
                 content.push_str("#### TLS Certificate Expiry\n\n");
-                content.push_str("| Secret (namespace/name) | Certificate (subject) | Expiry (UTC) | Days until expiry | Level | Issue Code |\n");
-                content.push_str("|--------------------------|-----------------------|--------------|-------------------|-------|------------|\n");
+                content.push_str("| Secret (namespace/name) | Expired | Expiry (UTC) | Days to Expiry | Level | Issue Code |\n");
+                content.push_str("|--------------------------|---------|--------------|----------------|-------|------------|\n");
                 for row in expiries {
+                    let expired = if row.days_until_expiry < 0 { "Yes" } else { "No" };
                     let (level, code_link) = if row.days_until_expiry < 0 {
                         (
                             "Critical",
@@ -1733,7 +1791,7 @@ impl ReportGenerator {
                     content.push_str(&format!(
                         "| {} | {} | {} | {} | {} | {} |\n",
                         secret_cell,
-                        truncate_string(&row.subject_or_cn, 50),
+                        expired,
                         row.expiry_utc,
                         row.days_until_expiry,
                         level,

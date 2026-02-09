@@ -1,6 +1,6 @@
 [package]
 name = "kubeowler"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["ops-engineer"]
 description = "Kubernetes cluster inspection tool"

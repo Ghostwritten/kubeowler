@@ -4,7 +4,8 @@
 #   stdout: exactly one JSON object (node_name, resources, services, security, kernel, certificates, etc.).
 #   stderr: diagnostics, warnings, errors only. Do not write to stdout except the final JSON.
 # When kubeowler runs this via exec, it parses stdout as JSON; use stderr for debugging (e.g. kubectl exec ... /node-check-universal.sh 2>&1).
-# Requires read-only hostPath: /proc, /sys, /etc. Optional: /host (host root) for host disk and os_version.
+# Requires host root mounted at /host (no overlay of /proc, /sys, /etc so container can start on older kernels/SELinux).
+# Compatible with any Linux host that provides /proc, /sys, and os-release or redhat-release (e.g. RHEL, CentOS, Rocky, Alma, Ubuntu, SUSE).
 
 set -e
 
@@ -18,6 +19,18 @@ log_err() { echo "[node-check] $*" >&2; }
 # ------------------------------------------------------------------------------
 NODE_NAME="${NODE_NAME:-$(hostname 2>/dev/null)}"
 TIMESTAMP="${TIMESTAMP:-$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)}"
+# Node local time (cluster host time) for report header/filename; use host TZ when /host is mounted
+if [ -r /host/etc/localtime ]; then
+  TIMESTAMP_LOCAL="${TIMESTAMP_LOCAL:-$(TZ=:/host/etc/localtime date "+%Y-%m-%dT%H:%M:%S%z" 2>/dev/null)}"
+else
+  TIMESTAMP_LOCAL="${TIMESTAMP_LOCAL:-$(date "+%Y-%m-%dT%H:%M:%S%z" 2>/dev/null)}"
+fi
+
+# Host paths for node inspection (when host root mounted at /host; no overlay of /proc,/sys,/etc)
+HOST_PROC="${HOST_PROC:-/host/proc}"
+HOST_SYS="${HOST_SYS:-/host/sys}"
+HOST_ETC="${HOST_ETC:-/host/etc}"
+[ ! -d "$HOST_PROC" ] && HOST_PROC="/proc" && HOST_SYS="/sys" && HOST_ETC="/etc"
 
 # ------------------------------------------------------------------------------
 # Utility: escape string for JSON
@@ -35,10 +48,10 @@ get_os_version() {
     [ -r /host/etc/os-release ] && v=$(grep -E '^PRETTY_NAME=' /host/etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
     [ -z "$v" ] && [ -r /host/usr/lib/os-release ] && v=$(grep -E '^PRETTY_NAME=' /host/usr/lib/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
   fi
-  [ -z "$v" ] && [ -r /etc/os-release ] && v=$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
-  [ -z "$v" ] && [ -r /etc/redhat-release ] && v=$(cat /etc/redhat-release 2>/dev/null | head -c 200)
-  [ -z "$v" ] && [ -r /proc/1/root/etc/os-release ] && v=$(grep -E '^PRETTY_NAME=' /proc/1/root/etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
-  [ -z "$v" ] && [ -r /proc/1/root/usr/lib/os-release ] && v=$(grep -E '^PRETTY_NAME=' /proc/1/root/usr/lib/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
+  [ -z "$v" ] && [ -r "$HOST_ETC/os-release" ] && v=$(grep -E '^PRETTY_NAME=' "$HOST_ETC/os-release" 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
+  [ -z "$v" ] && [ -r "$HOST_ETC/redhat-release" ] && v=$(cat "$HOST_ETC/redhat-release" 2>/dev/null | head -c 200)
+  [ -z "$v" ] && [ -r "$HOST_PROC/1/root/etc/os-release" ] && v=$(grep -E '^PRETTY_NAME=' "$HOST_PROC/1/root/etc/os-release" 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
+  [ -z "$v" ] && [ -r "$HOST_PROC/1/root/usr/lib/os-release" ] && v=$(grep -E '^PRETTY_NAME=' "$HOST_PROC/1/root/usr/lib/os-release" 2>/dev/null | cut -d= -f2- | tr -d '"' | head -c 200)
   echo "$v"
 }
 
@@ -46,8 +59,8 @@ get_os_version() {
 # Get kernel release from /proc
 # ------------------------------------------------------------------------------
 get_kernel_version() {
-  if [ -r /proc/sys/kernel/osrelease ]; then
-    cat /proc/sys/kernel/osrelease 2>/dev/null | tr -d '\n'
+  if [ -r "$HOST_PROC/sys/kernel/osrelease" ]; then
+    cat "$HOST_PROC/sys/kernel/osrelease" 2>/dev/null | tr -d '\n'
   fi
 }
 
@@ -56,7 +69,7 @@ get_kernel_version() {
 # ------------------------------------------------------------------------------
 get_uptime_string() {
   local uptime_sec=0
-  [ -r /proc/uptime ] && uptime_sec=$(awk '{print int($1)}' /proc/uptime 2>/dev/null)
+  [ -r "$HOST_PROC/uptime" ] && uptime_sec=$(awk '{print int($1)}' "$HOST_PROC/uptime" 2>/dev/null)
   [ -z "$uptime_sec" ] || [ "$uptime_sec" -lt 0 ] && return
   if [ "$uptime_sec" -ge 86400 ]; then
     local days=$((uptime_sec / 86400))
@@ -81,12 +94,12 @@ get_uptime_string() {
 gather_cpu_usage() {
   cpu_used_pct=""
   cpu_used=""
-  [ ! -r /proc/stat ] && return
+  [ ! -r "$HOST_PROC/stat" ] && return
   local line1 line2 id1 id2 t1 t2 total_delta idle_delta pct cores
-  line1=$(grep '^cpu ' /proc/stat 2>/dev/null)
+  line1=$(grep '^cpu ' "$HOST_PROC/stat" 2>/dev/null)
   [ -z "$line1" ] && return
   sleep 1
-  line2=$(grep '^cpu ' /proc/stat 2>/dev/null)
+  line2=$(grep '^cpu ' "$HOST_PROC/stat" 2>/dev/null)
   [ -z "$line2" ] && return
   # cpu user nice system idle iowait irq softirq steal (fields 2-9)
   id1=$(echo "$line1" | awk '{print $5}')
@@ -106,10 +119,10 @@ gather_cpu_usage() {
 # Sets: cpu_cores, mem_*, disk_*, load_*, swap_*, res_status, res_detail, cpu_used_pct, cpu_used
 # ------------------------------------------------------------------------------
 gather_resources() {
-  cpu_cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo "0")
+  cpu_cores=$(grep -c ^processor "$HOST_PROC/cpuinfo" 2>/dev/null || echo "0")
   gather_cpu_usage
-  mem_total_kb=$(awk '/MemTotal:/{print $2}' /proc/meminfo 2>/dev/null || echo "0")
-  mem_avail_kb=$(awk '/MemAvailable:/{print $2}' /proc/meminfo 2>/dev/null || echo "0")
+  mem_total_kb=$(awk '/MemTotal:/{print $2}' "$HOST_PROC/meminfo" 2>/dev/null || echo "0")
+  mem_avail_kb=$(awk '/MemAvailable:/{print $2}' "$HOST_PROC/meminfo" 2>/dev/null || echo "0")
   mem_used_kb=$((mem_total_kb - mem_avail_kb))
   mem_total_mib=$((mem_total_kb / 1024))
   mem_used_mib=$((mem_used_kb / 1024))
@@ -128,14 +141,14 @@ gather_resources() {
   disk_used_pct_num="0"
   [ "${disk_total_kb:-0}" -gt 0 ] && disk_total_g=$(awk "BEGIN {printf \"%.1f\", ${disk_total_kb:-0}/1024/1024}") && disk_used_g=$(awk "BEGIN {printf \"%.1f\", ${disk_used_kb:-0}/1024/1024}") && disk_used_pct_num=$(awk "BEGIN {printf \"%.1f\", (${disk_used_kb:-0}/${disk_total_kb:-0})*100}")
 
-  load_1m=$(awk '{print $1}' /proc/loadavg 2>/dev/null || echo "")
-  load_5m=$(awk '{print $2}' /proc/loadavg 2>/dev/null || echo "")
-  load_15m=$(awk '{print $3}' /proc/loadavg 2>/dev/null || echo "")
+  load_1m=$(awk '{print $1}' "$HOST_PROC/loadavg" 2>/dev/null || echo "")
+  load_5m=$(awk '{print $2}' "$HOST_PROC/loadavg" 2>/dev/null || echo "")
+  load_15m=$(awk '{print $3}' "$HOST_PROC/loadavg" 2>/dev/null || echo "")
 
   swap_enabled="false"
-  grep -q '^/dev/' /proc/swaps 2>/dev/null && swap_enabled="true"
-  swap_total_kb=$(awk '/SwapTotal:/{print $2}' /proc/meminfo 2>/dev/null || echo "0")
-  swap_free_kb=$(awk '/SwapFree:/{print $2}' /proc/meminfo 2>/dev/null || echo "0")
+  grep -q '^/dev/' "$HOST_PROC/swaps" 2>/dev/null && swap_enabled="true"
+  swap_total_kb=$(awk '/SwapTotal:/{print $2}' "$HOST_PROC/meminfo" 2>/dev/null || echo "0")
+  swap_free_kb=$(awk '/SwapFree:/{print $2}' "$HOST_PROC/meminfo" 2>/dev/null || echo "0")
   swap_used_kb=$((swap_total_kb - swap_free_kb))
   [ "${swap_used_kb:-0}" -lt 0 ] && swap_used_kb=0
   swap_total_g="0"
@@ -184,15 +197,52 @@ gather_disk_mounts() {
 }
 
 # ------------------------------------------------------------------------------
+# Check if a process name exists in host /proc (host-aware, no systemctl).
+# Usage: host_proc_running "firewalld" && var="true"
+# ------------------------------------------------------------------------------
+host_proc_running() {
+  local name="$1"
+  for f in "$HOST_PROC"/[0-9]*/cmdline; do
+    [ -r "$f" ] || continue
+    tr '\0' '\n' < "$f" 2>/dev/null | head -1 | grep -qF "$name" && return 0
+  done
+  return 1
+}
+
+# ------------------------------------------------------------------------------
 # Gather services (ntp, status). Sets: ntp_synced, svc_status, svc_detail. Runtime comes from Kubernetes API.
 # ------------------------------------------------------------------------------
 gather_services() {
   ntp_synced="false"
-  if command -v timedatectl &>/dev/null; then
+  # Host-aware: check NTP daemon process on host
+  if host_proc_running "chronyd" || host_proc_running "ntpd" || host_proc_running "systemd-timesyncd"; then
+    ntp_synced="true"
+  elif command -v timedatectl &>/dev/null; then
     timedatectl status 2>/dev/null | grep -qi 'NTP synchronized: yes' && ntp_synced="true" || true
   elif command -v chronyc &>/dev/null; then
     chronyc tracking 2>/dev/null | grep -q 'Leap status.*Normal' && ntp_synced="true" || true
   fi
+
+  journald_active="false"
+  if host_proc_running "systemd-journald"; then
+    journald_active="true"
+  fi
+
+  crontab_present="false"
+  if host_proc_running "crond"; then
+    crontab_present="true"
+  fi
+
+  kubelet_running="false"
+  if host_proc_running "kubelet"; then
+    kubelet_running="true"
+  fi
+
+  container_runtime_running="false"
+  if host_proc_running "containerd" || host_proc_running "dockerd" || host_proc_running "crio"; then
+    container_runtime_running="true"
+  fi
+
   svc_status="ok"
   svc_detail=""
 }
@@ -202,27 +252,78 @@ gather_services() {
 # ------------------------------------------------------------------------------
 gather_security() {
   selinux_val="unknown"
-  if command -v getenforce &>/dev/null; then
-    selinux_val=$(getenforce 2>/dev/null || echo "unknown")
-  fi
-  if [ "$selinux_val" = "unknown" ] && [ -r /sys/fs/selinux/enforce ]; then
+  # Prefer host's SELinux state from $HOST_SYS (container getenforce would report container context)
+  if [ -r "$HOST_SYS/fs/selinux/enforce" ]; then
     local e
-    e=$(cat /sys/fs/selinux/enforce 2>/dev/null | tr -d ' \n')
+    e=$(cat "$HOST_SYS/fs/selinux/enforce" 2>/dev/null | tr -d ' \n')
     case "$e" in
       1) selinux_val="Enforcing" ;;
       0) selinux_val="Permissive" ;;
-      *) selinux_val="unknown" ;;
+      *) ;;
     esac
   fi
-  if [ "$selinux_val" = "unknown" ] && [ -r /sys/fs/selinux/status ]; then
-    grep -q '^SELinux status:.*disabled' /sys/fs/selinux/status 2>/dev/null && selinux_val="Disabled" || true
+  if [ "$selinux_val" = "unknown" ] && [ -r "$HOST_SYS/fs/selinux/status" ]; then
+    grep -q '^SELinux status:.*disabled' "$HOST_SYS/fs/selinux/status" 2>/dev/null && selinux_val="Disabled" || true
+  fi
+  # When selinuxfs not mounted (common when SELinux disabled on RHEL/CentOS), infer Disabled
+  if [ "$selinux_val" = "unknown" ] && [ ! -d "$HOST_SYS/fs/selinux" ]; then
+    selinux_val="Disabled"
+  fi
+  # Fallback: check /etc/selinux/config for SELINUX=disabled
+  if [ "$selinux_val" = "unknown" ] && [ -r "$HOST_ETC/selinux/config" ]; then
+    grep -qE '^SELINUX=disabled' "$HOST_ETC/selinux/config" 2>/dev/null && selinux_val="Disabled" || true
+  fi
+  if [ "$selinux_val" = "unknown" ] && command -v getenforce &>/dev/null; then
+    selinux_val=$(getenforce 2>/dev/null || echo "unknown")
   fi
   firewalld_active="false"
-  systemctl is-active firewalld &>/dev/null && [ "$(systemctl is-active firewalld)" = "active" ] && firewalld_active="true" || true
+  if host_proc_running "firewalld"; then
+    firewalld_active="true"
+  fi
   ipvs_loaded="false"
-  lsmod 2>/dev/null | grep -q ip_vs && ipvs_loaded="true" || true
+  cat "$HOST_PROC/modules" 2>/dev/null | grep -q ip_vs && ipvs_loaded="true" || true
+  br_netfilter_loaded="false"
+  cat "$HOST_PROC/modules" 2>/dev/null | grep -q br_netfilter && br_netfilter_loaded="true" || true
+  overlay_loaded="false"
+  cat "$HOST_PROC/modules" 2>/dev/null | grep -qE '^overlay\s|^overlayfs\s' && overlay_loaded="true" || true
+  nf_conntrack_loaded="false"
+  nf_conntrack_count=""
+  nf_conntrack_max=""
+  if cat "$HOST_PROC/modules" 2>/dev/null | grep -q nf_conntrack; then
+    nf_conntrack_loaded="true"
+    [ -r "$HOST_PROC/sys/net/netfilter/nf_conntrack_count" ] && nf_conntrack_count=$(cat "$HOST_PROC/sys/net/netfilter/nf_conntrack_count" 2>/dev/null | tr -d '\n')
+    [ -r "$HOST_PROC/sys/net/netfilter/nf_conntrack_max" ] && nf_conntrack_max=$(cat "$HOST_PROC/sys/net/netfilter/nf_conntrack_max" 2>/dev/null | tr -d '\n')
+  fi
   sec_status="ok"
   sec_detail=""
+}
+
+# ------------------------------------------------------------------------------
+# Gather stability: inode usage (root or /host), OOM count (vmstat), file-nr (open/max).
+# ------------------------------------------------------------------------------
+gather_stability() {
+  inode_used_pct=""
+  if [ -d /host ] && [ -r /host ]; then
+    inode_used_pct=$(df -i /host 2>/dev/null | awk 'NR==2 {gsub(/%/,""); print $5}' || true)
+  else
+    inode_used_pct=$(df -i / 2>/dev/null | awk 'NR==2 {gsub(/%/,""); print $5}' || true)
+  fi
+  [ -z "$inode_used_pct" ] && inode_used_pct="null" || true
+
+  oom_kill_count="null"
+  if [ -r "$HOST_PROC/vmstat" ]; then
+    oom_kill_count=$(grep '^oom_kill ' "$HOST_PROC/vmstat" 2>/dev/null | awk '{print $2}' || true)
+  fi
+  [ -z "$oom_kill_count" ] && oom_kill_count="null" || true
+
+  file_nr_open=""
+  file_nr_max=""
+  if [ -r "$HOST_PROC/sys/fs/file-nr" ]; then
+    file_nr_open=$(awk '{print $1}' "$HOST_PROC/sys/fs/file-nr" 2>/dev/null || true)
+    file_nr_max=$(awk '{print $3}' "$HOST_PROC/sys/fs/file-nr" 2>/dev/null || true)
+  fi
+  [ -z "$file_nr_open" ] && file_nr_open="null" || true
+  [ -z "$file_nr_max" ] && file_nr_max="null" || true
 }
 
 # ------------------------------------------------------------------------------
@@ -232,11 +333,10 @@ gather_kernel_sysctl() {
   sysctl_forward=""
   sysctl_swappiness=""
   sysctl_somaxconn=""
-  if command -v sysctl &>/dev/null; then
-    sysctl_forward=$(sysctl -n net.ipv4.ip_forward 2>/dev/null || true)
-    sysctl_swappiness=$(sysctl -n vm.swappiness 2>/dev/null || true)
-    sysctl_somaxconn=$(sysctl -n net.core.somaxconn 2>/dev/null || true)
-  fi
+  # Read host kernel sysctl from $HOST_PROC/sys (container sysctl would report container view)
+  [ -r "$HOST_PROC/sys/net/ipv4/ip_forward" ] && sysctl_forward=$(cat "$HOST_PROC/sys/net/ipv4/ip_forward" 2>/dev/null | tr -d '\n') || true
+  [ -r "$HOST_PROC/sys/vm/swappiness" ] && sysctl_swappiness=$(cat "$HOST_PROC/sys/vm/swappiness" 2>/dev/null | tr -d '\n') || true
+  [ -r "$HOST_PROC/sys/net/core/somaxconn" ] && sysctl_somaxconn=$(cat "$HOST_PROC/sys/net/core/somaxconn" 2>/dev/null | tr -d '\n') || true
   ker_status="ok"
   ker_detail=""
 }
@@ -246,7 +346,7 @@ gather_kernel_sysctl() {
 # ------------------------------------------------------------------------------
 count_zombie_processes() {
   local count=0
-  for stat in /proc/[0-9]*/stat; do
+  for stat in "$HOST_PROC"/[0-9]*/stat; do
     [ -r "$stat" ] || continue
     [ "$(awk '{print $3}' "$stat" 2>/dev/null)" = "Z" ] && count=$((count + 1))
   done 2>/dev/null
@@ -271,7 +371,7 @@ compute_issue_count() {
 collect_cert_paths_from_proc() {
   local cert_flags="client-ca-file tls-cert-file etcd-certfile etcd-cafile cert-file trusted-ca-file peer-cert-file peer-trusted-ca-file"
   local key_flags="key-file keyfile private-key etcd-keyfile peer-key-file"
-  for proc in /proc/[0-9]*; do
+  for proc in "$HOST_PROC"/[0-9]*; do
     [ -d "$proc" ] || continue
     local pid="${proc##*/}"
     [ ! -r "$proc/cmdline" ] && continue
@@ -332,7 +432,7 @@ collect_cert_paths_from_proc() {
 # ------------------------------------------------------------------------------
 collect_cert_paths_fixed() {
   local dir
-  for dir in /etc/kubernetes/ssl /etc/ssl/etcd/ssl; do
+  for dir in "$HOST_ETC/kubernetes/ssl" "$HOST_ETC/ssl/etcd/ssl"; do
     [ ! -d "$dir" ] && continue
     local f
     for f in "$dir"/*.crt "$dir"/*.pem; do
@@ -357,7 +457,7 @@ build_certificates_json() {
     local path_noslash="${path#/}"
     local read_path=""
     if [ -n "$pid" ] && [ "$pid" != "0" ]; then
-      read_path="/proc/${pid}/root/${path_noslash}"
+      read_path="$HOST_PROC/${pid}/root/${path_noslash}"
       [ -r "$read_path" ] || read_path=""
     fi
     [ -z "$read_path" ] && read_path="$path"
@@ -394,6 +494,7 @@ emit_node_inspection_json() {
   "node_name": "$(escape_json "$NODE_NAME")",
   "hostname": "$(escape_json "$NODE_NAME")",
   "timestamp": "$TIMESTAMP",
+  "timestamp_local": "$(escape_json "${TIMESTAMP_LOCAL:-}")",
   "runtime": "",
   "os_version": "$(escape_json "$os_version")",
   "kernel_version": "$(escape_json "$kernel_version")",
@@ -422,6 +523,10 @@ emit_node_inspection_json() {
   "services": {
     "runtime": "",
     "ntp_synced": $ntp_synced,
+    "journald_active": $journald_active,
+    "crontab_present": $crontab_present,
+    "kubelet_running": $kubelet_running,
+    "container_runtime_running": $container_runtime_running,
     "status": "$svc_status",
     "detail": "$svc_d"
   },
@@ -429,6 +534,11 @@ emit_node_inspection_json() {
     "selinux": "$(escape_json "$selinux_val")",
     "firewalld_active": $firewalld_active,
     "ipvs_loaded": $ipvs_loaded,
+    "br_netfilter_loaded": $br_netfilter_loaded,
+    "overlay_loaded": $overlay_loaded,
+    "nf_conntrack_loaded": $nf_conntrack_loaded,
+    "nf_conntrack_count": ${nf_conntrack_count:-null},
+    "nf_conntrack_max": ${nf_conntrack_max:-null},
     "status": "$sec_status",
     "detail": "$sec_d"
   },
@@ -438,6 +548,12 @@ emit_node_inspection_json() {
     "net_core_somaxconn": "$(escape_json "$sysctl_somaxconn")",
     "status": "$ker_status",
     "detail": "$ker_d"
+  },
+  "stability": {
+    "inode_used_pct": ${inode_used_pct:-null},
+    "oom_kill_count": ${oom_kill_count:-null},
+    "file_nr_open": ${file_nr_open:-null},
+    "file_nr_max": ${file_nr_max:-null}
   },
   "container_state_counts": ${container_states_json},
   "zombie_count": $zombie_count,
@@ -458,6 +574,7 @@ gather_resources
 gather_disk_mounts
 gather_services
 gather_security
+gather_stability
 gather_kernel_sysctl
 zombie_count=$(count_zombie_processes)
 compute_issue_count

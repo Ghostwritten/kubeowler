@@ -43,6 +43,7 @@ Per-node inspection is provided by an optional DaemonSet that runs a script on e
 | [Development Guide](development-guide.md) | Project structure, adding inspection types, scoring weights, report extension, contribution workflow |
 | [Development Environment](development-environment.md) | Linux dev setup: proxy, system dependencies, Rust install, build and run (including enterprise and offline) |
 | [Build and Test](build-and-test.md) | Rust toolchain, clone, build, test, format and clippy, multi-arch and cross builds |
+| [Go Migration Plan](go-migration-plan.md) | Architecture plan for rebuilding Kubeowler in Go (phases, module mapping, dependencies, timeline) |
 
 ### Operations
 

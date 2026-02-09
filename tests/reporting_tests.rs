@@ -134,6 +134,8 @@ async fn test_report_generation() {
             ..Default::default()
         }),
         node_inspection_results: None,
+        display_timestamp: None,
+        display_timestamp_filename: None,
         recent_events: None,
     };
 
